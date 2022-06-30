@@ -1702,6 +1702,7 @@ void ensembleHdl::SIMULATE_myCAs( void )
 
 			caHdlP theca = myCAs[tid][mycathreaded];
 
+                        theca->hdf5_read_DAMASK();
 			theca->solve_INITIALIZATION();
 
 			theca->solve_INITIALIZATION_THREADED_DOMAIN_DECOMPOSITION();

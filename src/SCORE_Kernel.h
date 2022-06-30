@@ -1189,6 +1189,8 @@ public:
 	bool hdf5_write_voxelgrid_rho( string fname, string grpname, string subgrpname );
 	bool hdf5_write_voxelgrid_ipfz( string fname, string grpname, string subgrpname );
 	void hdf5_write_xmffile_3dcorectmesh( string fname, string hfname, string gname );
+        //bool hdf5_read_DAMASK( string fname );
+        bool hdf5_read_DAMASK();
 	void raw_write_xmffile_3dcorectmesh( string fname, string binprefix );
 
 	void ompcrit_write_voxeldata_h5( unsigned char colormodel, string grpnm, bool xdmf, string xmfsuffix, double now, double xfraction, unsigned int stp );

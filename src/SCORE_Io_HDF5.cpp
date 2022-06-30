@@ -1142,6 +1142,16 @@ void caHdl::write_clustersizedistr_h5( unsigned int* dist, unsigned int ndist )
 	omp_unset_lock(&h5lock);
 }
 
+bool caHdl::hdf5_read_DAMASK(){
+        hid_t file;
+        string fname = "/home/georg.falkinger/Rolling_partial_RX/L_ST_W_2_edge_0_percent_RX/simulation/L_ST_W_2_edge_0_percent_RX_tensionX.hdf5";
+	//file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );
+        std::cout << "trying to open the file" << endl;
+	file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );
+        cout << file;
+	if (file > 0) {std::cout << "file open successful -------------" << endl;}
+        return true;
+}
 	/*
 	memca.localtime = mycaHdl->t;
 	memca.localX = mycaHdl->X;
