@@ -1152,6 +1152,51 @@ bool caHdl::hdf5_read_DAMASK(){
 	if (file > 0) {std::cout << "file open successful -------------" << endl;}
         return true;
 }
+
+hid_t caHdl::HDF5_openFile( string fname ){
+// the files can be opened in parallel however as parallelization architecture is not known, only simple file opening is done
+       hid_t file;
+       
+       file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT); // simplest file opening
+       // can be improved further to open only when file exists etc (like in DAMASK)
+       return file;
+
+}
+
+hid_t caHdl::HDF5_openGroup( hid_t loc_id, string groupname ){
+
+        hid_t group_ID;
+        
+        group_ID = H5Gopen( loc_id, groupname.c_str(), H5P_DEFAULT );
+        return group_ID;
+}
+
+hid_t caHdl::HDF5_openAttribute( hid_t obj_id, string attribute_name ){
+        hid_t attr_id;
+       
+        attr_id = H5Aopen( obj_id, attribute_name.c_str(), H5P_DEFAULT);
+        return attr_id;
+}
+
+herr_t caHdl::HDF5_read_attribute(hid_t attr_id){
+       hid_t mem_type_id, aspace;
+       herr_t ret;
+       void* buf;
+       float *float_array;
+       size_t npoints;
+       
+       mem_type_id = H5Aget_type( attr_id );
+
+       // assuming a float array as attribute
+       // reference for code:  https://support.hdfgroup.org/ftp/HDF5/examples/misc-examples/attrs.c
+       aspace = H5Aget_space( attr_id );
+       npoints = H5Sget_simple_extent_npoints( aspace );
+       float_array = (float *)malloc(sizeof(float)*(int)npoints);
+       ret = H5Aread( attr_id, mem_type_id, float_array);
+    
+       return ret;
+}
+
 	/*
 	memca.localtime = mycaHdl->t;
 	memca.localX = mycaHdl->X;
