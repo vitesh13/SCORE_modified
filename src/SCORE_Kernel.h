@@ -1196,7 +1196,8 @@ public:
         hid_t HDF5_openFile( string fname );        
         hid_t HDF5_openGroup( hid_t loc_id, string groupname );
         hid_t HDF5_openAttribute( hid_t loc_id, string attribute_name );
-        double* HDF5_read_attribute( hid_t attr_id );
+        double* HDF5_read_attribute_float( hid_t attr_id );
+        int* HDF5_read_attribute_int( hid_t attr_id );
 
 	void raw_write_xmffile_3dcorectmesh( string fname, string binprefix );
 
