@@ -274,7 +274,7 @@ void caHdl::ebsd2polycrystal2( void )
 		} //ylines done
 
 		height += this->myCAGeometry.cellsize;
-		cout << "ZLayer " << column_block_id << " up to height " << height << " build, assigned a total of " << px << " cells." << endl;
+		//cout << "ZLayer " << column_block_id << " up to height " << height << " build, assigned a total of " << px << " cells." << endl;
 		if ( height >= columnheight ) { //next block
 			cout << "Beginning new block layer..." << endl;
 			height = 0.0;

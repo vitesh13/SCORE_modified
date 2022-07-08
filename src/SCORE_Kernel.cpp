@@ -1039,7 +1039,7 @@ bool ensembleHdl::init_ebsdmap_read( const char* ebsdfname ) {
 				else {
 					expUniqueGrainIDs.insert( pair<uint32_t,uint32_t>(ap.gid, ap.gid) );
 					//expGrainIDs.push_back( ap.gid );
-					cout << "SEM/EBSD grain id/phi1/Phi/phi2//KAM = " << ap.gid << ";" << ap.bunge1 << ";" << ap.bunge2 << ";" << ap.bunge3 << "\t\t" << ap.kam << "\t\t" << ap.q0 << ";" << ap.q1 << ";" << ap.q2 << ";" << ap.q3 << endl;
+					//cout << "SEM/EBSD grain id/phi1/Phi/phi2//KAM = " << ap.gid << ";" << ap.bunge1 << ";" << ap.bunge2 << ";" << ap.bunge3 << "\t\t" << ap.kam << "\t\t" << ap.q0 << ";" << ap.q1 << ";" << ap.q2 << ";" << ap.q3 << endl;
 				}
 
 				/*
@@ -1242,7 +1242,7 @@ bool ensembleHdl::init_parameter_defgpool_exp( void )
 
 		expGrains.push_back( agr ); //organization of expGrains is linear expGrains[].gid runs from [1,N] ascendingly
 
-cout << "Internal grain old_id/new_id phi1/Phi/phi2//KAM " << it->first << ";" << it->second << "\t\t" << agr.gid << ";" << agr.bunge1 << ";" << agr.bunge2 << ";" << agr.bunge3 << ";" << agr.kam << endl;
+//cout << "Internal grain old_id/new_id phi1/Phi/phi2//KAM " << it->first << ";" << it->second << "\t\t" << agr.gid << ";" << agr.bunge1 << ";" << agr.bunge2 << ";" << agr.bunge3 << ";" << agr.kam << endl;
 	}
 
 	//as in Martin Diehl's project grains will be generated based on the expGrains we have to add to worlddefgpool and worldoripool later

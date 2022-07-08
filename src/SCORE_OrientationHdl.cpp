@@ -262,7 +262,7 @@ uint32_t caHdl::ca_check_disjunctness_core( double* q_ori, bool thesebunge, doub
 		myoripool.push_back( anori );
 
 		unsigned int ii = myoripool.size()-1;
-cout << "MyOriPool adding " << myoripool[ii].bunge1 << ";" << myoripool[ii].bunge2 << ";" << myoripool[ii].bunge3 << ";" << myoripool[ii].q0 << ";" << myoripool[ii].q1 << ";" << myoripool[ii].q2 << ";" << myoripool[ii].q3 << endl;
+//cout << "MyOriPool adding " << myoripool[ii].bunge1 << ";" << myoripool[ii].bunge2 << ";" << myoripool[ii].bunge3 << ";" << myoripool[ii].q0 << ";" << myoripool[ii].q1 << ";" << myoripool[ii].q2 << ";" << myoripool[ii].q3 << endl;
 
 //cout << "ADD\t\t" << (myoripool.size() - 1) << "\t\t" << anori.bunge1 << "\t\t" << anori.bunge2 << "\t\t" << anori.bunge3;
 //cout << "\t\t" << anori.q0 << "\t\t" << anori.q1 << "\t\t" << anori.q2 << "\t\t" << anori.q3 << endl;

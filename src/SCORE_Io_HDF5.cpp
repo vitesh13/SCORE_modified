@@ -1144,12 +1144,15 @@ void caHdl::write_clustersizedistr_h5( unsigned int* dist, unsigned int ndist )
 
 bool caHdl::hdf5_read_DAMASK(){
         hid_t file;
+        hid_t group_ID;
+
         string fname = "/home/georg.falkinger/Rolling_partial_RX/L_ST_W_2_edge_0_percent_RX/simulation/L_ST_W_2_edge_0_percent_RX_tensionX.hdf5";
-	//file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );
-        std::cout << "trying to open the file" << endl;
-	file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );
+	file = HDF5_openFile( fname );
+        group_ID = HDF5_openGroup( file, "geometry");
         cout << file;
 	if (file > 0) {std::cout << "file open successful -------------" << endl;}
+        cout << group_ID;
+	if (group_ID > 0) {std::cout << "group open successful -------------" << endl;}
         return true;
 }
 
