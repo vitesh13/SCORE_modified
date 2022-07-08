@@ -1145,14 +1145,24 @@ void caHdl::write_clustersizedistr_h5( unsigned int* dist, unsigned int ndist )
 bool caHdl::hdf5_read_DAMASK(){
         hid_t file;
         hid_t group_ID;
+        hid_t attr_id;
+        herr_t ret;
+        double *float_array;
 
         string fname = "/home/georg.falkinger/Rolling_partial_RX/L_ST_W_2_edge_0_percent_RX/simulation/L_ST_W_2_edge_0_percent_RX_tensionX.hdf5";
 	file = HDF5_openFile( fname );
         group_ID = HDF5_openGroup( file, "geometry");
+        attr_id  = HDF5_openAttribute( group_ID, "size");
+        float_array = HDF5_read_attribute(attr_id);
         cout << file;
 	if (file > 0) {std::cout << "file open successful -------------" << endl;}
         cout << group_ID;
 	if (group_ID > 0) {std::cout << "group open successful -------------" << endl;}
+        cout << attr_id;
+	if (attr_id > 0) {std::cout << "attribute open successful -------------" << endl;}
+        cout << ret;
+	if (attr_id > 0) {std::cout << "no error open successful -------------" << endl;}
+        
         return true;
 }
 
@@ -1181,23 +1191,33 @@ hid_t caHdl::HDF5_openAttribute( hid_t obj_id, string attribute_name ){
         return attr_id;
 }
 
-herr_t caHdl::HDF5_read_attribute(hid_t attr_id){
+double* caHdl::HDF5_read_attribute(hid_t attr_id){
        hid_t mem_type_id, aspace;
        herr_t ret;
-       void* buf;
-       float *float_array;
+       int i;
+       double *float_array;
+       //float *float_array;
        size_t npoints;
        
        mem_type_id = H5Aget_type( attr_id );
 
        // assuming a float array as attribute
        // reference for code:  https://support.hdfgroup.org/ftp/HDF5/examples/misc-examples/attrs.c
+       if (H5T_FLOAT == H5Tget_class(mem_type_id)){
+          printf("Type: FLOAT \n");
+       }
+
        aspace = H5Aget_space( attr_id );
        npoints = H5Sget_simple_extent_npoints( aspace );
-       float_array = (float *)malloc(sizeof(float)*(int)npoints);
+       printf("The array size is ---- %d",(int)npoints);
+       //float_array = (float *)malloc(sizeof(float)*(int)npoints);
+       float_array = (double *)malloc(sizeof(double)*(int)npoints);
        ret = H5Aread( attr_id, mem_type_id, float_array);
+
+       for( i = 0; i < (int)npoints; i++) printf("%f \n", float_array[i]);
     
-       return ret;
+       //return ret;
+       return float_array;
 }
 
 	/*
