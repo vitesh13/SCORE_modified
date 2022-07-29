@@ -6102,6 +6102,7 @@ void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK( void )
 {
             //hdf5_read_DAMASK();
             DAMASKtoCA();
+            //printf("outside the HDF5 read block");
 
 }
 
@@ -6123,14 +6124,15 @@ void caHdl::solve_SYNTHESIZE_DEFORMATIONSTRUCTURE( void )
 	}
         //else if ( myCADefMS.defmstype == CPFEMDAMASK_DEFMS ){
         // currently setup that it still runs with the default simulation settings
+	//else if ( 	myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSINGLE ||
+	//			myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSTACK ||
+	//			myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSHIFT  ) {
+        //        solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
+        //}
 	else if ( 	myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSINGLE ||
 				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSTACK ||
 				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSHIFT  ) {
                 solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
-        }
-	else if ( 	myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSINGLE ||
-				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSTACK ||
-				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSHIFT  ) {
 		solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA();
 	}
 	else {

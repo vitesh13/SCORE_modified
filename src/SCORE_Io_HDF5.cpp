@@ -1221,6 +1221,37 @@ double* caHdl::HDF5_read_attribute_float(hid_t attr_id){
        return float_array;
 }
 
+int* caHdl::HDF5_read_dataset_int_rank_1(hid_t loc_id, string datasetname ){
+       hid_t mem_type_id, aspace, dset_id, dapl_id;
+       herr_t ret;
+       int i, ndims;
+       double *float_array;
+       int *rdata;
+       size_t npoints;
+       hsize_t adims[1] = {0}, 
+               dims[1] = {0};
+       
+       printf("About to open the dataset");
+       dset_id = H5Dopen( loc_id, datasetname.c_str(),H5P_DEFAULT );
+       mem_type_id = H5Dget_type( dset_id );
+
+       //ndims = H5Tget_array_dims( mem_type_id, adims );
+
+       // assuming a float array as attribute
+       // reference for code:  https://support.hdfgroup.org/ftp/HDF5/examples/misc-examples/attrs.c
+
+       aspace = H5Dget_space( dset_id );
+
+       ndims = H5Sget_simple_extent_dims( aspace, dims, NULL );
+       npoints = H5Sget_simple_extent_npoints( aspace );
+
+       rdata = (int *)malloc(sizeof(int)*(int)dims[0]);
+       ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
+
+       for( i = 0; i < (int)dims[0]; i++) printf("%d \n", rdata[i]);
+       return rdata;
+}
+
 int* caHdl::HDF5_read_attribute_int(hid_t attr_id){
        hid_t mem_type_id, aspace;
        herr_t ret;

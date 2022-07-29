@@ -287,6 +287,7 @@ void caHdl::DAMASKtoCA( void )
 {
         hid_t file;
         hid_t group_ID;
+        herr_t ret; 
 
 	vector<defgseed>* tmp2defgseeds = NULL;
 	tmp2defgseeds = new vector<defgseed>;
@@ -295,12 +296,15 @@ void caHdl::DAMASKtoCA( void )
         string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_example_tensionX_increment1000_segmented.dream3D";
 
         file = HDF5_openFile( fname );
-        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
- 
+        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/_SIMPL_GEOMETRY" );
+
         cout << file;
 	if (file > 0) {std::cout << "file open successful -------------" << endl;}
         cout << group_ID;
 	if (group_ID > 0) {std::cout << "group open successful -------------" << endl;}
+ 
+        HDF5_read_dataset_int_rank_1( group_ID, "DIMENSIONS");
+ 
 
         
         
