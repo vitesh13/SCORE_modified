@@ -478,7 +478,7 @@ void caHdl::solve_nucmodeling_csrdiehl( void )
 			if ( myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMSO3 ) {
 				//##a random orientation from the SO3
 				localmath.rnd_quat_shoemake( qderived );
-				cout << "RANDOMSO3 q0/q1/q2/q3 " << qderived[0] << ";" << qderived[1] << ";" << qderived[2] << ";" << qderived[3] << "\n";
+				//cout << "RANDOMSO3 q0/q1/q2/q3 " << qderived[0] << ";" << qderived[1] << ";" << qderived[2] << ";" << qderived[3] << "\n";
 			}
 			else if (  myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMDEFORI ) {
 				//##the orientation from a random of the orientations of the deformed grains
@@ -516,7 +516,7 @@ void caHdl::solve_nucmodeling_csrdiehl( void )
 
 			myrxgpool.push_back ( rxg );
 
-			cout << "NucleationDiehl placing id/ix/iy/iz/bunge1/bunge2/bunge3 = " << (myrxgpool.size() - 1) << "\t\t" << ix << ";" << iy << ";" << iz << "\tBunge123\t" << myoripool[rxg.caori].bunge1 << ";" << myoripool[rxg.caori].bunge2 << ";" << myoripool[rxg.caori].bunge3 << endl;
+			//cout << "NucleationDiehl placing id/ix/iy/iz/bunge1/bunge2/bunge3 = " << (myrxgpool.size() - 1) << "\t\t" << ix << ";" << iy << ";" << iz << "\tBunge123\t" << myoripool[rxg.caori].bunge1 << ";" << myoripool[rxg.caori].bunge2 << ";" << myoripool[rxg.caori].bunge3 << endl;
 		} //next point
 	}
 

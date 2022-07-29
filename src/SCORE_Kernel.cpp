@@ -6100,7 +6100,8 @@ void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA( void )
 
 void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK( void )
 {
-            hdf5_read_DAMASK();
+            //hdf5_read_DAMASK();
+            DAMASKtoCA();
 
 }
 
