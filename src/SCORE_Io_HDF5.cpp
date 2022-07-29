@@ -1150,7 +1150,7 @@ bool caHdl::hdf5_read_DAMASK(){
         double *float_array;
         int *int_array;
 
-        string fname = "/home/georg.falkinger/Rolling_partial_RX/L_ST_W_2_edge_0_percent_RX/simulation/L_ST_W_2_edge_0_percent_RX_tensionX.hdf5";
+        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_example_tensionX_increment1000_segmented.dream3D";
 	file = HDF5_openFile( fname );
         group_ID = HDF5_openGroup( file, "geometry");
         attr_id  = HDF5_openAttribute( group_ID, "size");

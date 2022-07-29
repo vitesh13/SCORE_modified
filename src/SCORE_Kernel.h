@@ -1035,6 +1035,9 @@ public:
 	void ebsd2polycrystal( void );
 	void ebsd2polycrystal2( void ); //directly sets voxel
 
+        // DAMASK importing
+        void DAMASKtoCA( void );
+
 	//GB physics
 	double calc_mobilityweight( uint32_t rgp, uint32_t dgp );
 	double calc_mobilityweight_sebaldgottstein( uint32_t rgpoolid, uint32_t dgpoolid );

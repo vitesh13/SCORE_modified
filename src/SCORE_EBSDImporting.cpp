@@ -283,6 +283,29 @@ void caHdl::ebsd2polycrystal2( void )
 	} //all zlayers were build
 }
 
+void caHdl::DAMASKtoCA( void )
+{
+        hid_t file;
+        hid_t group_ID;
+
+	vector<defgseed>* tmp2defgseeds = NULL;
+	tmp2defgseeds = new vector<defgseed>;
+
+        // get the grain based data
+        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_example_tensionX_increment1000_segmented.dream3D";
+
+        file = HDF5_openFile( fname );
+        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
+ 
+        cout << file;
+	if (file > 0) {std::cout << "file open successful -------------" << endl;}
+        cout << group_ID;
+	if (group_ID > 0) {std::cout << "group open successful -------------" << endl;}
+
+        
+        
+
+}
 
 
 #endif
