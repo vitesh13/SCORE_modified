@@ -304,6 +304,9 @@ void caHdl::DAMASKtoCA( void )
 	if (group_ID > 0) {std::cout << "group open successful -------------" << endl;}
  
         HDF5_read_dataset_int_rank_1( group_ID, "DIMENSIONS");
+
+        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
+        HDF5_read_dataset_int_rank_2( group_ID, "Active");
  
 
         
