@@ -320,7 +320,7 @@ void caHdl::colorize_myoripool_ipfz( void )
 		myoripool[oi].RGB_A = UCHAR_RANGE_MAX;
 //cout << "Bunge2IPFZ=" << oi << "\t" << (int) rgb[RED] << ";" << (int) rgb[GREEN] << (int) rgb[BLUE] << endl;
 
-cout << "oi/phi1/Phi/phi2/RGB = " << oi << "\t" << RAD2DEG(myoripool[oi].bunge1) << ";" << RAD2DEG(myoripool[oi].bunge2) << ";" << RAD2DEG(myoripool[oi].bunge3) << "\t\t" << (int) myoripool[oi].RGB_R << ";" << (int) myoripool[oi].RGB_G << ";" << (int) myoripool[oi].RGB_B << endl;
+//cout << "oi/phi1/Phi/phi2/RGB = " << oi << "\t" << RAD2DEG(myoripool[oi].bunge1) << ";" << RAD2DEG(myoripool[oi].bunge2) << ";" << RAD2DEG(myoripool[oi].bunge3) << "\t\t" << (int) myoripool[oi].RGB_R << ";" << (int) myoripool[oi].RGB_G << ";" << (int) myoripool[oi].RGB_B << endl;
 	}
 }
 
