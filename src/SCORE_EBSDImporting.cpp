@@ -292,10 +292,13 @@ void caHdl::DAMASKtoCA( void )
         std::vector<std::vector<double>> quats_vec;
         std::vector<std::vector<double>> eulers_vec;
         std::vector<std::vector<double>> rho_vec;
+        std::vector<int> grain_ID;
         int* rdata_int;
         int i, j, ndims;
 
-        struct cadefg dgr;
+        struct cadefg dgr;   // pool of deformed grains in the CA
+        struct dgopt anopt;  // maintainence structure which keeps track of a reduction rho to speed up Euler forward integration
+        struct defgseed aseed;     // register this deformed grain as a with tmpdefgseeds for the REPLACE_CA_STRUCTURE function to work properly
 
 	vector<defgseed>* tmp2defgseeds = NULL;
 	tmp2defgseeds = new vector<defgseed>;
@@ -322,6 +325,7 @@ void caHdl::DAMASKtoCA( void )
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
         rho_vec = HDF5_read_dataset_float_rank_2( group_ID, "AvgRho");
 
+        // filling the grain data
         for(size_t g = 0; g < rho_vec[0].size(); g++){
             double bunge_ref[3] = {eulers_vec[g][0],eulers_vec[g][1],eulers_vec[g][2]};
             double quaternion_ref[4] = {quats_vec[g][0],quats_vec[g][1],quats_vec[g][2]};
@@ -330,7 +334,42 @@ void caHdl::DAMASKtoCA( void )
             dgr.rho   = rho_vec[g][0];
             mydefgpool.push_back( dgr );
 
-}
+            anopt.rho = rho_vec[g][0]; 
+            anopt.id  = mydefgpool.size() - 1;
+            anopt.cnt = 0;
+            mydgoptimize.push_back( anopt );
+
+            aseed.mydefgpoolid = (mydefgpool.size() - 1);
+            tmp2defgseeds->push_back( aseed );
+
+       }
+
+	//transfer seeds from temporary into tmpdefgseeds, this workaround is necessary because total number of seeds is unknown at subfunction entry ##MK::consider to replace tmpdefgseeds in the future
+	ndefgseeds = tmp2defgseeds->size(); //MK::total number of seeds is an integer multiple of expGrains.size()
+	QUICKASSERT ( ndefgseeds < CA_ALLOCATION_MAXIMUM );
+	tmpdefgseeds = NULL;
+	tmpdefgseeds = new struct defgseed[ndefgseeds];
+	QUICKASSERT ( tmpdefgseeds != NULL );
+	myMemGuard = myMemGuard + (ndefgseeds * sizeof(struct defgseed));
+	for ( uint32_t sd = 0; sd < ndefgseeds; sd++ ) { //##MK::was ++sd
+		//tmpdefgseeds[sd].ensdefgpoolid = tmp2defgseeds->at(sd).ensdefgpoolid;
+		//tmpdefgseeds[sd].location = tmp2defgseeds->at(sd).location;
+		tmpdefgseeds[sd].mydefgpoolid = tmp2defgseeds->at(sd).mydefgpoolid;
+	}
+	delete tmp2defgseeds; tmp2defgseeds = NULL;
+
+        // get the Grain_Ids
+        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
+        grain_ID = HDF5_read_dataset_int_rank_4( group_ID, "Grain_Ids");
+        printf("Grain ID values: %d \n",grain_ID[0]); 
+        printf("Grain ID values: %d \n",grain_ID[1]);
+        printf("Grain ID values: %d \n",grain_ID[2]);
+        printf("Grain ID values: %d \n",grain_ID[3]);
+
+        // go into a particular region of CA based on the partitioning
+        // copying relevant code from ebsd2polycrystal
+
+
 }
 
 
