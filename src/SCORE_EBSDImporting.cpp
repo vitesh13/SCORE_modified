@@ -295,6 +295,8 @@ void caHdl::DAMASKtoCA( void )
         int* rdata_int;
         int i, j, ndims;
 
+        struct cadefg dgr;
+
 	vector<defgseed>* tmp2defgseeds = NULL;
 	tmp2defgseeds = new vector<defgseed>;
 
@@ -319,6 +321,16 @@ void caHdl::DAMASKtoCA( void )
 
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
         rho_vec = HDF5_read_dataset_float_rank_2( group_ID, "AvgRho");
+
+        for(size_t g = 0; g < rho_vec[0].size(); g++){
+            double bunge_ref[3] = {eulers_vec[g][0],eulers_vec[g][1],eulers_vec[g][2]};
+            double quaternion_ref[4] = {quats_vec[g][0],quats_vec[g][1],quats_vec[g][2]};
+            dgr.caori = ca_check_disjunctness_core(quaternion_ref, true, bunge_ref[0],bunge_ref[1],bunge_ref[2]);
+            dgr.rho0  = rho_vec[g][0];
+            dgr.rho   = rho_vec[g][0];
+            mydefgpool.push_back( dgr );
+
+}
 }
 
 
