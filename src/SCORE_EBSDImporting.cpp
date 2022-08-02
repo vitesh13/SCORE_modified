@@ -288,20 +288,12 @@ void caHdl::DAMASKtoCA( void )
         hid_t file;
         hid_t group_ID;
         herr_t ret; 
-        //int* rdata;
-        std::vector<int> rdata;
-        std::vector<std::vector<int>> rdata_vec;
-        std::vector<std::vector<double>> rdata_vec_1;
+        std::vector<int> dim_vec;
+        std::vector<std::vector<double>> quats_vec;
+        std::vector<std::vector<double>> eulers_vec;
+        std::vector<std::vector<double>> rho_vec;
         int* rdata_int;
         int i, j, ndims;
-
-        int a = 5;
-        int* iptr = &a;
-
-        printf("Value is: %d \n",a);
-        printf("Value is: %d \n",*iptr);
-        printf("Address pointed is: %p \n",iptr);
-        printf("Pointer address is: %p \n",&iptr);
 
 	vector<defgseed>* tmp2defgseeds = NULL;
 	tmp2defgseeds = new vector<defgseed>;
@@ -317,33 +309,16 @@ void caHdl::DAMASKtoCA( void )
         cout << group_ID;
 	if (group_ID > 0) {std::cout << "group open successful -------------" << endl;}
  
-        rdata = HDF5_read_dataset_int_rank_1( group_ID, "DIMENSIONS");
-        //printf("Dimensions Value is: %d \n",*(rdata));
-        //cout << *(rdata) << endl;
-        printf("Dimensions Value is: %d \n",rdata[0]);
-        printf("Dimensions Value is: %d \n",rdata[1]);
-        printf("Dimensions Value is: %d \n",rdata[2]);
-        //printf("Dimensions Address pointed is: %p \n",rdata_int);
-        //printf("Dimensions Pointer address is: %p \n",&rdata_int);
+        dim_vec = HDF5_read_dataset_int_rank_1( group_ID, "DIMENSIONS");
 
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
-        rdata_vec = HDF5_read_dataset_int_rank_2( group_ID, "Active");
-        printf("Dimensions Value is: %d \n",rdata_vec[0][0]);
-        printf("Dimensions Value is: %d \n",rdata_vec[1][0]);
-        printf("Dimensions Value is: %d \n",rdata_vec[2][0]);
-        ////printf("Value is: %d \n",*(rdata));
-        //printf("Active Address pointed is: %p \n",rdata);
-        //printf("Active Pointer address is: %p \n",&rdata);
- 
+        quats_vec = HDF5_read_dataset_float_rank_2( group_ID, "AvgQuats");
+
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
-        rdata_vec_1 = HDF5_read_dataset_float_rank_2( group_ID, "AvgEulerAngles");
-        printf("Euler Value is: %f %f %f \n",rdata_vec_1[0][0],rdata_vec_1[0][1],rdata_vec_1[0][2]);  
-        printf("Euler Value is: %f %f %f \n",rdata_vec_1[1][0],rdata_vec_1[1][1],rdata_vec_1[1][2]);
-        printf("Euler Value is: %f %f %f \n",rdata_vec_1[2][0],rdata_vec_1[2][1],rdata_vec_1[2][2]);
+        eulers_vec = HDF5_read_dataset_float_rank_2( group_ID, "AvgEulerAngles");
 
-        
-        
-
+        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
+        rho_vec = HDF5_read_dataset_float_rank_2( group_ID, "AvgRho");
 }
 
 
