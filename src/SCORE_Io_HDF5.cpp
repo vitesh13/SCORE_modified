@@ -1221,7 +1221,8 @@ double* caHdl::HDF5_read_attribute_float(hid_t attr_id){
        return float_array;
 }
 
-int* caHdl::HDF5_read_dataset_int_rank_1(hid_t loc_id, string datasetname ){
+//int* caHdl::HDF5_read_dataset_int_rank_1(hid_t loc_id, string datasetname ){
+std::vector<int> caHdl::HDF5_read_dataset_int_rank_1(hid_t loc_id, string datasetname ){
        hid_t mem_type_id, aspace, dset_id, dapl_id;
        herr_t ret;
        int i, ndims;
@@ -1244,14 +1245,52 @@ int* caHdl::HDF5_read_dataset_int_rank_1(hid_t loc_id, string datasetname ){
        ndims = H5Sget_simple_extent_dims( aspace, dims, NULL );
        npoints = H5Sget_simple_extent_npoints( aspace );
 
-       rdata = (int *)malloc(sizeof(int)*(int)dims[0]);
-       ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
+       //rdata = (int *)malloc(sizeof(int)*(int)dims[0]);
+       std::vector<int> rdata_vec(dims[0]);
+       //ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
+       ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, static_cast<void*>(rdata_vec.data()));
 
-       for( i = 0; i < (int)dims[0]; i++) printf("%d \n", rdata[i]);
-       return rdata;
+       //for( i = 0; i < (int)dims[0]; i++) printf("%d \n", rdata[i]);
+       for( i = 0; i < (int)dims[0]; i++) printf("%d \n", rdata_vec[i]);
+       //return rdata;
+       return rdata_vec;
 }
 
-void caHdl::HDF5_read_dataset_int_rank_2(hid_t loc_id, string datasetname ){
+int* caHdl::HDF5_read_dataset_int_rank_2(hid_t loc_id, string datasetname ){
+       hid_t mem_type_id, aspace, dset_id, dapl_id;
+       herr_t ret;
+       int i, j, ndims;
+       size_t npoints;
+       hsize_t dims[2] = {0,0};
+       
+       dset_id = H5Dopen( loc_id, datasetname.c_str(),H5P_DEFAULT );
+       mem_type_id = H5Dget_type( dset_id );
+
+       aspace = H5Dget_space( dset_id );
+
+       ndims = H5Sget_simple_extent_dims( aspace, dims, NULL );
+       npoints = H5Sget_simple_extent_npoints( aspace );
+
+       int rdata[dims[0]][dims[1]];
+       int* rdata_1D;
+       rdata_1D = (int *)malloc(sizeof(int)*(int)dims[0]*dims[1]);
+       //std::vector<std::vector<int>> rdata_vec(dims[0], std::vector<int>(dims[1]));
+       //ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, static_cast<void*>(rdata_vec.data()));
+       ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
+
+       for(i = 0; i < (int)dims[0]; i++){
+          for( j = 0; j < (int)dims[1]; j++){
+              printf("%d \n", rdata[i][j]);
+              rdata_1D[i*dims[0] + j] = rdata[i][j];
+              //printf("%d \n", rdata_vec.at(i).at(j));
+          }
+       }
+
+       //return reinterpret_cast<int *>(rdata);
+       return rdata_1D;
+}
+
+void caHdl::HDF5_read_dataset_float_rank_2(hid_t loc_id, string datasetname ){
        hid_t mem_type_id, aspace, dset_id, dapl_id;
        herr_t ret;
        int i, j, ndims;
@@ -1272,12 +1311,12 @@ void caHdl::HDF5_read_dataset_int_rank_2(hid_t loc_id, string datasetname ){
        ndims = H5Sget_simple_extent_dims( aspace, dims, NULL );
        npoints = H5Sget_simple_extent_npoints( aspace );
 
-       int rdata[dims[0]][dims[1]];
-       ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
+       double rdata[dims[0]][dims[1]];
+       ret = H5Dread( dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
 
        for(i = 0; i < (int)dims[0]; i++){
           for( j = 0; j < (int)dims[1]; j++){
-              printf("%d \n", rdata[i][j]);
+              printf("%f \n", rdata[i][j]);
           }
        }
 
