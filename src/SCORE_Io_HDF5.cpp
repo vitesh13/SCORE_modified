@@ -1346,13 +1346,13 @@ std::vector<int> caHdl::HDF5_read_dataset_int_rank_4(hid_t loc_id, string datase
        //ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, static_cast<void*>(rdata_vec.data()));
        ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
 
-       for(i = 0; i < (int)dims[2]; i++){
+       for(i = 0; i < (int)dims[0]; i++){
           for( j = 0; j < (int)dims[1]; j++){
-             for( k = 0; k < (int)dims[0]; k++){
-                   printf("%d \n", rdata[k][j][i][0]);
+             for( k = 0; k < (int)dims[2]; k++){
+                   printf("%d \n", rdata[i][j][k][0]);
                    //rdata_1D[i*dims[0] + j] = rdata[i][j];
-                   index = k + j*dims[0] + i*dims[0]*dims[1];
-                   rdata_vec.at(index) = rdata[k][j][i][0] - 1;  //grain ID for CA starts from 0, DAMASK is flexible about this and doesnt care
+                   index = k + j*dims[2] + i*dims[2]*dims[1];
+                   rdata_vec.at(index) = rdata[i][j][k][0] - 1;  //grain ID for CA starts from 0, DAMASK is flexible about this and doesnt care
                    //printf("%d \n", rdata_vec.at(i).at(j));
           }
        }
