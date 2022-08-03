@@ -362,13 +362,80 @@ void caHdl::DAMASKtoCA( void )
         // get the Grain_Ids
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
         grain_ID = HDF5_read_dataset_int_rank_4( group_ID, "Grain_Ids");
-        printf("Grain ID values: %d \n",grain_ID[0]); 
-        printf("Grain ID values: %d \n",grain_ID[1]);
-        printf("Grain ID values: %d \n",grain_ID[2]);
-        printf("Grain ID values: %d \n",grain_ID[3]);
+        printf("Grain ID values: %d \n",grain_ID[41184]); 
+        printf("Grain ID values: %d \n",grain_ID[41185]);
+        printf("Grain ID values: %d \n",grain_ID[41186]);
+        printf("Grain ID values: %d \n",grain_ID[41187]);
 
         // go into a particular region of CA based on the partitioning
         // copying relevant code from ebsd2polycrystal
+	//set explicitly initial state of every cell in every region
+	//##MK::mind dimensions of global CA coordinates whose organization with +x lines along +y stacked slabs along +z is the same as expData, i.e. +x lines then +y lines downwards
+	uint32_t column_block_id = 0;
+        int r;
+	double height = 0.0;
+	uint32_t px = 0;
+	uint32_t rxmi, rxmx, rymi, rymx, rzmi, rzmx, extentx, extenty;
+	//no domain partitioning into regions along x, but along y and z
+	uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
+	uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
+	uint32_t ry, rz;
+	uint32_t ebsdgid, seedid;
+	uint32_t totalexpgrains = rho_vec.size() - 1;
+
+	for ( uint32_t z = 0; z < myCAGeometry.nboxedge_nd; z++ ) {
+		//in which xy slab of regions is this particular CA layer xy, z included?
+		for ( uint32_t rr = 0; rr < (1*npy*npz); rr = rr + npy ) { //mind that implicit region id 0 unfolds into ry=0,rz=0, if npy e.g. =3 then next zlayer in 3
+			if ( z >= this->regions[rr]->myGeom.nreg_ndmin && z <= this->regions[rr]->myGeom.nreg_ndmax ) { //works because linear cluster of regions along y has same dimensions
+				rz = rr / npy; break;
+			}
+		}
+
+		for ( uint32_t y = 0; y < myCAGeometry.nboxedge_td; y++ ) {
+			//in which slab yregion is the particular coordinate line y?
+			for ( uint32_t rr = 0+(rz*npy); rr < npy+(rz*npy); rr++ ) { //mind that caHdl->regions is organized as contiguous groups of regions along +y stacked in +z
+				if ( y >= this->regions[rr]->myGeom.nreg_tdmin && y <= this->regions[rr]->myGeom.nreg_tdmax ) {
+					ry = rr-(rz*npy); break;
+				}
+			}
+			//no region partitioning along x so now we know in which particular region to place the xline assignments
+			uint32_t here = ry+(rz*npy); //MK::mentality --- a pixel from the EBSD mapping becomes mapped on global CA volume that is partitioned into regions
+			uint32_t* thecells = this->regions[here]->mycellgrid;
+
+			//x,y,z are SU global coordinates, we have to translate into local coordinates...
+			rxmi = this->regions[here]->myGeom.nreg_rdmin;
+			rxmx = this->regions[here]->myGeom.nreg_rdmax;
+			rymi = this->regions[here]->myGeom.nreg_tdmin;
+			rymx = this->regions[here]->myGeom.nreg_tdmax; //local region cell coordinate inclusive limits
+			rzmi = this->regions[here]->myGeom.nreg_ndmin;
+			rzmx = this->regions[here]->myGeom.nreg_ndmax;
+			extentx = rxmx - rxmi + 1;
+			QUICKASSERT( extentx == myCAGeometry.nboxedge_rd );
+			extenty = rymx - rymi + 1;
+
+			uint32_t yzoffset = (y-rymi)*extentx + (z-rzmi)*extentx*extenty;
+			for ( uint32_t x = 0; x < extentx; x++ ) { //setup region partitioning more efficiently
+				//ebsdgid = myensHdl->expData[px].gid; //the grain at this position, expGrains is contiguous with IDs on [1,N]
+                                index = x + y*myCAGeometry.nboxedge_td + z*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td 
+ 
+
+				//seedid = (ebsdgid - 1) + (column_block_id * totalexpgrains); //MK::-1 substracting on ebsdgid necessary because expGrains.gid start at 1 but seedid are positions on linear array!
+
+				//make the CA cell to represent a voxel of a particular seeded deformed grain
+				thecells[x+yzoffset] = grain_ID[index];
+				//translate next pixel to CA volume
+				//px++;
+			} //xline completed
+		} //ylines done
+
+	//	height += this->myCAGeometry.cellsize;
+	//	//cout << "ZLayer " << column_block_id << " up to height " << height << " build, assigned a total of " << px << " cells." << endl;
+	//	if ( height >= columnheight ) { //next block
+	//		cout << "Beginning new block layer..." << endl;
+	//		height = 0.0;
+	//		column_block_id++;
+	//	}
+	//} //all zlayers were build
 
 
 }
