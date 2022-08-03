@@ -326,7 +326,8 @@ void caHdl::DAMASKtoCA( void )
         rho_vec = HDF5_read_dataset_float_rank_2( group_ID, "AvgRho");
 
         // filling the grain data
-        for(size_t g = 0; g < rho_vec[0].size(); g++){
+        // the first element in the grain average arrays is neglected as Dream3D adds an extra row/element at index 0
+        for(size_t g = 1; g < rho_vec[0].size(); g++){
             double bunge_ref[3] = {eulers_vec[g][0],eulers_vec[g][1],eulers_vec[g][2]};
             double quaternion_ref[4] = {quats_vec[g][0],quats_vec[g][1],quats_vec[g][2]};
             dgr.caori = ca_check_disjunctness_core(quaternion_ref, true, bunge_ref[0],bunge_ref[1],bunge_ref[2]);
