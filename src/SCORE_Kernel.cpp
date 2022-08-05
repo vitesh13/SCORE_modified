@@ -449,6 +449,7 @@ bool ensembleHdl::init_parameter_ensemble( void ) {
 
 	defmsmethod = CUBOID_DEFMS;
 	long val = geTInt("DefStructureSynthesis", ensembledef);
+        std::cout << "value is ------------------------" << val << std::endl;
 	if ( val == 1 ) defmsmethod = CUBOID_DEFMS;
 	if ( val == 2 ) defmsmethod = POISSONVORONOI_DEFMS;
 	if ( val == 3 ) defmsmethod = CPFEMDAMASK_DEFMS;
@@ -6122,17 +6123,17 @@ void caHdl::solve_SYNTHESIZE_DEFORMATIONSTRUCTURE( void )
 	if ( myCADefMS.defmstype == CUBOID_DEFMS ) {
 		solve_SYNTHESIZED_DEFORMEDSTRUCTURE_CUBOIDBLOCKS();
 	}
-        //else if ( myCADefMS.defmstype == CPFEMDAMASK_DEFMS ){
+        else if ( myCADefMS.defmstype == CPFEMDAMASK_DEFMS ){
         // currently setup that it still runs with the default simulation settings
 	//else if ( 	myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSINGLE ||
 	//			myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSTACK ||
 	//			myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSHIFT  ) {
-        //        solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
-        //}
+                solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
+        }
 	else if ( 	myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSINGLE ||
 				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSTACK ||
 				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSHIFT  ) {
-                solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
+                //solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
 		solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA();
 	}
 	else {

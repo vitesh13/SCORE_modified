@@ -304,7 +304,7 @@ void caHdl::DAMASKtoCA( void )
 	tmp2defgseeds = new vector<defgseed>;
 
         // get the grain based data
-        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_example_tensionX_increment1000_segmented.dream3D";
+        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_example_tensionX_increment500_segmented.dream3D";
 
         file = HDF5_openFile( fname );
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/_SIMPL_GEOMETRY" );
@@ -362,17 +362,17 @@ void caHdl::DAMASKtoCA( void )
         // get the Grain_Ids
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
         grain_ID = HDF5_read_dataset_int_rank_4( group_ID, "Grain_Ids");
-        printf("Grain ID values: %d \n",grain_ID[41184]); 
-        printf("Grain ID values: %d \n",grain_ID[41185]);
-        printf("Grain ID values: %d \n",grain_ID[41186]);
-        printf("Grain ID values: %d \n",grain_ID[41187]);
+        printf("Grain ID values: %d \n",grain_ID[118848]); 
+        printf("Grain ID values: %d \n",grain_ID[118848]);
+        printf("Grain ID values: %d \n",grain_ID[118848]);
+        printf("Grain ID values: %d \n",grain_ID[118848]);
 
         // go into a particular region of CA based on the partitioning
         // copying relevant code from ebsd2polycrystal
 	//set explicitly initial state of every cell in every region
 	//##MK::mind dimensions of global CA coordinates whose organization with +x lines along +y stacked slabs along +z is the same as expData, i.e. +x lines then +y lines downwards
 	uint32_t column_block_id = 0;
-        int r;
+        int r, index;
 	double height = 0.0;
 	uint32_t px = 0;
 	uint32_t rxmi, rxmx, rymi, rymx, rzmi, rzmx, extentx, extenty;
@@ -416,13 +416,21 @@ void caHdl::DAMASKtoCA( void )
 			uint32_t yzoffset = (y-rymi)*extentx + (z-rzmi)*extentx*extenty;
 			for ( uint32_t x = 0; x < extentx; x++ ) { //setup region partitioning more efficiently
 				//ebsdgid = myensHdl->expData[px].gid; //the grain at this position, expGrains is contiguous with IDs on [1,N]
-                                index = x + y*myCAGeometry.nboxedge_td + z*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td 
+                                index = x + y*myCAGeometry.nboxedge_rd + z*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
  
 
 				//seedid = (ebsdgid - 1) + (column_block_id * totalexpgrains); //MK::-1 substracting on ebsdgid necessary because expGrains.gid start at 1 but seedid are positions on linear array!
 
 				//make the CA cell to represent a voxel of a particular seeded deformed grain
 				thecells[x+yzoffset] = grain_ID[index];
+                                if (index == 118848) {
+                                std::cout << "the index " << index << std::endl;
+                                std::cout << "the x " << x << std::endl;
+                                std::cout << "the y " << y << std::endl;
+                                std::cout << "the z " << z << std::endl;
+                                std::cout << "the data in region 0 " << thecells[x + yzoffset] << std::endl;
+                                std::cout << "the offset value is" << x + yzoffset << std::endl;
+                                }
 				//translate next pixel to CA volume
 				//px++;
 			} //xline completed
@@ -439,6 +447,6 @@ void caHdl::DAMASKtoCA( void )
 
 
 }
-
+}
 
 #endif
