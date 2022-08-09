@@ -304,6 +304,7 @@ bool ensembleHdl::init_parameter_runtime( void ) {
 	uint32_t support_ebsddata = 0;
 	support_ebsddata = geTInt("ReadEBSDMapping", runtimecontrol );
 	if ( support_ebsddata == 1 ) experimentInput = true;
+	experimentInput = true;
 
 	this->ebsdstepsize = geTReal("ReadEBSDStepsize", runtimecontrol );
 	if ( ebsdstepsize <= DEFAULT_EBSDSTEPSIZE_MINIMUM ) { status = false; cout << "ERROR::Invalid argument in ReadEBSDStepsize." << endl; }
