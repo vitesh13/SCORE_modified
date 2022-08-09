@@ -304,7 +304,7 @@ bool ensembleHdl::init_parameter_runtime( void ) {
 	uint32_t support_ebsddata = 0;
 	support_ebsddata = geTInt("ReadEBSDMapping", runtimecontrol );
 	if ( support_ebsddata == 1 ) experimentInput = true;
-	experimentInput = true;
+	//experimentInput = true;
 
 	this->ebsdstepsize = geTReal("ReadEBSDStepsize", runtimecontrol );
 	if ( ebsdstepsize <= DEFAULT_EBSDSTEPSIZE_MINIMUM ) { status = false; cout << "ERROR::Invalid argument in ReadEBSDStepsize." << endl; }
@@ -1725,7 +1725,9 @@ void ensembleHdl::SIMULATE_myCAs( void )
 
 			//##MK::nucleation does not run OpenMP parallel
 			if ( theca->myNucleationModel.csrnucleation != CSRNUCLEATION_NO || theca->myNucleationModel.gbnucleation != GBNUCLEATION_NO ) {
+                                printf("Starting nucleation model");
 				theca->solve_NUCLEATIONMODELING();
+                                printf("Nucleation passed ---------------------");
 			}
 			timer[4] = MPI_Wtime();
 			prof.MPIWTimeSpendNucleation = timer[4] - timer[3];
@@ -6103,8 +6105,9 @@ void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA( void )
 void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK( void )
 {
             //hdf5_read_DAMASK();
+            printf("Going inside HDf5 read block");
             DAMASKtoCA();
-            //printf("outside the HDF5 read block");
+            printf("outside the HDF5 read block");
 
 }
 
@@ -6500,7 +6503,7 @@ void caHdl::solve_RXGROWTH( void )
 
 #ifdef REPORTSTYLE_USER
 	if ( this->myensRank == MASTER ) 
-		cout << this->jobid << "\tstep;t;X;dt;CurrTemperature;Sv\t\t" << this->step << "\t\t" << this->t << "\t\t" << this->X  << "\t\t" << this->dt << "\t\t" << this->CurrentTemperature << "\t\t" << this->Sv << endl;
+		//cout << this->jobid << "\tstep;t;X;dt;CurrTemperature;Sv\t\t" << this->step << "\t\t" << this->t << "\t\t" << this->X  << "\t\t" << this->dt << "\t\t" << this->CurrentTemperature << "\t\t" << this->Sv << endl;
 #endif
 
 	//get initial delta time for the numerical integration scheme
@@ -6685,8 +6688,8 @@ void caHdl::solve_RXGROWTH( void )
 					step++;
 
 //#ifdef REPORTSTYLE_USER
-					if ( this->myensRank == MASTER ) 
-						cout << "\tstep;t;X;dt;CurrTemperature;Sv\t\t" << this->step << "\t\t" << this->t << "\t\t" << this->X  << "\t\t" << this->dt << "\t\t" << this->CurrentTemperature << "\t\t" << this->Sv << endl;
+				        //	if ( this->myensRank == MASTER ) 
+						//cout << "\tstep;t;X;dt;CurrTemperature;Sv\t\t" << this->step << "\t\t" << this->t << "\t\t" << this->X  << "\t\t" << this->dt << "\t\t" << this->CurrentTemperature << "\t\t" << this->Sv << endl;
 //#endif
 				}
 			}
