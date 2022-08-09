@@ -327,7 +327,7 @@ void caHdl::DAMASKtoCA( void )
 
         // filling the grain data
         // the first element in the grain average arrays is neglected as Dream3D adds an extra row/element at index 0
-        for(size_t g = 1; g < rho_vec[0].size(); g++){
+        for(size_t g = 1; g < rho_vec.size(); g++){
             double bunge_ref[3] = {eulers_vec[g][0],eulers_vec[g][1],eulers_vec[g][2]};
             double quaternion_ref[4] = {quats_vec[g][0],quats_vec[g][1],quats_vec[g][2]};
             dgr.caori = ca_check_disjunctness_core(quaternion_ref, true, bunge_ref[0],bunge_ref[1],bunge_ref[2]);
@@ -362,26 +362,21 @@ void caHdl::DAMASKtoCA( void )
         // get the Grain_Ids
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
         grain_ID = HDF5_read_dataset_int_rank_4( group_ID, "Grain_Ids");
-        printf("Grain ID values: %d \n",grain_ID[118848]); 
-        printf("Grain ID values: %d \n",grain_ID[118848]);
-        printf("Grain ID values: %d \n",grain_ID[118848]);
-        printf("Grain ID values: %d \n",grain_ID[118848]);
+        printf("Grain ID values: %d \n",grain_ID[487360]); 
+        printf("Grain ID values: %d \n",grain_ID[487360]);
+        std::cout << grain_ID.size() << std::endl;
 
         // go into a particular region of CA based on the partitioning
         // copying relevant code from ebsd2polycrystal
 	//set explicitly initial state of every cell in every region
 	//##MK::mind dimensions of global CA coordinates whose organization with +x lines along +y stacked slabs along +z is the same as expData, i.e. +x lines then +y lines downwards
-	uint32_t column_block_id = 0;
         int r, index;
-	double height = 0.0;
-	uint32_t px = 0;
 	uint32_t rxmi, rxmx, rymi, rymx, rzmi, rzmx, extentx, extenty;
 	//no domain partitioning into regions along x, but along y and z
 	uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
 	uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
 	uint32_t ry, rz;
 	uint32_t ebsdgid, seedid;
-	uint32_t totalexpgrains = rho_vec.size() - 1;
 
 	for ( uint32_t z = 0; z < myCAGeometry.nboxedge_nd; z++ ) {
 		//in which xy slab of regions is this particular CA layer xy, z included?
@@ -420,17 +415,24 @@ void caHdl::DAMASKtoCA( void )
  
 
 				//seedid = (ebsdgid - 1) + (column_block_id * totalexpgrains); //MK::-1 substracting on ebsdgid necessary because expGrains.gid start at 1 but seedid are positions on linear array!
+                                //if (index > 491510) {
+                                //std::cout << "index overshooting check" << index << std::endl; 
+                                //std::cout << "check offsets" << x+yzoffset << std::endl; 
+                                //}
 
 				//make the CA cell to represent a voxel of a particular seeded deformed grain
 				thecells[x+yzoffset] = grain_ID[index];
-                                if (index == 118848) {
-                                std::cout << "the index " << index << std::endl;
-                                std::cout << "the x " << x << std::endl;
-                                std::cout << "the y " << y << std::endl;
-                                std::cout << "the z " << z << std::endl;
-                                std::cout << "the data in region 0 " << thecells[x + yzoffset] << std::endl;
-                                std::cout << "the offset value is" << x + yzoffset << std::endl;
-                                }
+                                //if (index > 491510) {
+                                //std::cout << "data mapped" << index << std::endl; 
+                                //}
+                                //if (index == 491519) {
+                                //std::cout << "the index " << index << std::endl;
+                                //std::cout << "the x " << x << std::endl;
+                                //std::cout << "the y " << y << std::endl;
+                                //std::cout << "the z " << z << std::endl;
+                                //std::cout << "the data in region 1 " << thecells[x + yzoffset] << std::endl;
+                                //std::cout << "the offset value is" << x + yzoffset << std::endl;
+                                //}
 				//translate next pixel to CA volume
 				//px++;
 			} //xline completed
