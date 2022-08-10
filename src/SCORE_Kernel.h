@@ -886,6 +886,8 @@ public:
 	bool init_ebsdmap_read( const char* ebsdfname );
 		bool init_parameter_defgpool_exp( void );
 		bool init_parameter_rxgpool_exp( void );
+        bool init_parameter_defgpool_damask( void );
+        bool init_parameter_rxgpool_damask( void );
 	void report_successful_setup( void );
 	void report_datastructures( void );
 	void compare_two_ang_files( const char* inputang, const char* snpang );
@@ -984,6 +986,7 @@ public:
 	bool ensembleSuccess;
 	bool postProcessing;
 	bool experimentInput;
+	bool damaskInput;
 
 	struct aabb renderwindow;
 	int ensembleprngseed;

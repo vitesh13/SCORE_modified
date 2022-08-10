@@ -309,7 +309,6 @@ bool ensembleHdl::init_parameter_runtime( void ) {
 	this->ebsdstepsize = geTReal("ReadEBSDStepsize", runtimecontrol );
 	if ( ebsdstepsize <= DEFAULT_EBSDSTEPSIZE_MINIMUM ) { status = false; cout << "ERROR::Invalid argument in ReadEBSDStepsize." << endl; }
 
-
 	delete runtimecontrol;
 
 	return status;
@@ -457,6 +456,10 @@ bool ensembleHdl::init_parameter_ensemble( void ) {
 	if ( val == 4 ) defmsmethod = SEMEBSD_2D3D_COLUMNSINGLE;
 	if ( val == 5 ) defmsmethod = SEMEBSD_2D3D_COLUMNSTACK;
 	if ( val == 6 ) defmsmethod = SEMEBSD_2D3D_COLUMNSHIFT;
+
+        if (val == 3 ){
+            damaskInput = true;
+        } 
 
 	ensPhysData.defgmean_poisson = geTReal("MeanDefSizePoissonDiameter", ensembledef) * MICRON2METER;
 	if ( (ensPhysData.defgmean_poisson < mindiscretization && myRank == MASTER ) ) { status = false; cout << "ERROR::Invalid argument for the average size of deformed grain for method poisson." << endl; }
@@ -1262,6 +1265,16 @@ bool ensembleHdl::init_parameter_defgpool_exp( void )
 	return true;
 }
 
+bool ensembleHdl::init_parameter_defgpool_damask( void )
+{
+	//in Martin Diehl's project nuclei will be generated from the structure so no importing of a priori information on nucleation spectrum required
+	return true;
+}
+bool ensembleHdl::init_parameter_rxgpool_damask( void )
+{
+	//in Martin Diehl's project nuclei will be generated from the structure so no importing of a priori information on nucleation spectrum required
+	return true;
+}
 bool ensembleHdl::init_parameter_rxgpool_exp( void )
 {
 	//in Martin Diehl's project nuclei will be generated from the structure so no importing of a priori information on nucleation spectrum required
@@ -1593,6 +1606,10 @@ bool ensembleHdl::init_parameter( void )
 			good = init_parameter_defgpool();
 			cout << "Initialized defgpool..." << "\n";
 		}
+                else if (damaskInput == true){
+                    good = init_parameter_defgpool_damask();
+	            cout << "Initialized defgpooldamask..." << "\n";
+                }
 		else {
 			good = init_parameter_defgpool_exp();
 			cout << "Initialized defgpoolexp..." << "\n";
@@ -1603,6 +1620,10 @@ bool ensembleHdl::init_parameter( void )
 			good = init_parameter_rxgpool();
 			cout << "Initialized rxgpool..." << "\n";
 		}
+                else if (damaskInput == true){
+                    good = init_parameter_rxgpool_damask();
+	            cout << "Initialized defgpooldamask..." << "\n";
+                }
 		else {
 			good = init_parameter_rxgpool_exp();
 			cout << "Initialized rxgpoolexp..." << "\n";
