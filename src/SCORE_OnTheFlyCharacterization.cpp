@@ -616,7 +616,7 @@ void caHdl::log_OUTPUT_Diehl()
 		if ( z00_logcnt < rendering_atthisX.size() ) {
 
 			double z00_area_13px = ompcrit_probe_semebsd_core( 0.0, 13 ); //returns fractions not counts!
-			cout << "z00_area_13px\t\t" << z00_area_13px << endl;
+			//cout << "z00_area_13px\t\t" << z00_area_13px << endl;
 
 			if ( z00_area_13px >= rendering_atthisX[z00_logcnt] ) {
 				if ( outopt_localrenderhow == RENDERING_MS2D &&
@@ -639,7 +639,7 @@ void caHdl::log_OUTPUT_Diehl()
 		if ( z05_logcnt < rendering_atthisX.size() ) {
 
 			double z05_area_13px = ompcrit_probe_semebsd_core( 0.5, 13 );
-			cout << "z05_area_13px\t\t" << z05_area_13px << endl;
+			//cout << "z05_area_13px\t\t" << z05_area_13px << endl;
 
 			if ( z05_area_13px >= rendering_atthisX[z05_logcnt] ) {
 				if ( outopt_localrenderhow == RENDERING_MS2D &&
@@ -661,7 +661,7 @@ void caHdl::log_OUTPUT_Diehl()
 		if ( z10_logcnt < rendering_atthisX.size() ) {
 
 			double z10_area_13px = ompcrit_probe_semebsd_core( 1.0, 13 );
-			cout << "z10_area_13px\t\t" << z10_area_13px << endl;
+			//cout << "z10_area_13px\t\t" << z10_area_13px << endl;
 
 			if ( z10_area_13px >= rendering_atthisX[z10_logcnt] ) {
 				if ( outopt_localrenderhow == RENDERING_MS2D &&

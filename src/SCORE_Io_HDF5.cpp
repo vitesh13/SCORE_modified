@@ -1316,7 +1316,7 @@ std::vector<std::vector<double>> caHdl::HDF5_read_dataset_float_rank_2(hid_t loc
 
        for(i = 0; i < (int)dims[0]; i++){
           for( j = 0; j < (int)dims[1]; j++){
-              printf("%f \n", rdata[i][j]);
+              //printf("%f \n", rdata[i][j]);
               rdata_vec.at(i).at(j) = rdata[i][j];
           }
        }
@@ -1349,7 +1349,7 @@ std::vector<int> caHdl::HDF5_read_dataset_int_rank_4(hid_t loc_id, string datase
        for(i = 0; i < (int)dims[0]; i++){
           for( j = 0; j < (int)dims[1]; j++){
              for( k = 0; k < (int)dims[2]; k++){
-                   printf("%d \n", rdata[i][j][k][0]);
+                   //printf("%d \n", rdata[i][j][k][0]);
                    //rdata_1D[i*dims[0] + j] = rdata[i][j];
                    index = k + j*dims[2] + i*dims[2]*dims[1];
                    rdata_vec.at(index) = rdata[i][j][k][0] - 1;  //grain ID for CA starts from 0, DAMASK is flexible about this and doesnt care
