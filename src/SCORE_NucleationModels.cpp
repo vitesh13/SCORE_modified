@@ -397,7 +397,7 @@ void caHdl::solve_nucmodeling_csr_pickrandomly( void )
 
 void caHdl::solve_nucmodeling_csrdiehl( void )
 {
-	if ( myensHdl->experimentInput == false ) { cout << "ERROR::This nucleation model is design only for utilization with a SEM/EBSD mapping!" << endl; return; }
+	//if ( myensHdl->experimentInput == false ) { cout << "ERROR::This nucleation model is design only for utilization with a SEM/EBSD mapping!" << endl; return; }
 	//MK::random subwindow of a CSR point process (without enforcing fixed number of nuclei), orientation inheriting from parent grains + scatter
 	//MK::for simulation with myensHdl->experimentInput == true no recrystallized grains were defined a priori hence we have to
 	//MK::add nuclei into myrxgpool and add their orientation as well-
@@ -478,7 +478,7 @@ void caHdl::solve_nucmodeling_csrdiehl( void )
 			if ( myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMSO3 ) {
 				//##a random orientation from the SO3
 				localmath.rnd_quat_shoemake( qderived );
-				//cout << "RANDOMSO3 q0/q1/q2/q3 " << qderived[0] << ";" << qderived[1] << ";" << qderived[2] << ";" << qderived[3] << "\n";
+				cout << "RANDOMSO3 q0/q1/q2/q3 " << qderived[0] << ";" << qderived[1] << ";" << qderived[2] << ";" << qderived[3] << "\n";
 			}
 			else if (  myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMDEFORI ) {
 				//##the orientation from a random of the orientations of the deformed grains
