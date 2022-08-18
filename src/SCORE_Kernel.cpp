@@ -5347,6 +5347,7 @@ void caHdl::update_intrinsicmobilities( void )
 	QUICKASSERT ( mHAGB >= mLAGB );
 	QUICKASSERT ( mGS >= mHAGB );
 	QUICKASSERT ( mRHHAGB > 0.0 );
+
 }
 
 
@@ -6125,10 +6126,10 @@ void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA( void )
 
 void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK( void )
 {
-            //hdf5_read_DAMASK();
-            printf("Going inside HDf5 read block");
-            DAMASKtoCA();
-            printf("outside the HDF5 read block");
+        DAMASKtoCA();
+	for ( uint32_t mr = 0; mr < regions.size(); mr++ ) {
+		regions[mr]->reg_nmydefgpool = mydefgpool.size();
+	}
 
 }
 
@@ -6371,6 +6372,7 @@ void caHdl::solve_REPLACE_CA_STRUCTURE( void )
 	{
 		threadid = omp_get_thread_num(); //MK::hereby it is dictacted that each thread works on disjoint data!
 		nxyz = regions[threadid]->myGeom.nregvol_rdtdnd;
+                
 
 		//threads initialize local copy of the myrxgpool and the mydefgpoolcell counters
 		//such that during updating the cells in the growth simulation, the bookkeeping is race free and thread-locality maximized
@@ -6399,11 +6401,13 @@ void caHdl::solve_REPLACE_CA_STRUCTURE( void )
 		uint32_t cadefgid;
 		uint32_t ocategory;
 		scaler = (1.0 / SCALING_DEFAULT_DISDENS);
+		//scaler = (1.0 / 1.0E13);
 		for ( c = 0; c < nxyz; c++ ) {
 			cadefgid = regions[threadid]->mycellgrid[c];
 
 			regions[threadid]->reg_mydfgp_counts[cadefgid] += 1;
 
+                        //std::cout << "index & Dislocation density after replacement \t" << c << ";\t" << mydefgpool[cadefgid].rho0 * scaler << std::endl;
 			reg_storedenergy = reg_storedenergy + (mydefgpool[cadefgid].rho0 * scaler);
 		}
 
@@ -6551,10 +6555,10 @@ void caHdl::solve_RXGROWTH( void )
 					ompcrit_write_zsection_looping_ipfz( 0.0, COLORIZE_RX_RHOGREYSCALE_DEFORMED );
 				}
 				else
-					cout << "ERROR::2D output in RAW format supports currently only IPFZ coloring!" << endl;
+                                    cout << "ERROR::2D output in RAW format supports currently only IPFZ coloring!" << endl;
 			}
 			if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ) 
-				cout << "ERROR::2D output of complete 2D structure with HDF5 currently not supported!" << endl;
+                           cout << "ERROR::2D output of complete 2D structure with HDF5 currently not supported!" << endl;
 		}
 
 		//##MK:for study with Martin Diehl, MMM2018 Proceedings Paper
@@ -6599,7 +6603,7 @@ void caHdl::solve_RXGROWTH( void )
 				if ( regions[r]->reg_myMobilityWeightMax >= myMobilityWeightMax ) { myMobilityWeightMax = regions[r]->reg_myMobilityWeightMax; }
 				nmynuclei = nmynuclei + regions[r]->reg_nmynuclei;
 			}
-			//cout << "Starting RX Growth with myMobilityWeightMax = " << myMobilityWeightMax << " and " << nmynuclei << " nuclei." << endl;
+			cout << "Starting RX Growth with myMobilityWeightMax = " << myMobilityWeightMax << " and " << nmynuclei << " nuclei." << endl;
 		}
 		//barrier necessary, as otherwise the threads would start iterating even though myMobilityWeightMax is not yet consistent because pragma omp master construct has no implicit barrier
 		#pragma omp barrier
