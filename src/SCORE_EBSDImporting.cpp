@@ -362,9 +362,6 @@ void caHdl::DAMASKtoCA( void )
         // get the Grain_Ids
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
         grain_ID = HDF5_read_dataset_int_rank_4( group_ID, "Grain_Ids");
-        printf("Grain ID values: %d \n",grain_ID[487360]); 
-        printf("Grain ID values: %d \n",grain_ID[487360]);
-        std::cout << grain_ID.size() << std::endl;
 
         // go into a particular region of CA based on the partitioning
         // copying relevant code from ebsd2polycrystal
@@ -376,7 +373,7 @@ void caHdl::DAMASKtoCA( void )
 	uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
 	uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
 	uint32_t ry, rz;
-	uint32_t ebsdgid, seedid;
+	uint32_t seedid;
 
 	for ( uint32_t z = 0; z < myCAGeometry.nboxedge_nd; z++ ) {
 		//in which xy slab of regions is this particular CA layer xy, z included?
