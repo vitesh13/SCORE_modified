@@ -6534,6 +6534,10 @@ void caHdl::solve_RXGROWTH( void )
 	//get initial delta time for the numerical integration scheme
 	dt = get_dtmax_minimum();
 
+        // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
+        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_output.hdf5";
+        HDF5_create_CA_output( fname, true );
+
 	//mechanism to enable the writing of HDF5 files (though sequentially) from within a threaded region
 	omp_init_lock(&(this->h5lock)); //only the calling thread who sets a lock is allowed to unlock it again, so outside a parallel region locker is the master thread
 
@@ -6557,9 +6561,10 @@ void caHdl::solve_RXGROWTH( void )
 				else
                                     cout << "ERROR::2D output in RAW format supports currently only IPFZ coloring!" << endl;
 			}
-			if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ) 
+			if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ){
                            cout << "ERROR::2D output of complete 2D structure with HDF5 currently not supported!" << endl;
-		}
+		        }
+                }
 
 		//##MK:for study with Martin Diehl, MMM2018 Proceedings Paper
 		//switched off initial ang file
@@ -6692,6 +6697,7 @@ void caHdl::solve_RXGROWTH( void )
 
 					//log_OUTPUT();
 					log_OUTPUT_Diehl();
+                                        log_grain_IDs();
 
 					log_PERCOLATION();
 

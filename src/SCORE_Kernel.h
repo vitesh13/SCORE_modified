@@ -1151,6 +1151,7 @@ public:
 	void log_OUTPUT_Diehl();
 	void binarize_partiallyrxed_microstructure( vector<bool>* out );
 	void log_PERCOLATION( void );
+        void log_grain_IDs( void );
 
 	//post-processing solitary unit averaging
 	double get_interpCellCount( uint32_t localid, double when );
@@ -1198,6 +1199,7 @@ public:
 	void hdf5_write_xmffile_3dcorectmesh( string fname, string hfname, string gname );
 
         bool hdf5_read_DAMASK();
+        void HDF5_create_CA_output( string fname, bool mode);
 
         // modular HDF5 functions
         hid_t HDF5_openFile( string fname );        

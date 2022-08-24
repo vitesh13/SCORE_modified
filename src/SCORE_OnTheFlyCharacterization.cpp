@@ -827,5 +827,70 @@ void caHdl::log_PERCOLATION( void )
 	this->myhk.push_back( foo );
 }
 
+void caHdl::log_grain_IDs( void ){
+     // write the grain IDs to a hdf5 file
+     // First need to get the grain IDs from different regions
+     // Following the code from EBSD Importing
+        int r, index;
+	uint32_t rxmi, rxmx, rymi, rymx, rzmi, rzmx, extentx, extenty;
+	//no domain partitioning into regions along x, but along y and z
+	uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
+	uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
+	uint32_t ry, rz;
+	uint32_t seedid;
+        std::vector<int> grain_ID(myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td*myCAGeometry.nboxedge_nd);
+
+	for ( uint32_t z = 0; z < myCAGeometry.nboxedge_nd; z++ ) {
+		//in which xy slab of regions is this particular CA layer xy, z included?
+		for ( uint32_t rr = 0; rr < (1*npy*npz); rr = rr + npy ) { //mind that implicit region id 0 unfolds into ry=0,rz=0, if npy e.g. =3 then next zlayer in 3
+			if ( z >= this->regions[rr]->myGeom.nreg_ndmin && z <= this->regions[rr]->myGeom.nreg_ndmax ) { //works because linear cluster of regions along y has same dimensions
+				rz = rr / npy; break;
+			}
+		}
+
+		for ( uint32_t y = 0; y < myCAGeometry.nboxedge_td; y++ ) {
+			//in which slab yregion is the particular coordinate line y?
+			for ( uint32_t rr = 0+(rz*npy); rr < npy+(rz*npy); rr++ ) { //mind that caHdl->regions is organized as contiguous groups of regions along +y stacked in +z
+				if ( y >= this->regions[rr]->myGeom.nreg_tdmin && y <= this->regions[rr]->myGeom.nreg_tdmax ) {
+					ry = rr-(rz*npy); break;
+				}
+			}
+			//no region partitioning along x so now we know in which particular region to place the xline assignments
+			uint32_t here = ry+(rz*npy); //MK::mentality --- a pixel from the EBSD mapping becomes mapped on global CA volume that is partitioned into regions
+			uint32_t* thecells = this->regions[here]->mycellgrid;
+
+			//x,y,z are SU global coordinates, we have to translate into local coordinates...
+			rxmi = this->regions[here]->myGeom.nreg_rdmin;
+			rxmx = this->regions[here]->myGeom.nreg_rdmax;
+			rymi = this->regions[here]->myGeom.nreg_tdmin;
+			rymx = this->regions[here]->myGeom.nreg_tdmax; //local region cell coordinate inclusive limits
+			rzmi = this->regions[here]->myGeom.nreg_ndmin;
+			rzmx = this->regions[here]->myGeom.nreg_ndmax;
+			extentx = rxmx - rxmi + 1;
+			QUICKASSERT( extentx == myCAGeometry.nboxedge_rd );
+			extenty = rymx - rymi + 1;
+
+			uint32_t yzoffset = (y-rymi)*extentx + (z-rzmi)*extentx*extenty;
+			for ( uint32_t x = 0; x < extentx; x++ ) { //setup region partitioning more efficiently
+				//ebsdgid = myensHdl->expData[px].gid; //the grain at this position, expGrains is contiguous with IDs on [1,N]
+                                index = x + y*myCAGeometry.nboxedge_rd + z*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
+ 
+				//Fill the array with the data from CA
+				grain_ID[index] = thecells[x+yzoffset];
+			} //xline completed
+		} //ylines done
+
+	//} //all zlayers were build
+
+
+}
+        std::cout << "Going to reopen the HDF5 file --------- \n" << std::endl;
+        // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
+        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_output.hdf5";
+        HDF5_create_CA_output( fname, true );
+
+}
+
+
 
 #endif
