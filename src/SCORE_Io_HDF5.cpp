@@ -1390,6 +1390,19 @@ int* caHdl::HDF5_read_attribute_int(hid_t attr_id){
        return int_array;
 }
 
+void caHdl::HDF5_create_CA_output( string fname, bool append ){
+     hid_t file;
+     
+     if (!append){
+     file = H5Fcreate( fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);   
+     }
+     if (append){
+     file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);   
+     }
+     
+     H5Fclose( file );
+}
+
 	/*
 	memca.localtime = mycaHdl->t;
 	memca.localX = mycaHdl->X;
