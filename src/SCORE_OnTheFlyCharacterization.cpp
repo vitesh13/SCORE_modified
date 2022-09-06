@@ -342,6 +342,9 @@ void caHdl::log_rxareaprofile( uint32_t threshold )
 
 			//add contribution from active cells
 			uint32_t ncandidates = this->cellStatii.at(r)->size();
+                        //std::cout << "Logging function cell statii exists" << this->cellStatii.size() << "\n" << std::endl;
+                        //std::cout << "What is at cell statii" << this->cellStatii.at(0) << "\n" << std::endl;
+                        //std::cout << "Can we find size of cell statii" << this->cellStatii.at(0)->size() << "\n" << std::endl;
 			vector<cellstatus>* candidates = this->cellStatii.at(r);
 			for ( uint32_t cand = 0; cand < ncandidates; cand++ ) {
 				//in which z layer is the infected pixel?
@@ -598,6 +601,7 @@ void caHdl::log_OUTPUT_Diehl()
 	//##MK::ideally time-resolved growth data of individual grains is spread on the threads to reduce overhead in get_interp_cellCount, not now
 	if ( Xcells >= output_atthisX[loginfo_grainevo_cnt] && loginfo_grainevo_cnt < output_atthisX.size() ) {
 		//##MK::if no solitary unit analyses are conducted this storing might not even be necessary, disable to save memory!
+                std::cout << "Is there output of rxarea profile ----??????" << std::endl;
 		log_grainevo();
 		log_rxareaprofile( 13 ); //accounts for all
 	}
@@ -827,67 +831,216 @@ void caHdl::log_PERCOLATION( void )
 	this->myhk.push_back( foo );
 }
 
-void caHdl::log_grain_IDs( void ){
+//void caHdl::log_grain_IDs( double t ){
+//     // write the grain IDs to a hdf5 file
+//     // First need to get the grain IDs from different regions
+//     // Following the code from EBSD Importing
+//        int r, index;
+//	uint32_t rxmi, rxmx, rymi, rymx, rzmi, rzmx, extentx, extenty;
+//	//no domain partitioning into regions along x, but along y and z
+//	uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
+//	uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
+//	uint32_t ry, rz;
+//	uint32_t seedid;
+//        std::vector<int> grain_ID(myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td*myCAGeometry.nboxedge_nd);
+//
+//	for ( uint32_t z = 0; z < myCAGeometry.nboxedge_nd; z++ ) {
+//		//in which xy slab of regions is this particular CA layer xy, z included?
+//		for ( uint32_t rr = 0; rr < (1*npy*npz); rr = rr + npy ) { //mind that implicit region id 0 unfolds into ry=0,rz=0, if npy e.g. =3 then next zlayer in 3
+//			if ( z >= this->regions[rr]->myGeom.nreg_ndmin && z <= this->regions[rr]->myGeom.nreg_ndmax ) { //works because linear cluster of regions along y has same dimensions
+//				rz = rr / npy; break;
+//			}
+//		}
+//
+//		for ( uint32_t y = 0; y < myCAGeometry.nboxedge_td; y++ ) {
+//			//in which slab yregion is the particular coordinate line y?
+//			for ( uint32_t rr = 0+(rz*npy); rr < npy+(rz*npy); rr++ ) { //mind that caHdl->regions is organized as contiguous groups of regions along +y stacked in +z
+//				if ( y >= this->regions[rr]->myGeom.nreg_tdmin && y <= this->regions[rr]->myGeom.nreg_tdmax ) {
+//					ry = rr-(rz*npy); break;
+//				}
+//			}
+//			//no region partitioning along x so now we know in which particular region to place the xline assignments
+//			uint32_t here = ry+(rz*npy); //MK::mentality --- a pixel from the EBSD mapping becomes mapped on global CA volume that is partitioned into regions
+//			uint32_t* thecells = this->regions[here]->mycellgrid;
+//
+//			//x,y,z are SU global coordinates, we have to translate into local coordinates...
+//			rxmi = this->regions[here]->myGeom.nreg_rdmin;
+//			rxmx = this->regions[here]->myGeom.nreg_rdmax;
+//			rymi = this->regions[here]->myGeom.nreg_tdmin;
+//			rymx = this->regions[here]->myGeom.nreg_tdmax; //local region cell coordinate inclusive limits
+//			rzmi = this->regions[here]->myGeom.nreg_ndmin;
+//			rzmx = this->regions[here]->myGeom.nreg_ndmax;
+//			extentx = rxmx - rxmi + 1;
+//			QUICKASSERT( extentx == myCAGeometry.nboxedge_rd );
+//			extenty = rymx - rymi + 1;
+//
+//                        uint32_t ncandidates;
+//                        cellP front = NULL;
+//                        ncandidates = this->regions[here]->nextSlotNeverActiveRXFrontInside;
+//                        //std::cout << "Slot never active rx front inside" << ncandidates << std::endl;
+//                        front = this->regions[here]->myRXFrontInside;
+//                        for (uint32_t c = 0; c < ncandidates; c++){
+//                            //if (front[c].activity == ACTIVE){
+//                            if (front[c].activity == ACTIVE && c == 1038){
+//                            //if (c == 1){
+//                               //if (here == 3){
+//                               //std::cout << "region is" << here << std::endl;
+//                               std::cout << "Deformation grain id --------------------------" << front[c].mydefgid << std::endl;
+//                               std::cout << "Recrystallized grain id --------------------------" << front[c].myrxgid << std::endl;
+//                               std::cout << "Candidate is --------------------------" << c << std::endl;
+//                               //int ind;
+//			       //ind = front[c].ix + (front[c].iy * myCAGeometry.nboxedge_rd) + (front[c].iz * (myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td)); //ix, ... are short but positive! so short to uint32_t no problem
+//                               //std::cout << "Index is" << ind << std::endl;
+//                               //std::cout << "Front x is" << front[c].ix << std::endl;
+//                               //std::cout << "Front y is" << front[c].iy << std::endl;
+//                               //std::cout << "Front z is" << front[c].iz << std::endl;
+//                               //}
+//                            }
+//                        }
+//
+//                        //std::cout << "check if cellStatii exists" << this->cellStatii.size() << std::endl;
+//                        //std::cout << "see inside cellStatii" << this->cellStatii.at(0) << "\n" << std::endl;
+//                        //std::cout << "Can we find size of cell statii" << this->cellStatii.at(0)->size() << std::endl;
+//                        //uint32_t ncandidates = this->cellStatii.at(0)->size(); 
+//                        //std::cout << "Hellooooooooooooooooo candidates" << std::endl;
+//                        //for (uint32_t cand = 0; cand < ncandidates; cand ++){
+//                        //      std::cout << "Going over each candidate here" << cand << "\n" << std::endl;
+//                        //}
+//
+//			uint32_t yzoffset = (y-rymi)*extentx + (z-rzmi)*extentx*extenty;
+//			for ( uint32_t x = 0; x < extentx; x++ ) { //setup region partitioning more efficiently
+//				//ebsdgid = myensHdl->expData[px].gid; //the grain at this position, expGrains is contiguous with IDs on [1,N]
+//                                index = x + y*myCAGeometry.nboxedge_rd + z*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
+// 
+//                                grain_ID[index] = thecells[x+yzoffset];
+//                                //if (thecells[x+yzoffset] == CURRENTLY_INFECTED){
+//                                //   grain_ID[index] = 0;
+//                                //   continue;
+//                                //}
+//                                //if (thecells[x+yzoffset] <= CA_GRAINIDS_MAXIMUM){
+//                                //   grain_ID[index] = thecells[x+yzoffset] + 1;
+//                                //   continue;
+//                                //}
+//				//Fill the array with the data from CA
+//				//grain_ID[index] = thecells[x+yzoffset];
+//                                //if (index==327606 & t == 0.0){
+//                                //std::cout << "x value is " << x << std::endl;
+//                                //std::cout << "y value is " << y << std::endl;
+//                                //std::cout << "z value is " << z << std::endl;
+//                                //std::cout << "The actual theCells value" << thecells[x+yzoffset] << std::endl;
+//                                //std::cout << "maybe the grainID gets converted" << grain_ID[index] << std::endl;
+//                                //}
+//			} //xline completed
+//		} //ylines done
+//
+//	//} //all zlayers were build
+//
+//
+//}
+//        //std::cout << "Going to reopen the HDF5 file --------- \n" << std::endl;
+//        //std::cout << "The index 6 grainID is: " << grain_ID[6] << std::endl;
+//        //std::cout << "If this is infected then should be zero ------------" << grain_ID[327606] << std::endl;
+//
+//        //if (grain_ID[6] == CELL_IS_A_PARTICLE){
+//        //std::cout << "The cell is a particle " << grain_ID[6] << std::endl;
+//        //}
+//        //if (grain_ID[6] == CURRENTLY_INFECTED){
+//        //std::cout << "This is infected and thus RXed" << grain_ID[6] << std::endl;
+//        //}
+//        //if (grain_ID[6] <= CA_GRAINIDS_MAXIMUM){
+//        //   if (grain_ID[6] > this->mydefgpool.size()){
+//        //      std::cout << "This is Rxed dont know how" << std::endl;
+//        //   }
+//        //}
+//
+//        // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
+//        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_output.hdf5";
+//        HDF5_write_CA_output_int( fname, t, grain_ID );
+//
+//}
+
+void caHdl::log_grain_IDs( double t ){
      // write the grain IDs to a hdf5 file
      // First need to get the grain IDs from different regions
      // Following the code from EBSD Importing
-        int r, index;
-	uint32_t rxmi, rxmx, rymi, rymx, rzmi, rzmx, extentx, extenty;
+        int r, index, ixyz;
 	//no domain partitioning into regions along x, but along y and z
 	uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
 	uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
-	uint32_t ry, rz;
-	uint32_t seedid;
         std::vector<int> grain_ID(myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td*myCAGeometry.nboxedge_nd);
 
-	for ( uint32_t z = 0; z < myCAGeometry.nboxedge_nd; z++ ) {
-		//in which xy slab of regions is this particular CA layer xy, z included?
-		for ( uint32_t rr = 0; rr < (1*npy*npz); rr = rr + npy ) { //mind that implicit region id 0 unfolds into ry=0,rz=0, if npy e.g. =3 then next zlayer in 3
-			if ( z >= this->regions[rr]->myGeom.nreg_ndmin && z <= this->regions[rr]->myGeom.nreg_ndmax ) { //works because linear cluster of regions along y has same dimensions
-				rz = rr / npy; break;
-			}
-		}
+        uint32_t ndg = this->mydefgpool.size();
+        uint32_t nthreads = this->regions.size();
+        uint32_t ncandidates = 0;
+        cellP front = NULL;
 
-		for ( uint32_t y = 0; y < myCAGeometry.nboxedge_td; y++ ) {
-			//in which slab yregion is the particular coordinate line y?
-			for ( uint32_t rr = 0+(rz*npy); rr < npy+(rz*npy); rr++ ) { //mind that caHdl->regions is organized as contiguous groups of regions along +y stacked in +z
-				if ( y >= this->regions[rr]->myGeom.nreg_tdmin && y <= this->regions[rr]->myGeom.nreg_tdmax ) {
-					ry = rr-(rz*npy); break;
-				}
-			}
-			//no region partitioning along x so now we know in which particular region to place the xline assignments
-			uint32_t here = ry+(rz*npy); //MK::mentality --- a pixel from the EBSD mapping becomes mapped on global CA volume that is partitioned into regions
-			uint32_t* thecells = this->regions[here]->mycellgrid;
+        std::cout << "The number of deformed grains " << ndg << "\n" << std::endl;
+        std::cout << "Total number of threads" << nthreads << "\n" << std::endl;
 
-			//x,y,z are SU global coordinates, we have to translate into local coordinates...
-			rxmi = this->regions[here]->myGeom.nreg_rdmin;
-			rxmx = this->regions[here]->myGeom.nreg_rdmax;
-			rymi = this->regions[here]->myGeom.nreg_tdmin;
-			rymx = this->regions[here]->myGeom.nreg_tdmax; //local region cell coordinate inclusive limits
-			rzmi = this->regions[here]->myGeom.nreg_ndmin;
-			rzmx = this->regions[here]->myGeom.nreg_ndmax;
-			extentx = rxmx - rxmi + 1;
-			QUICKASSERT( extentx == myCAGeometry.nboxedge_rd );
-			extenty = rymx - rymi + 1;
+	for ( uint32_t r = 0; r < nthreads; r++ ) {
+	    uint32_t rx = this->regions[r]->myGeom.nreg_rd; //local coordinates [0, ri) so ri exclusive
+	    uint32_t ry = this->regions[r]->myGeom.nreg_td;
+	    uint32_t rz = this->regions[r]->myGeom.nreg_nd;
+            uint32_t rymin = this->regions[r]->myGeom.nreg_tdmin;
+            uint32_t rzmin = this->regions[r]->myGeom.nreg_ndmin;
+	    uint32_t rxy = rx*ry;
+            uint32_t yzoffset;
+	    uint32_t c = 0;
 
-			uint32_t yzoffset = (y-rymi)*extentx + (z-rzmi)*extentx*extenty;
-			for ( uint32_t x = 0; x < extentx; x++ ) { //setup region partitioning more efficiently
-				//ebsdgid = myensHdl->expData[px].gid; //the grain at this position, expGrains is contiguous with IDs on [1,N]
-                                index = x + y*myCAGeometry.nboxedge_rd + z*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
- 
-				//Fill the array with the data from CA
-				grain_ID[index] = thecells[x+yzoffset];
-			} //xline completed
-		} //ylines done
+            std::cout << "This is region: " << r << "\n" << std::endl;
+            std::cout << "x lims" << this->regions[r]->myGeom.nreg_rdmin << "\n" << std::endl;
+            std::cout << "y lims" << this->regions[r]->myGeom.nreg_tdmin << "\n" << std::endl;
+            std::cout << "z lims" << this->regions[r]->myGeom.nreg_ndmin << "\n" << std::endl;
+            std::cout << "CA geometry dimensions " << myCAGeometry.nboxedge_rd << std::endl; 
+	    uint32_t* thegrid = this->regions[r]->mycellgrid;
+   
+            for ( uint32_t z = 0; z < rz; z++){
+                for (uint32_t y = 0; y < ry; y++){
+                    yzoffset = y*rx + z*ry*rx; 
+                    for (uint32_t x = 0; x < rx; x++){
+                       index = x + (y + rymin)*myCAGeometry.nboxedge_rd + (z + rzmin)*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
+                       c = thegrid[x + yzoffset];
+                       if (c <= CA_GRAINIDS_MAXIMUM){ //not infected
+                          grain_ID[index] = c;
+                       }
+                    
+                       } 
 
-	//} //all zlayers were build
+                }
 
-
-}
-        std::cout << "Going to reopen the HDF5 file --------- \n" << std::endl;
+             } // z layer completed
+             
+             // assuming that myRXFrontInside & myRXFrontBorder have all the infected cells
+             // analyze cells inside
+	     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+	     front = this->regions[r]->myRXFrontInside;
+	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
+	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
+                    ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
+                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){
+                       grain_ID[ixyz] = front[c].mydefgid;
+                    }
+                    grain_ID[ixyz] = ndg + front[c].myrxgid;
+                 }
+             }
+   
+             // analyse cells border
+	     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+	     front = this->regions[r]->myRXFrontBorder;
+	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
+	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
+                    ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
+                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){
+                       grain_ID[ixyz] = front[c].mydefgid;
+                    }
+                    grain_ID[ixyz] = ndg + front[c].myrxgid;
+                 }
+             }
+             
+        } // loop for threads
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_output.hdf5";
-        HDF5_create_CA_output( fname, true );
+        HDF5_write_CA_output_int( fname, t, grain_ID );
 
 }
 
