@@ -329,7 +329,7 @@ void caHdl::DAMASKtoCA( void )
         // the first element in the grain average arrays is neglected as Dream3D adds an extra row/element at index 0
         for(size_t g = 1; g < rho_vec.size(); g++){
             double bunge_ref[3] = {eulers_vec[g][0],eulers_vec[g][1],eulers_vec[g][2]};
-            double quaternion_ref[4] = {quats_vec[g][0],quats_vec[g][1],quats_vec[g][2]};
+            double quaternion_ref[4] = {quats_vec[g][0],quats_vec[g][1],quats_vec[g][2],quats_vec[g][3]};
             dgr.caori = ca_check_disjunctness_core(quaternion_ref, true, bunge_ref[0],bunge_ref[1],bunge_ref[2]);
             dgr.rho0  = rho_vec[g][0];
             dgr.rho   = rho_vec[g][0];
