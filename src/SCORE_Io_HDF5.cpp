@@ -1456,6 +1456,7 @@ void caHdl::HDF5_write_CA_output_double_rank_2( string fname, double t, std::vec
      hsize_t dims[2] = {data.size(),data[0].size()};
      herr_t status;
      int i,j,index;
+     std::vector<double> cont_data(data.size()*data[0].size());
 
      if (t == 0.0){
      std::cout << "The orientations HDF5 at t = 0" << data.at(491519).at(0) << std::endl;
@@ -1473,37 +1474,20 @@ void caHdl::HDF5_write_CA_output_double_rank_2( string fname, double t, std::vec
 
      space_id = H5Screate_simple( 2, dims, NULL );
     
-     //double* wdata = &data[0][0];
-     double wdata1[dims[0]*dims[1]];//= &data[0][0];
-     //double wdata1[dims[0]][dims[1]] = {0.0};//= &data[0][0];
-     //double wdata1[3][4];//= &data[0][0];
-     
-     //std::cout << "Does this element exist in the vector" << data.at(491519).at(0) << std::endl;
-     //std::cout << "Does this element exist in the vector" << data.at(491519).at(1) << std::endl;
-     //std::cout << "Does this element exist in the vector" << data.at(491519).at(2) << std::endl;
-     //std::cout << "Does this element exist in the vector" << data.at(491519).at(3) << std::endl;
-     //std::cout << "Does this element exist in the vector" << wdata1[0][0] << std::endl;
-     //std::cout << "Does this element exist in the vector" << wdata1[0][1] << std::endl;
-     //std::cout << "Does this element exist in the vector" << wdata1[0][2] << std::endl;
-     //std::cout << "Does this element exist in the vector" << wdata1[0][3] << std::endl;
-     //for(i = 0; i < 3; i++){
-     //    for( j = 0; j < 4; j++){
-     //       //wdata1[i][j] = data.at(i).at(j);
-     //       //wdata1[i][j] = 0.0;
-     //       std::cout << "Hello" << wdata1[i][j] << std::endl;
-     //    }
-     //}
-     for(i = 0; i < (int)dims[0]; i++){
-         for( j = 0; j < (int)dims[1]; j++){
-            //wdata1[i][j] = data.at(i).at(j);
-            //wdata1[i][j] = 0.0;
-            index = i + j*dims[1];
-            wdata1[index] = data.at(i).at(j);
+     // convert 2D data to 1D contiguous array
+     for (i = 0; i < dims[0]; i++){
+         for(j = 0; j < dims[1]; j++){
+             index = i*dims[1] + j;
+             cont_data[index] = data[i][j];
          }
      }
+     //double* wdata = &data[0][0];
+     double* wdata = &cont_data[0];
+     //double wdata1[dims[0]*dims[1]];//= &data[0][0];
+     
      
      dset_id = H5Dcreate( group_id, dset_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
-     status  = H5Dwrite( dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata1);
+     status  = H5Dwrite( dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata);
      
      H5Dclose( dset_id );
      H5Sclose( space_id );

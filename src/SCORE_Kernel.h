@@ -1151,7 +1151,9 @@ public:
 	void log_OUTPUT_Diehl();
 	void binarize_partiallyrxed_microstructure( vector<bool>* out );
 	void log_PERCOLATION( void );
-        void log_grain_IDs( void );
+        void log_grain_IDs( double t);
+        void log_grain_rho( double t);
+        void log_grain_ori( double t);
 
 	//post-processing solitary unit averaging
 	double get_interpCellCount( uint32_t localid, double when );
@@ -1199,7 +1201,10 @@ public:
 	void hdf5_write_xmffile_3dcorectmesh( string fname, string hfname, string gname );
 
         bool hdf5_read_DAMASK();
-        void HDF5_create_CA_output( string fname, bool mode);
+        void HDF5_create_CA_output( string fname );
+        void HDF5_write_CA_output_int( string fname, double t, std::vector<int> );
+        void HDF5_write_CA_output_double_rank_1( string fname, double t, std::vector<double> );
+        void HDF5_write_CA_output_double_rank_2( string fname, double t, std::vector<std::vector<double>> );
 
         // modular HDF5 functions
         hid_t HDF5_openFile( string fname );        
