@@ -1455,7 +1455,14 @@ void caHdl::HDF5_write_CA_output_double_rank_2( string fname, double t, std::vec
      string s = to_string(t);
      hsize_t dims[2] = {data.size(),data[0].size()};
      herr_t status;
-     int i,j;
+     int i,j,index;
+
+     if (t == 0.0){
+     std::cout << "The orientations HDF5 at t = 0" << data.at(491519).at(0) << std::endl;
+     std::cout << "The orientations HDF5 at t = 0" << data.at(491519).at(1) << std::endl;
+     std::cout << "The orientations HDF5 at t = 0" << data.at(491519).at(2) << std::endl;
+     std::cout << "The orientations HDF5 at t = 0" << data.at(491519).at(3) << std::endl;
+     }
 
      string dset_name = "O";
      string group_name = "Time_" + s;
@@ -1466,23 +1473,37 @@ void caHdl::HDF5_write_CA_output_double_rank_2( string fname, double t, std::vec
 
      space_id = H5Screate_simple( 2, dims, NULL );
     
-     double* wdata = &data[0][0];
-     double wdata1[dims[0]][dims[1]];//= &data[0][0];
+     //double* wdata = &data[0][0];
+     double wdata1[dims[0]*dims[1]];//= &data[0][0];
+     //double wdata1[dims[0]][dims[1]] = {0.0};//= &data[0][0];
+     //double wdata1[3][4];//= &data[0][0];
      
-     //std::cout << "The dimension 1 is " << dims[0] << std::endl;
-     //std::cout << "The dimension 2 is " << dims[1] << std::endl;
      //std::cout << "Does this element exist in the vector" << data.at(491519).at(0) << std::endl;
      //std::cout << "Does this element exist in the vector" << data.at(491519).at(1) << std::endl;
      //std::cout << "Does this element exist in the vector" << data.at(491519).at(2) << std::endl;
      //std::cout << "Does this element exist in the vector" << data.at(491519).at(3) << std::endl;
-     //for(i = 0; i < (int)dims[0]; i++){
-     //    for( j = 0; j < (int)dims[1]; j++){
-     //       wdata1[i][j] = data.at(i).at(j);
+     //std::cout << "Does this element exist in the vector" << wdata1[0][0] << std::endl;
+     //std::cout << "Does this element exist in the vector" << wdata1[0][1] << std::endl;
+     //std::cout << "Does this element exist in the vector" << wdata1[0][2] << std::endl;
+     //std::cout << "Does this element exist in the vector" << wdata1[0][3] << std::endl;
+     //for(i = 0; i < 3; i++){
+     //    for( j = 0; j < 4; j++){
+     //       //wdata1[i][j] = data.at(i).at(j);
+     //       //wdata1[i][j] = 0.0;
+     //       std::cout << "Hello" << wdata1[i][j] << std::endl;
      //    }
      //}
+     for(i = 0; i < (int)dims[0]; i++){
+         for( j = 0; j < (int)dims[1]; j++){
+            //wdata1[i][j] = data.at(i).at(j);
+            //wdata1[i][j] = 0.0;
+            index = i + j*dims[1];
+            wdata1[index] = data.at(i).at(j);
+         }
+     }
      
      dset_id = H5Dcreate( group_id, dset_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
-     status  = H5Dwrite( dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata);
+     status  = H5Dwrite( dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata1);
      
      H5Dclose( dset_id );
      H5Sclose( space_id );

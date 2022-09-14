@@ -974,9 +974,6 @@ void caHdl::log_grain_IDs( double t ){
         uint32_t ncandidates = 0;
         cellP front = NULL;
 
-        std::cout << "The number of deformed grains " << ndg << "\n" << std::endl;
-        std::cout << "Total number of threads" << nthreads << "\n" << std::endl;
-
 	for ( uint32_t r = 0; r < nthreads; r++ ) {
 	    uint32_t rx = this->regions[r]->myGeom.nreg_rd; //local coordinates [0, ri) so ri exclusive
 	    uint32_t ry = this->regions[r]->myGeom.nreg_td;
@@ -987,11 +984,11 @@ void caHdl::log_grain_IDs( double t ){
             uint32_t yzoffset;
 	    uint32_t c = 0;
 
-            std::cout << "This is region: " << r << "\n" << std::endl;
-            std::cout << "x lims" << this->regions[r]->myGeom.nreg_rdmin << "\n" << std::endl;
-            std::cout << "y lims" << this->regions[r]->myGeom.nreg_tdmin << "\n" << std::endl;
-            std::cout << "z lims" << this->regions[r]->myGeom.nreg_ndmin << "\n" << std::endl;
-            std::cout << "CA geometry dimensions " << myCAGeometry.nboxedge_rd << std::endl; 
+            //std::cout << "This is region: " << r << "\n" << std::endl;
+            //std::cout << "x lims" << this->regions[r]->myGeom.nreg_rdmin << "\n" << std::endl;
+            //std::cout << "y lims" << this->regions[r]->myGeom.nreg_tdmin << "\n" << std::endl;
+            //std::cout << "z lims" << this->regions[r]->myGeom.nreg_ndmin << "\n" << std::endl;
+            //std::cout << "CA geometry dimensions " << myCAGeometry.nboxedge_rd << std::endl; 
 	    uint32_t* thegrid = this->regions[r]->mycellgrid;
    
             for ( uint32_t z = 0; z < rz; z++){
@@ -1058,9 +1055,6 @@ void caHdl::log_grain_rho( double t ){
         uint32_t ncandidates = 0;
         cellP front = NULL;
 
-        std::cout << "The number of deformed grains " << ndg << "\n" << std::endl;
-        std::cout << "Total number of threads" << nthreads << "\n" << std::endl;
-
 	for ( uint32_t r = 0; r < nthreads; r++ ) {
 	    uint32_t rx = this->regions[r]->myGeom.nreg_rd; //local coordinates [0, ri) so ri exclusive
 	    uint32_t ry = this->regions[r]->myGeom.nreg_td;
@@ -1071,11 +1065,11 @@ void caHdl::log_grain_rho( double t ){
             uint32_t yzoffset;
 	    uint32_t c = 0;
 
-            std::cout << "This is region: " << r << "\n" << std::endl;
-            std::cout << "x lims" << this->regions[r]->myGeom.nreg_rdmin << "\n" << std::endl;
-            std::cout << "y lims" << this->regions[r]->myGeom.nreg_tdmin << "\n" << std::endl;
-            std::cout << "z lims" << this->regions[r]->myGeom.nreg_ndmin << "\n" << std::endl;
-            std::cout << "CA geometry dimensions " << myCAGeometry.nboxedge_rd << std::endl; 
+            //std::cout << "This is region: " << r << "\n" << std::endl;
+            //std::cout << "x lims" << this->regions[r]->myGeom.nreg_rdmin << "\n" << std::endl;
+            //std::cout << "y lims" << this->regions[r]->myGeom.nreg_tdmin << "\n" << std::endl;
+            //std::cout << "z lims" << this->regions[r]->myGeom.nreg_ndmin << "\n" << std::endl;
+            //std::cout << "CA geometry dimensions " << myCAGeometry.nboxedge_rd << std::endl; 
 	    uint32_t* thegrid = this->regions[r]->mycellgrid;
    
             for ( uint32_t z = 0; z < rz; z++){
@@ -1154,9 +1148,6 @@ void caHdl::log_grain_ori( double t ){
         uint32_t ncandidates = 0;
         cellP front = NULL;
 
-        std::cout << "The number of deformed grains " << ndg << "\n" << std::endl;
-        std::cout << "Total number of threads" << nthreads << "\n" << std::endl;
-
 	for ( uint32_t r = 0; r < nthreads; r++ ) {
 	    uint32_t rx = this->regions[r]->myGeom.nreg_rd; //local coordinates [0, ri) so ri exclusive
 	    uint32_t ry = this->regions[r]->myGeom.nreg_td;
@@ -1167,11 +1158,11 @@ void caHdl::log_grain_ori( double t ){
             uint32_t yzoffset;
 	    uint32_t c = 0;
 
-            std::cout << "This is region: " << r << "\n" << std::endl;
-            std::cout << "x lims" << this->regions[r]->myGeom.nreg_rdmin << "\n" << std::endl;
-            std::cout << "y lims" << this->regions[r]->myGeom.nreg_tdmin << "\n" << std::endl;
-            std::cout << "z lims" << this->regions[r]->myGeom.nreg_ndmin << "\n" << std::endl;
-            std::cout << "CA geometry dimensions " << myCAGeometry.nboxedge_rd << std::endl; 
+            //std::cout << "This is region: " << r << "\n" << std::endl;
+            //std::cout << "x lims" << this->regions[r]->myGeom.nreg_rdmin << "\n" << std::endl;
+            //std::cout << "y lims" << this->regions[r]->myGeom.nreg_tdmin << "\n" << std::endl;
+            //std::cout << "z lims" << this->regions[r]->myGeom.nreg_ndmin << "\n" << std::endl;
+            //std::cout << "CA geometry dimensions " << myCAGeometry.nboxedge_rd << std::endl; 
 	    uint32_t* thegrid = this->regions[r]->mycellgrid;
    
             for ( uint32_t z = 0; z < rz; z++){
@@ -1259,7 +1250,13 @@ void caHdl::log_grain_ori( double t ){
         
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_output.hdf5";
-        //HDF5_write_CA_output_double_rank_1( fname, t, rho );
+        if (t == 0.0){
+        std::cout << "The orientations at t = 0" << ori_quats.at(491519).at(0) << std::endl;
+        std::cout << "The orientations at t = 0" << ori_quats.at(491519).at(1) << std::endl;
+        std::cout << "The orientations at t = 0" << ori_quats.at(491519).at(2) << std::endl;
+        std::cout << "The orientations at t = 0" << ori_quats.at(491519).at(3) << std::endl;
+        }
+        HDF5_write_CA_output_double_rank_2( fname, t, ori_quats );
 
 }
 
