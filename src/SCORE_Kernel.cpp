@@ -6702,9 +6702,11 @@ void caHdl::solve_RXGROWTH( void )
 
 					//log_OUTPUT();
 					log_OUTPUT_Diehl();
-                                        log_grain_IDs(t);
-                                        log_grain_rho(t);
-                                        log_grain_ori(t);
+                                        if (step%100 == 0){
+                                            log_grain_IDs(t);
+                                            log_grain_rho(t);
+                                            log_grain_ori(t);
+                                        }
 
 					log_PERCOLATION();
 
