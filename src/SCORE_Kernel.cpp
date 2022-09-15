@@ -5331,6 +5331,7 @@ void caHdl::update_atomisticproperties( void )
 
 	//cache Gbhalfsq
 	Gbhalfsq = 0.5 * myPhysData.G * SQR( myPhysData.b );
+        
 }
 
 
@@ -6536,7 +6537,11 @@ void caHdl::solve_RXGROWTH( void )
 
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_output.hdf5";
-        HDF5_create_CA_output( fname, true );
+        HDF5_create_CA_output( fname );
+        log_grain_IDs(t);
+        log_grain_rho(t);
+        log_grain_ori(t);
+
 
 	//mechanism to enable the writing of HDF5 files (though sequentially) from within a threaded region
 	omp_init_lock(&(this->h5lock)); //only the calling thread who sets a lock is allowed to unlock it again, so outside a parallel region locker is the master thread
@@ -6697,7 +6702,9 @@ void caHdl::solve_RXGROWTH( void )
 
 					//log_OUTPUT();
 					log_OUTPUT_Diehl();
-                                        log_grain_IDs();
+                                        log_grain_IDs(t);
+                                        log_grain_rho(t);
+                                        log_grain_ori(t);
 
 					log_PERCOLATION();
 
