@@ -273,6 +273,8 @@ bool ensembleHdl::init_parameter_runtime( void ) {
 	NTSTEPSMAX = geTInt("NMAX", runtimecontrol );
 	if ( (NTSTEPSMAX < 1 || NTSTEPSMAX > DEFAULT_NMAX || NTSTEPSMAX >= INTEGER_RANGE_MAX) && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument for NMAX." << endl; }
 
+        output_freq = geTInt("OutputFrequency", runtimecontrol);
+
 	percolation = PERCOLATION_ANALYZE_NO;
 	if ( geTInt("PERCOLATIONANALYSIS", runtimecontrol) == 1 ) percolation = PERCOLATION_ANALYZE_YES_NOSZDISTR;
 	if ( geTInt("PERCOLATIONANALYSIS", runtimecontrol) == 2 ) percolation = PERCOLATION_ANALYZE_YES_SZDISTR;
@@ -5738,6 +5740,7 @@ void caHdl::init_parameter( void )
 	XMAX = myens->XMAX;
 	TMAX = myens->TMAX;
 	NTSTEPSMAX = myens->NTSTEPSMAX;
+        output_freq = myens->output_freq;
 
 	myCAGeometry.cellsize = myens->ensCAGeometry.cellsize; //MK::within my thesis all SUs of the same geometry
 	this->_cellsize = (1.0 / myCAGeometry.cellsize);
@@ -6702,7 +6705,7 @@ void caHdl::solve_RXGROWTH( void )
 
 					//log_OUTPUT();
 					log_OUTPUT_Diehl();
-                                        if (step%100 == 0){
+                                        if (step%output_freq == 0){
                                             log_grain_IDs(t);
                                             log_grain_rho(t);
                                             log_grain_ori(t);

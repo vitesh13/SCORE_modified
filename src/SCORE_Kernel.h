@@ -961,6 +961,7 @@ public:
 	double TMAX;
 	uint32_t NTSTEPSMAX;
 	uint32_t simid;
+        uint32_t output_freq;
 
 	int myRank;														//my MPI ID in the MPI_COMM_WORLD
 	int nRanks;														//total number of MPI processes that work in the world
@@ -1309,6 +1310,7 @@ public:
 	uint32_t Sv;										//number of cells in the front
 	uint32_t step;
 	uint32_t NTSTEPSMAX;
+        uint32_t output_freq;
 
 	double myMobilityWeightMax;					//maximum mobility weight detected in this automaton, if for instance locally there is no GS or only a factor of the maximum value, the local adaptive timestepping can profit from this information
 	double myrhomax;							//maximum dislocation density in the system
