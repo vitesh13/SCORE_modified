@@ -289,7 +289,6 @@ void caHdl::DAMASKtoCA( void )
         hid_t group_ID;
         herr_t ret; 
         std::vector<int> dim_vec;
-        std::vector<std::vector<double>> quats_vec;
         std::vector<std::vector<double>> eulers_vec;
         std::vector<std::vector<double>> rho_vec;
         std::vector<int> grain_ID;
@@ -309,15 +308,7 @@ void caHdl::DAMASKtoCA( void )
         file = HDF5_openFile( fname );
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/_SIMPL_GEOMETRY" );
 
-        cout << file;
-	if (file > 0) {std::cout << "file open successful -------------" << endl;}
-        cout << group_ID;
-	if (group_ID > 0) {std::cout << "group open successful -------------" << endl;}
- 
         dim_vec = HDF5_read_dataset_int_rank_1( group_ID, "DIMENSIONS");
-
-        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
-        quats_vec = HDF5_read_dataset_float_rank_2( group_ID, "AvgQuats");
 
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
         eulers_vec = HDF5_read_dataset_float_rank_2( group_ID, "AvgEulerAngles");
@@ -329,7 +320,8 @@ void caHdl::DAMASKtoCA( void )
         // the first element in the grain average arrays is neglected as Dream3D adds an extra row/element at index 0
         for(size_t g = 1; g < rho_vec.size(); g++){
             double bunge_ref[3] = {eulers_vec[g][0],eulers_vec[g][1],eulers_vec[g][2]};
-            double quaternion_ref[4] = {quats_vec[g][0],quats_vec[g][1],quats_vec[g][2],quats_vec[g][3]};
+            double quaternion_ref[4] = {0.0,0.0,0.0,0.0};
+            localmath.euler2quat_damask(bunge_ref,quaternion_ref);
             dgr.caori = ca_check_disjunctness_core(quaternion_ref, true, bunge_ref[0],bunge_ref[1],bunge_ref[2]);
             dgr.rho0  = rho_vec[g][0];
             dgr.rho   = rho_vec[g][0];

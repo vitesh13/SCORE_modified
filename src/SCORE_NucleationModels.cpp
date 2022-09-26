@@ -478,7 +478,7 @@ void caHdl::solve_nucmodeling_csrdiehl( void )
 			if ( myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMSO3 ) {
 				//##a random orientation from the SO3
 				localmath.rnd_quat_shoemake( qderived );
-				cout << "RANDOMSO3 q0/q1/q2/q3 " << qderived[0] << ";" << qderived[1] << ";" << qderived[2] << ";" << qderived[3] << "\n";
+			//	cout << "RANDOMSO3 q0/q1/q2/q3 " << qderived[0] << ";" << qderived[1] << ";" << qderived[2] << ";" << qderived[3] << "\n";
 			}
 			else if (  myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMDEFORI ) {
 				//##the orientation from a random of the orientations of the deformed grains
