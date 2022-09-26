@@ -311,14 +311,14 @@ void mathMethods::euler2quat_degraef( double *bunge, double* q ) {
 	
 	//sign reversal to flip to upper hemisphere if q[0] is negative
 	if ( q[0] < 0.0 )
-		signreversal_quaternion( q );
+	    signreversal_quaternion( q );
 		
 	//MK::is not obviously consistent with DAMASK at least because upper hemisphere restriction is not considered	
 }
 
 void mathMethods::euler2quat_damask( double *bunge, double* q ) {
 	//Bunge passive Euler angles (radians) into passive orientation unit quaternion
-	//consistent with DAMASK v2.0.1
+	//consistent with DAMASK v3.0.0-alpha6
 	double sigma = 0.5*(bunge[0]+bunge[2]);
 	double delta = 0.5*(bunge[0]-bunge[2]);
 	
@@ -329,6 +329,10 @@ void mathMethods::euler2quat_damask( double *bunge, double* q ) {
 	q[1] = -1.0 * s * cos(delta); //the -1.0 in the vector part convert to passive by implementing the conjugate
 	q[2] = -1.0 * s * sin(delta);
 	q[3] = -1.0 * c * sin(sigma);
+
+        if (q[0] < 0.0){
+            q[0] = q[0]*(-1.0);
+        }
 }
 
 void mathMethods::euler2quat_imm( double *bunge, double* q ) {
