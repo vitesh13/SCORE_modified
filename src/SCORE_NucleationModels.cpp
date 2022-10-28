@@ -738,6 +738,45 @@ cout << "The window = " << owinoo[XMI] << ";" << owinoo[XMX] << ";" << owinoo[YM
 	cout << "Clustering process performed with so many entries = " << myrxgpool.size() << endl;
 }
 
+void caHdl::solve_nucmodelling_dislo_ori_based( void )
+{
+// This nucleation model is based on the nucleation criterion described in paper by Shah et al. (2022)
+// The actual nucleation sites are already detected by a post processing script. 
+// Here this info is read from the HDF5 file and then incorporated in the CA framework for their growth.
+        std::vector<int> nuc_flag;
+    
+        uint32_t nbx = myCAGeometry.nboxedge_rd;
+        uint32_t nby = myCAGeometry.nboxedge_td;
+        uint32_t nbz = myCAGeometry.nboxedge_nd;
+        uint32_t lucksite;
+
+        // read the nucleation flag dataset from HDF5
+        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
+        nuc_flag = HDF5_read_dataset_int_rank_4( group_ID, "nuc_flag");
+       
+        for (uint32_t i = 0; i < nbx*nby*nbz; i++){
+            if (nuc_flag[i] == 1){
+                luckysite = nuc_flag[i];
+            }
+            valid = true;
+            // check if the nucleus was already placed in the CA box
+            for (uint32_t s = 0; s < myrxgpool.size(); s++){
+                if ( luckysite == myrxgpool[s].nucsite ){valid = false; break;}
+            }
+            // still true, so plant a nucleus
+            if ( valid == true ){
+		//inspect parent grain at the site, as nucleation functions are executed before solve_REPLACE_CA_STRUCTURE() we have to
+		//access deformed grains via the tmpdefgseeds ID references
+		uint32_t parentid = tmpdefgseeds[getDeformedGrainID( ix, iy, iz )].mydefgpoolid;
+		uint32_t oid = mydefgpool[parentid].caori;
+		double qparent_ref[4] = { myoripool[oid].q0, myoripool[oid].q1, myoripool[oid].q2, myoripool[oid].q3 };
+                
+            }
+
+        }
+
+
+}
 
 void caHdl::solve_nucmodeling_ellipsoidalcluster_pickrandomly( void )
 {
