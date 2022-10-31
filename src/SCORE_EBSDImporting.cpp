@@ -303,7 +303,7 @@ void caHdl::DAMASKtoCA( void )
 	tmp2defgseeds = new vector<defgseed>;
 
         // get the grain based data
-        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_example_tensionX_increment500_segmented.dream3D";
+        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation_check/postProc/CA_example_tensionX_remeshed_increment500_segmented.dream3D";
 
         file = HDF5_openFile( fname );
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/_SIMPL_GEOMETRY" );
@@ -353,7 +353,12 @@ void caHdl::DAMASKtoCA( void )
 
         // get the Grain_Ids
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
-        grain_ID = HDF5_read_dataset_int_rank_4( group_ID, "Grain_Ids");
+        //grain_ID = HDF5_read_dataset_int_rank_4( group_ID, "Grain_Ids");
+        grain_ID = HDF5_read_dataset_int_rank_4( group_ID, "FeatureIds");
+
+        for( i = 0; i < grain_ID.size(); i++){
+            grain_ID[i] = grain_ID[i] - 1;
+        }
 
         // go into a particular region of CA based on the partitioning
         // copying relevant code from ebsd2polycrystal

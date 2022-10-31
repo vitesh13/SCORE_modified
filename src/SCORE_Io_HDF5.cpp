@@ -1352,7 +1352,7 @@ std::vector<int> caHdl::HDF5_read_dataset_int_rank_4(hid_t loc_id, string datase
                    //printf("%d \n", rdata[i][j][k][0]);
                    //rdata_1D[i*dims[0] + j] = rdata[i][j];
                    index = k + j*dims[2] + i*dims[2]*dims[1];
-                   rdata_vec.at(index) = rdata[i][j][k][0] - 1;  //grain ID for CA starts from 0, DAMASK is flexible about this and doesnt care
+                   rdata_vec.at(index) = rdata[i][j][k][0];  //grain ID for CA starts from 0, DAMASK is flexible about this and doesnt care
                    //printf("%d \n", rdata_vec.at(i).at(j));
           }
        }
