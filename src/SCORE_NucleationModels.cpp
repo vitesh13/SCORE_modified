@@ -754,43 +754,50 @@ void caHdl::solve_nucmodelling_dislo_ori_based( void )
         bool valid = false;
 
         // read the nucleation flag dataset from HDF5
-        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_example_tensionX_increment500_segmented.dream3D";
+        string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
         
         file = HDF5_openFile( fname );
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
         nuc_flag = HDF5_read_dataset_int_rank_4( group_ID, "nuc_flag");
        
+        double qderived[4] = {1.0, 0.0, 0.0, 0.0};
         for (uint32_t i = 0; i < nbx*nby*nbz; i++){
             if (nuc_flag[i] == 1){
                 luckysite = i;
-            }
-            valid = true;
-            // check if the nucleus was already placed in the CA box
-            for (uint32_t s = 0; s < myrxgpool.size(); s++){
-                if ( luckysite == myrxgpool[s].nucsite ){valid = false; break;}
-            }
-            // still true, so plant a nucleus
-            if ( valid == true ){
-		//inspect parent grain at the site, as nucleation functions are executed before solve_REPLACE_CA_STRUCTURE() we have to
-		//access deformed grains via the tmpdefgseeds ID references
-                // how to get co-ordinates from indices
-                // https://stackoverflow.com/questions/10155893/1d-vector-3d-indices
-                ix = i%nbx; 
-                iy = (i/nbx)%nby;
-                iz = ((i/nbx)/nby)%nbz;
-		uint32_t parentid = tmpdefgseeds[getDeformedGrainID( ix, iy, iz )].mydefgpoolid;
-		uint32_t oid = mydefgpool[parentid].caori;
-		double qparent_ref[4] = { myoripool[oid].q0, myoripool[oid].q1, myoripool[oid].q2, myoripool[oid].q3 };
-                
-            }
+                valid = true;
+                // check if the nucleus was already placed in the CA box
+                for (uint32_t s = 0; s < myrxgpool.size(); s++){
+                    if ( luckysite == myrxgpool[s].nucsite ){valid = false; break;}
+                }
+                // still true, so plant a nucleus
+                if ( valid == true ){
+	            //inspect parent grain at the site, as nucleation functions are executed before solve_REPLACE_CA_STRUCTURE() we have to
+	            //access deformed grains via the tmpdefgseeds ID references
+                    // how to get co-ordinates from indices
+                    // https://stackoverflow.com/questions/10155893/1d-vector-3d-indices
+                    ix = i%nbx; 
+                    iy = (i/nbx)%nby;
+                    iz = ((i/nbx)/nby)%nbz;
+	            uint32_t parentid = tmpdefgseeds[getDeformedGrainID( ix, iy, iz )].mydefgpoolid;
+	            uint32_t oid = mydefgpool[parentid].caori;
+	            double qparent_ref[4] = { myoripool[oid].q0, myoripool[oid].q1, myoripool[oid].q2, myoripool[oid].q3 };
+                    qderived[0] = qparent_ref[0];
+                    qderived[1] = qparent_ref[1];
+                    qderived[2] = qparent_ref[2];
+                    qderived[3] = qparent_ref[3];
+                    
+                }
             
             struct carxg rxg;
+            rxg.caori = ca_check_disjunctness_core( qderived, false, 0.0, 0.0, 0.0 ); //internal quat2euler
             rxg.cellcount = 0;
             rxg.nucsite   = luckysite;
             rxg.startingsite = luckysite;
             rxg.tincub    = 0.0; //## assume site-saturation
 
             myrxgpool.push_back( rxg );
+
+            }
 
         }
 

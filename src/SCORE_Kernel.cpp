@@ -6345,7 +6345,8 @@ void caHdl::solve_NUCLEATIONMODELING( void )
 	if ( 	myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMSO3 ||
 			myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMDEFORI	||
 			myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_SCATTEREXISTENT  ) {
-		solve_nucmodeling_csrdiehl();
+		//solve_nucmodeling_csrdiehl();
+                solve_nucmodelling_dislo_ori_based();
 	}
 
 	if ( myNucleationModel.clustnucleation == CLUSTERNUCLEATION_YES_PICKRND ) {
@@ -6539,7 +6540,7 @@ void caHdl::solve_RXGROWTH( void )
 	dt = get_dtmax_minimum();
 
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_output.hdf5";
+        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation_check/postProc/CA_output.hdf5";
         HDF5_create_CA_output( fname );
         log_grain_IDs(t);
         log_grain_rho(t);
