@@ -1065,6 +1065,7 @@ public:
 	void solve_nucmodeling_csr_pickrandomly( void );
 	uint32_t getDeformedGrainID( uint32_t xglo, uint32_t yglo, uint32_t zglo );
 	void solve_nucmodeling_csrdiehl( void );
+        void solve_nucmodelling_dislo_ori_based ( void );
 	void init_myMaternUniverse( void );
 	void pickrandomly_myMaternUniverse(void );
 	void solve_nucmodeling_ellipsoidalcluster_pickrandomly( void );
