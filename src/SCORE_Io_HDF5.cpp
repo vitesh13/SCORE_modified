@@ -1458,13 +1458,6 @@ void caHdl::HDF5_write_CA_output_double_rank_2( string fname, double t, std::vec
      int i,j,index;
      std::vector<double> cont_data(data.size()*data[0].size());
 
-     if (t == 0.0){
-     std::cout << "The orientations HDF5 at t = 0" << data.at(491519).at(0) << std::endl;
-     std::cout << "The orientations HDF5 at t = 0" << data.at(491519).at(1) << std::endl;
-     std::cout << "The orientations HDF5 at t = 0" << data.at(491519).at(2) << std::endl;
-     std::cout << "The orientations HDF5 at t = 0" << data.at(491519).at(3) << std::endl;
-     }
-
      string dset_name = "O";
      string group_name = "Time_" + s;
 
