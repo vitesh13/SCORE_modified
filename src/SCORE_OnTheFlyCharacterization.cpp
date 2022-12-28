@@ -1031,7 +1031,7 @@ void caHdl::log_grain_IDs( double t ){
              
         } // loop for threads
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation_check/postProc/CA_output.hdf5";
+        string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
         HDF5_write_CA_output_int( fname, t, grain_ID );
 
 }
@@ -1119,7 +1119,7 @@ void caHdl::log_grain_rho( double t ){
         // loop over the grain IDs to fill the rho array
         
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation_check/postProc/CA_output.hdf5";
+        string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
         HDF5_write_CA_output_double_rank_1( fname, t, rho );
 
 }
@@ -1234,7 +1234,7 @@ void caHdl::log_grain_ori( double t ){
         // loop over the grain IDs to fill the rho array
         
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation_check/postProc/CA_output.hdf5";
+        string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
         HDF5_write_CA_output_double_rank_2( fname, t, ori_quats );
 
 }

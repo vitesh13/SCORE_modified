@@ -303,7 +303,7 @@ void caHdl::DAMASKtoCA( void )
 	tmp2defgseeds = new vector<defgseed>;
 
         // get the grain based data
-        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation_check/postProc/CA_example_tensionX_remeshed_increment500_segmented.dream3D";
+        string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
 
         file = HDF5_openFile( fname );
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/_SIMPL_GEOMETRY" );
