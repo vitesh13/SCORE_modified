@@ -1394,7 +1394,7 @@ void caHdl::HDF5_create_CA_output( string fname ){
      hid_t file;
      
      file = H5Fcreate( fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);   
-     //H5Fclose( file );
+     H5Fclose( file );
 }
 
 void caHdl::HDF5_write_CA_output_int( string fname, double t, std::vector<int> data){

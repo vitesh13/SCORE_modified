@@ -6707,7 +6707,7 @@ void caHdl::solve_RXGROWTH( void )
 
 					//log_OUTPUT();
 					log_OUTPUT_Diehl();
-                                        if (step%output_freq == 0){
+                                        if (step%output_freq == 0 && t > 0.0){
                                             log_grain_IDs(t);
                                             log_grain_rho(t);
                                             log_grain_ori(t);
