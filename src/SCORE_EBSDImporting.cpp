@@ -303,6 +303,7 @@ void caHdl::DAMASKtoCA( void )
 	tmp2defgseeds = new vector<defgseed>;
 
         // get the grain based data
+        std::cout << "The filename is carried over here -----" << filename << "\n" << std::endl;
         string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
 
         file = HDF5_openFile( fname );
