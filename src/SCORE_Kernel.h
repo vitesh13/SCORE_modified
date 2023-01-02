@@ -982,6 +982,7 @@ public:
 	unsigned char outopt_singlegrainevo;
 	unsigned char outopt_generateDAMASKgeom;
 	unsigned char outopt_artsemebsd;
+        char * filename;
 
 	bool onthefly_defragmentation;
 	bool ensembleSuccess;
@@ -1371,6 +1372,8 @@ public:
 	bool mySuccess;
 	bool onthefly_defragmentation;
 	bool renderingForThisCA;
+
+        char * filename;
 
 	struct aabb myrenderwindow;
 	randomClass localprng;

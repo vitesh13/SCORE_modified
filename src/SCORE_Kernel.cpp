@@ -296,6 +296,18 @@ bool ensembleHdl::init_parameter_runtime( void ) {
 	onthefly_defrag = geTInt( "OnTheFlyDefragmentation", runtimecontrol );
 	if ( onthefly_defrag == 1 ) onthefly_defragmentation = true;
 
+        // trying to read the filename
+        //char * filename_1;
+        filename = geTString( "InputFileName", runtimecontrol);
+        std::cout << "The input file name is: " << filename << "\n" << std::endl;
+        std::cout << "The address of the pointer is: " << (void *) filename << "\n" << std::endl;
+        //filename = geTString( "InputFileName", runtimecontrol);
+        //std::cout << "The input file name is: " << filename << "\n" << std::endl;
+        //std::cout << "The address of the pointer is: " << (void *) filename << "\n" << std::endl;
+        char * filename_1;
+        filename_1 = filename;
+        std::cout << "The copied input file name is: " << filename_1 << "\n" << std::endl;
+
 	//possibility to switch off postProcessing in order to utilize only the CA solver
 	postProcessing = false;
 	uint32_t kuehbach_su_analysis = 0;
@@ -451,7 +463,6 @@ bool ensembleHdl::init_parameter_ensemble( void ) {
 
 	defmsmethod = CUBOID_DEFMS;
 	long val = geTInt("DefStructureSynthesis", ensembledef);
-        std::cout << "value is ------------------------" << val << std::endl;
 	if ( val == 1 ) defmsmethod = CUBOID_DEFMS;
 	if ( val == 2 ) defmsmethod = POISSONVORONOI_DEFMS;
 	if ( val == 3 ) defmsmethod = CPFEMDAMASK_DEFMS;
@@ -1567,6 +1578,7 @@ bool ensembleHdl::init_parameter( void )
 		good = init_parameter_runtime();
 		cout << "Initialized runtime..." << "\n";
 	}
+        std::cout << "Does filename come out?" << filename << "\n" << std::endl;
 	if ( good == true )	 {
 		good = init_parameter_output();
 		cout << "Initialized output..." << "\n";
@@ -5841,6 +5853,16 @@ void caHdl::init_parameter( void )
 	myCADefMS.defmstype = myens->defmsmethod;
 
 	onthefly_defragmentation = myens->onthefly_defragmentation;
+
+        filename = myens->filename;
+        std::cout << "The filename carried to caHdl class" << myens->filename << "\n" << std::endl;
+        std::cout << "The filename carried to caHdl class" << filename << "\n" << std::endl;
+        
+        //filename = malloc(strlen(myens->filename) + 1);
+        //strcpy(filename,myens->filename);
+        //filename = strdup(myens->filename);
+        //std::cout << "The filename carried to caHdl class" << myens->filename << "\n" << std::endl;
+        //std::cout << "The filename carried to caHdl class" << filename << "\n" << std::endl;
 
 	//MK::ideal orientations are only relevant at the ensembleHdl level at which I/O proceeds but reference possible with myens
 
