@@ -1120,7 +1120,8 @@ void caHdl::log_grain_rho( double t ){
         
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
-        HDF5_write_CA_output_double_rank_1( fname, t, rho );
+        string dset_name = "rho";
+        HDF5_write_CA_output_double_rank_1( fname, t, rho, dset_name );
 
 }
 
@@ -1323,7 +1324,8 @@ void caHdl::log_RX_frac( double t ){
         
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
-        HDF5_write_CA_output_double_rank_1( fname, t, RXfrac );
+        string dset_name = "RXfrac";
+        HDF5_write_CA_output_double_rank_1( fname, t, RXfrac, dset_name );
 
 }
 
