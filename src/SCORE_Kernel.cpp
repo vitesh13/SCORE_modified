@@ -6568,6 +6568,7 @@ void caHdl::solve_RXGROWTH( void )
         log_grain_IDs(t);
         log_grain_rho(t);
         log_grain_ori(t);
+        log_RX_frac(t);
 
 
 	//mechanism to enable the writing of HDF5 files (though sequentially) from within a threaded region
@@ -6733,6 +6734,7 @@ void caHdl::solve_RXGROWTH( void )
                                             log_grain_IDs(t);
                                             log_grain_rho(t);
                                             log_grain_ori(t);
+                                            log_RX_frac(t);
                                         }
 
 					log_PERCOLATION();
