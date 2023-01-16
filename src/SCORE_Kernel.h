@@ -1204,13 +1204,14 @@ public:
 	bool hdf5_write_voxelgrid_ipfz( string fname, string grpname, string subgrpname );
 	void hdf5_write_xmffile_3dcorectmesh( string fname, string hfname, string gname );
 
+        // modular HDF5 functions
         bool hdf5_read_DAMASK();
         void HDF5_create_CA_output( string fname );
         void HDF5_write_CA_output_int( string fname, double t, std::vector<int> );
         void HDF5_write_CA_output_double_rank_1( string fname, double t, std::vector<double>, string dset_name );
         void HDF5_write_CA_output_double_rank_2( string fname, double t, std::vector<std::vector<double>> );
+        void HDF5_writeFileAttribute( hid_t obj_id, string attribute_name, string attribute_value );
 
-        // modular HDF5 functions
         hid_t HDF5_openFile( string fname );        
         hid_t HDF5_openGroup( hid_t loc_id, string groupname );
         hid_t HDF5_openAttribute( hid_t loc_id, string attribute_name );

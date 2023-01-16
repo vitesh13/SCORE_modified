@@ -1187,6 +1187,24 @@ hid_t caHdl::HDF5_openGroup( hid_t loc_id, string groupname ){
         return group_ID;
 }
 
+void caHdl::HDF5_writeFileAttribute( hid_t obj_id, string attribute_name, string attribute_value ){
+        
+       hid_t attr, type_id, space_id;
+
+       // the string needs tobe converted to a char pointer and then it works (this is similar to what DAMASK HDF5 does
+       //https://forum.hdfgroup.org/t/write-data-to-variable-length-string-attribute/8101
+       const char* val[1] = {attribute_value.c_str()};
+  
+       type_id = H5Tcopy(H5T_C_S1);
+       H5Tset_size(type_id,H5T_VARIABLE);
+
+       space_id = H5Screate(H5S_SCALAR);
+       attr = H5Acreate( obj_id, attribute_name.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
+
+       H5Awrite(attr, type_id, val);
+       H5Aclose(attr);
+}
+
 hid_t caHdl::HDF5_openAttribute( hid_t obj_id, string attribute_name ){
         hid_t attr_id;
        
@@ -1394,6 +1412,7 @@ void caHdl::HDF5_create_CA_output( string fname ){
      hid_t file;
      
      file = H5Fcreate( fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);   
+     HDF5_writeFileAttribute( file, "InputFileName","example.uds" ); 
      H5Fclose( file );
 }
 
