@@ -1424,13 +1424,13 @@ void caHdl::HDF5_write_CA_output_int( string fname, double t, std::vector<int> d
 
 }
 
-void caHdl::HDF5_write_CA_output_double_rank_1( string fname, double t, std::vector<double> data){
+void caHdl::HDF5_write_CA_output_double_rank_1( string fname, double t, std::vector<double> data, string dset_name ){
      hid_t file, dset_id, space_id, group_id;
      string s = to_string(t);
      hsize_t dims[1] = {data.size()};
      herr_t status;
 
-     string dset_name = "rho";
+     //string dset_name = "rho";
      string group_name = "Time_" + s;
 
      file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);

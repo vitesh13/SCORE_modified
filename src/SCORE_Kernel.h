@@ -1157,6 +1157,7 @@ public:
         void log_grain_IDs( double t);
         void log_grain_rho( double t);
         void log_grain_ori( double t);
+        void log_RX_frac( double t);
 
 	//post-processing solitary unit averaging
 	double get_interpCellCount( uint32_t localid, double when );
@@ -1206,7 +1207,7 @@ public:
         bool hdf5_read_DAMASK();
         void HDF5_create_CA_output( string fname );
         void HDF5_write_CA_output_int( string fname, double t, std::vector<int> );
-        void HDF5_write_CA_output_double_rank_1( string fname, double t, std::vector<double> );
+        void HDF5_write_CA_output_double_rank_1( string fname, double t, std::vector<double>, string dset_name );
         void HDF5_write_CA_output_double_rank_2( string fname, double t, std::vector<std::vector<double>> );
 
         // modular HDF5 functions

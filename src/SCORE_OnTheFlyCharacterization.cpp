@@ -1009,10 +1009,12 @@ void caHdl::log_grain_IDs( double t ){
 	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
 	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
                     ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
-                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){
+                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){ //active but not yet RX
                        grain_ID[ixyz] = front[c].mydefgid;
                     }
+                    else{ // just RX
                     grain_ID[ixyz] = ndg + front[c].myrxgid;
+                    }
                  }
              }
    
@@ -1022,10 +1024,12 @@ void caHdl::log_grain_IDs( double t ){
 	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
 	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
                     ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
-                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){
+                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){ //active but not yet RX
                        grain_ID[ixyz] = front[c].mydefgid;
                     }
+                    else{ //just RX
                     grain_ID[ixyz] = ndg + front[c].myrxgid;
+                    }
                  }
              }
              
@@ -1090,12 +1094,14 @@ void caHdl::log_grain_rho( double t ){
 	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
 	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
                     ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
-                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){
+                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){ //active but not yet RX
                        //grain_ID[ixyz] = front[c].mydefgid;
                        rho[ixyz] = mydefgpool[front[c].mydefgid].rho;
                     }
                     //grain_ID[ixyz] = ndg + front[c].myrxgid;
+                    else{ //recrystallized
                     rho[ixyz] = RHO_RECRYSTALLIZED_MATERIAL; 
+                    }
                  }
              }
    
@@ -1105,12 +1111,12 @@ void caHdl::log_grain_rho( double t ){
 	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
 	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
                     ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
-                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){
-                       //grain_ID[ixyz] = front[c].mydefgid;
+                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){ //active but not yet RX
                        rho[ixyz] = mydefgpool[front[c].mydefgid].rho;
                     }
-                    //grain_ID[ixyz] = ndg + front[c].myrxgid;
+                    else{ //recrystallized
                     rho[ixyz] = RHO_RECRYSTALLIZED_MATERIAL; 
+                    }
                  }
              }
              
@@ -1120,7 +1126,8 @@ void caHdl::log_grain_rho( double t ){
         
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
-        HDF5_write_CA_output_double_rank_1( fname, t, rho );
+        string dset_name = "rho";
+        HDF5_write_CA_output_double_rank_1( fname, t, rho, dset_name );
 
 }
 
@@ -1158,7 +1165,6 @@ void caHdl::log_grain_ori( double t ){
                        c = thegrid[x + yzoffset];
                        if (c <= CA_GRAINIDS_MAXIMUM){ //not infected either RX or deformed
                           if (c >= ndg){ // recrystallized
-                              //rho[index] = RHO_RECRYSTALLIZED_MATERIAL; 
                               oid = myrxgpool[c - ndg].caori;
                               ori_quats[index][0] = myoripool[oid].q0; 
                               ori_quats[index][1] = myoripool[oid].q1; 
@@ -1166,7 +1172,6 @@ void caHdl::log_grain_ori( double t ){
                               ori_quats[index][3] = myoripool[oid].q3; 
                           }
                           else { // deformed
-                              //rho[index] = mydefgpool[c].rho;
                               oid = mydefgpool[c].caori;
                               ori_quats[index][0] = myoripool[oid].q0; 
                               ori_quats[index][1] = myoripool[oid].q1; 
@@ -1188,21 +1193,20 @@ void caHdl::log_grain_ori( double t ){
 	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
 	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
                     ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
-                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){
-                       //grain_ID[ixyz] = front[c].mydefgid;
+                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){ // not yet RX so take as deformed
                        oid = mydefgpool[front[c].mydefgid].caori;
                        ori_quats[ixyz][0] = myoripool[oid].q0;
                        ori_quats[ixyz][1] = myoripool[oid].q1;
                        ori_quats[ixyz][2] = myoripool[oid].q2;
                        ori_quats[ixyz][3] = myoripool[oid].q3;
                     }
-                    //grain_ID[ixyz] = ndg + front[c].myrxgid;
-                    //rho[ixyz] = RHO_RECRYSTALLIZED_MATERIAL; 
+                    else{ //recrystallized
                     oid = myrxgpool[front[c].myrxgid].caori;
                     ori_quats[ixyz][0] = myoripool[oid].q0;
                     ori_quats[ixyz][1] = myoripool[oid].q1;
                     ori_quats[ixyz][2] = myoripool[oid].q2;
                     ori_quats[ixyz][3] = myoripool[oid].q3;
+                    }
                  }
              }
    
@@ -1212,7 +1216,7 @@ void caHdl::log_grain_ori( double t ){
 	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
 	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
                     ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
-                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){
+                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){ // not yet RX so deformed
                        //grain_ID[ixyz] = front[c].mydefgid;
                        oid = mydefgpool[front[c].mydefgid].caori;
                        ori_quats[ixyz][0] = myoripool[oid].q0;
@@ -1221,11 +1225,13 @@ void caHdl::log_grain_ori( double t ){
                        ori_quats[ixyz][3] = myoripool[oid].q3;
                     }
                     //grain_ID[ixyz] = ndg + front[c].myrxgid;
+                    else{ //recrystallized
                     oid = myrxgpool[front[c].myrxgid].caori;
                     ori_quats[ixyz][0] = myoripool[oid].q0;
                     ori_quats[ixyz][1] = myoripool[oid].q1;
                     ori_quats[ixyz][2] = myoripool[oid].q2;
                     ori_quats[ixyz][3] = myoripool[oid].q3;
+                    }
                  }
              }
              
@@ -1236,6 +1242,105 @@ void caHdl::log_grain_ori( double t ){
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
         HDF5_write_CA_output_double_rank_2( fname, t, ori_quats );
+
+}
+
+void caHdl::log_RX_frac( double t ){
+     // write the RX frac for each cell to hdf5 file
+        int r, index, ixyz;
+	//no domain partitioning into regions along x, but along y and z
+	uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
+	uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
+        std::vector<int> grain_ID(myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td*myCAGeometry.nboxedge_nd);
+        std::vector<double> RXfrac(myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td*myCAGeometry.nboxedge_nd);
+
+        uint32_t ndg = this->mydefgpool.size();
+        uint32_t nthreads = this->regions.size();
+        uint32_t ncandidates = 0;
+        cellP front = NULL;
+
+	for ( uint32_t r = 0; r < nthreads; r++ ) {
+	    uint32_t rx = this->regions[r]->myGeom.nreg_rd; //local coordinates [0, ri) so ri exclusive
+	    uint32_t ry = this->regions[r]->myGeom.nreg_td;
+	    uint32_t rz = this->regions[r]->myGeom.nreg_nd;
+            uint32_t rymin = this->regions[r]->myGeom.nreg_tdmin;
+            uint32_t rzmin = this->regions[r]->myGeom.nreg_ndmin;
+	    uint32_t rxy = rx*ry;
+            uint32_t yzoffset;
+	    uint32_t c = 0;
+
+	    uint32_t* thegrid = this->regions[r]->mycellgrid;
+   
+            uint32_t count = 0;
+            for ( uint32_t z = 0; z < rz; z++){
+                for (uint32_t y = 0; y < ry; y++){
+                    yzoffset = y*rx + z*ry*rx; 
+                    for (uint32_t x = 0; x < rx; x++){
+                       index = x + (y + rymin)*myCAGeometry.nboxedge_rd + (z + rzmin)*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
+                       c = thegrid[x + yzoffset];
+                       if (c == 252366){
+                       std::cout << "Detected the grain ID of interest" << c << "at time" << t << std::endl;
+                       std::cout << "Detected the grain ID of interest" << c << "at index" << index << std::endl;
+                       }
+                       if (c <= CA_GRAINIDS_MAXIMUM){ //not infected either RX or deformed
+                          count = count + 1;
+                          if (c >= ndg){ // recrystallized
+                              RXfrac[index] = RXFRACTION_THRESHOLD; 
+                          }
+                          else { // deformed
+                              RXfrac[index] = 0.0;
+                          }
+                       }
+                    
+                       } 
+
+                }
+
+             } // z layer completed
+     
+             //std::cout << "The non infected cells at time " << t << "are " << count << std::endl;
+             //std::cout << "The infected cells would be" << rx*ry*rz - count << std::endl; 
+             
+             // assuming that myRXFrontInside & myRXFrontBorder have all the infected cells
+             // analyze cells inside
+	     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+	     front = this->regions[r]->myRXFrontInside;
+	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
+	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
+                    ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
+                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){
+                       // active but not yet recrystallized
+                       RXfrac[ixyz] = front[c].rxFrac;
+                    }
+                    else{ // just recrytsallized
+                    RXfrac[ixyz] = RXFRACTION_THRESHOLD; 
+                    }
+                 }
+             }
+   
+             // analyse cells border
+	     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+	     front = this->regions[r]->myRXFrontBorder;
+	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
+	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
+                    ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
+                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){
+                       // active but not yet recrystallized
+                       RXfrac[ixyz] = front[c].rxFrac;
+                    }
+                    else {// just recrystalized
+                    RXfrac[ixyz] = RXFRACTION_THRESHOLD; 
+                    }
+                 }
+             }
+             
+        } // loop for threads
+
+        //std::cout << "In the end the RXfrac array is" << RXfrac[166509] << "at time " << t << std::endl; 
+        // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
+        string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
+        string dset_name = "RXfrac";
+        HDF5_write_CA_output_double_rank_1( fname, t, RXfrac, dset_name );
 
 }
 
