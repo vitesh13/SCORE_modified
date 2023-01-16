@@ -300,7 +300,6 @@ bool ensembleHdl::init_parameter_runtime( void ) {
         //char * filename_1;
         filename = geTString( "InputFileName", runtimecontrol);
         std::cout << "The input file name is: " << filename << "\n" << std::endl;
-        std::cout << "The address of the pointer is: " << (void *) filename << "\n" << std::endl;
         //filename = geTString( "InputFileName", runtimecontrol);
         //std::cout << "The input file name is: " << filename << "\n" << std::endl;
         //std::cout << "The address of the pointer is: " << (void *) filename << "\n" << std::endl;
