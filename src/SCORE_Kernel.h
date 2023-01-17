@@ -1211,7 +1211,7 @@ public:
         void HDF5_create_CA_output( string fname );
         void HDF5_write_CA_output_int( string fname, double t, std::vector<int> );
         void HDF5_write_CA_output_double_rank_1( string fname, double t, std::vector<double>, string dset_name );
-        void HDF5_write_CA_output_double_rank_2( string fname, double t, std::vector<std::vector<double>> );
+        void HDF5_write_CA_output_double_rank_2( string fname, double t, std::vector<std::vector<double>>, string dset_name );
         void HDF5_writeFileAttribute( hid_t obj_id, string attribute_name, string attribute_value );
 
         hid_t HDF5_openFile( string fname );        

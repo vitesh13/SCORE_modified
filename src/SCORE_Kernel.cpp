@@ -6568,6 +6568,7 @@ void caHdl::solve_RXGROWTH( void )
         log_grain_rho(t);
         log_grain_rho_smaller(t);
         log_grain_ori(t);
+        log_grain_ori_smaller(t);
         log_RX_frac(t);
 
 
@@ -6735,6 +6736,7 @@ void caHdl::solve_RXGROWTH( void )
                                             log_grain_rho(t);
                                             log_grain_rho_smaller(t);
                                             log_grain_ori(t);
+                                            log_grain_ori_smaller(t);
                                             log_RX_frac(t);
                                         }
 
