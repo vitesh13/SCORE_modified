@@ -1216,6 +1216,38 @@ void caHdl::log_RX_frac( double t ){
 
 }
 
+void caHdl::log_grain_rho_smaller( double t ){
+     // write the dislocation density of the grains to a hdf5 file
+        int r, index, ixyz;
+	//no domain partitioning into regions along x, but along y and z
+	uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
+	uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
+        std::vector<int> grain_ID(myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td*myCAGeometry.nboxedge_nd);
+
+        uint32_t ndg = this->mydefgpool.size();
+        uint32_t nthreads = this->regions.size();
+        uint32_t ncandidates = 0;
+        cellP front = NULL;
+
+        uint32_t ngrains = ndg + this->myrxgpool.size();
+        std::vector<double> rho(ngrains);
+
+        for ( uint32_t g = 0; g < ngrains; g++){
+            if (g < ndg){ //deformed grain
+                rho[g] = mydefgpool[g].rho; 
+            }
+            else if (g > ndg){ // recrystallized grain
+                rho[g] = RHO_RECRYSTALLIZED_MATERIAL;
+            }
+        }
+
+        // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
+        string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
+        string dset_name = "rho_per_grain";
+        HDF5_write_CA_output_double_rank_1( fname, t, rho, dset_name );
+
+}
+
 
 
 #endif
