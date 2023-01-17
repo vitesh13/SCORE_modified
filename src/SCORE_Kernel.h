@@ -1159,6 +1159,7 @@ public:
         void log_grain_ori( double t);
         void log_RX_frac( double t);
         void log_grain_rho_smaller( double t );
+        void log_grain_ori_smaller( double t);
 
 	//post-processing solitary unit averaging
 	double get_interpCellCount( uint32_t localid, double when );

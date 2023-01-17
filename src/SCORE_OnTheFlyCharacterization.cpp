@@ -1240,112 +1240,28 @@ void caHdl::log_grain_rho_smaller( double t ){
 
 void caHdl::log_grain_ori_smaller( double t ){
      // write the orientations (quaternions) of the grains to a hdf5 file
-        int r, index, ixyz, oid;
-	//no domain partitioning into regions along x, but along y and z
-	uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
-	uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
-        std::vector<int> grain_ID(myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td*myCAGeometry.nboxedge_nd);
-        std::vector<std::vector<double>> ori_quats(myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td*myCAGeometry.nboxedge_nd, std::vector<double>(4));
-
+        int r, oid;
         uint32_t ndg = this->mydefgpool.size();
-        uint32_t nthreads = this->regions.size();
-        uint32_t ncandidates = 0;
-        cellP front = NULL;
+        uint32_t ngrains = ndg + this->myrxgpool.size();
+        std::vector<std::vector<double>> ori_quats(ngrains, std::vector<double>(4));
 
-	for ( uint32_t r = 0; r < nthreads; r++ ) {
-	    uint32_t rx = this->regions[r]->myGeom.nreg_rd; //local coordinates [0, ri) so ri exclusive
-	    uint32_t ry = this->regions[r]->myGeom.nreg_td;
-	    uint32_t rz = this->regions[r]->myGeom.nreg_nd;
-            uint32_t rymin = this->regions[r]->myGeom.nreg_tdmin;
-            uint32_t rzmin = this->regions[r]->myGeom.nreg_ndmin;
-	    uint32_t rxy = rx*ry;
-            uint32_t yzoffset;
-	    uint32_t c = 0;
+        for (uint32_t g = 0; g < ngrains; g++){
+            if (g < ndg){// deformed 
+                oid = mydefgpool[g].caori; 
+                ori_quats[g][0] = myoripool[oid].q0; 
+                ori_quats[g][1] = myoripool[oid].q1; 
+                ori_quats[g][2] = myoripool[oid].q2; 
+                ori_quats[g][3] = myoripool[oid].q3; 
+            }
+            else{
+                oid = myrxgpool[g - ndg].caori;
+                ori_quats[g][0] = myoripool[oid].q0; 
+                ori_quats[g][1] = myoripool[oid].q1; 
+                ori_quats[g][2] = myoripool[oid].q2; 
+                ori_quats[g][3] = myoripool[oid].q3; 
+            }
+        }
 
-	    uint32_t* thegrid = this->regions[r]->mycellgrid;
-   
-            for ( uint32_t z = 0; z < rz; z++){
-                for (uint32_t y = 0; y < ry; y++){
-                    yzoffset = y*rx + z*ry*rx; 
-                    for (uint32_t x = 0; x < rx; x++){
-                       index = x + (y + rymin)*myCAGeometry.nboxedge_rd + (z + rzmin)*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
-                       c = thegrid[x + yzoffset];
-                       if (c <= CA_GRAINIDS_MAXIMUM){ //not infected either RX or deformed
-                          if (c >= ndg){ // recrystallized
-                              oid = myrxgpool[c - ndg].caori;
-                              ori_quats[index][0] = myoripool[oid].q0; 
-                              ori_quats[index][1] = myoripool[oid].q1; 
-                              ori_quats[index][2] = myoripool[oid].q2; 
-                              ori_quats[index][3] = myoripool[oid].q3; 
-                          }
-                          else { // deformed
-                              oid = mydefgpool[c].caori;
-                              ori_quats[index][0] = myoripool[oid].q0; 
-                              ori_quats[index][1] = myoripool[oid].q1; 
-                              ori_quats[index][2] = myoripool[oid].q2; 
-                              ori_quats[index][3] = myoripool[oid].q3; 
-                          }
-                       }
-                    
-                       } 
-
-                }
-
-             } // z layer completed
-             
-             // assuming that myRXFrontInside & myRXFrontBorder have all the infected cells
-             // analyze cells inside
-	     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
-	     front = this->regions[r]->myRXFrontInside;
-	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
-	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
-                    ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
-                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){ // not yet RX so take as deformed
-                       oid = mydefgpool[front[c].mydefgid].caori;
-                       ori_quats[ixyz][0] = myoripool[oid].q0;
-                       ori_quats[ixyz][1] = myoripool[oid].q1;
-                       ori_quats[ixyz][2] = myoripool[oid].q2;
-                       ori_quats[ixyz][3] = myoripool[oid].q3;
-                    }
-                    else{ //recrystallized
-                    oid = myrxgpool[front[c].myrxgid].caori;
-                    ori_quats[ixyz][0] = myoripool[oid].q0;
-                    ori_quats[ixyz][1] = myoripool[oid].q1;
-                    ori_quats[ixyz][2] = myoripool[oid].q2;
-                    ori_quats[ixyz][3] = myoripool[oid].q3;
-                    }
-                 }
-             }
-   
-             // analyse cells border
-	     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
-	     front = this->regions[r]->myRXFrontBorder;
-	     for ( uint32_t c = 0; c < ncandidates; c++ ) {
-	         if ( front[c].activity == ACTIVE ) { //most likely case for densely populated list
-                    ixyz = front[c].ix + front[c].iy*myCAGeometry.nboxedge_rd + front[c].iz*myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td;
-                    if (front[c].rxFrac < RXFRACTION_THRESHOLD){ // not yet RX so deformed
-                       //grain_ID[ixyz] = front[c].mydefgid;
-                       oid = mydefgpool[front[c].mydefgid].caori;
-                       ori_quats[ixyz][0] = myoripool[oid].q0;
-                       ori_quats[ixyz][1] = myoripool[oid].q1;
-                       ori_quats[ixyz][2] = myoripool[oid].q2;
-                       ori_quats[ixyz][3] = myoripool[oid].q3;
-                    }
-                    //grain_ID[ixyz] = ndg + front[c].myrxgid;
-                    else{ //recrystallized
-                    oid = myrxgpool[front[c].myrxgid].caori;
-                    ori_quats[ixyz][0] = myoripool[oid].q0;
-                    ori_quats[ixyz][1] = myoripool[oid].q1;
-                    ori_quats[ixyz][2] = myoripool[oid].q2;
-                    ori_quats[ixyz][3] = myoripool[oid].q3;
-                    }
-                 }
-             }
-             
-        } // loop for threads
-
-        // loop over the grain IDs to fill the rho array
-        
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
         HDF5_write_CA_output_double_rank_2( fname, t, ori_quats );
