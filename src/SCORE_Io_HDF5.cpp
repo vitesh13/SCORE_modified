@@ -1417,52 +1417,59 @@ void caHdl::HDF5_create_CA_output( string fname ){
 }
 
 void caHdl::HDF5_write_CA_output_int( string fname, double t, std::vector<int> data, string dset_name){
-     hid_t file, dset_id, space_id, group_id;
+     hid_t file, dset_id, space_id, sub_group_id, group_id;
      string s = to_string(t);
      hsize_t dims[1] = {data.size()};
      herr_t status;
 
      string group_name = "Time_" + s;
+     string sub_group_name = "Cell_based_data";
 
      file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
   
      group_id = H5Gcreate( file, group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
 
+     sub_group_id = H5Gcreate( group_id, sub_group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+
      space_id = H5Screate_simple( 1, dims, NULL );
     
      int* wdata = &data[0];
-     //dset_id = H5Dcreate( file, dset_name.c_str(), H5T_NATIVE_INT, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
-     dset_id = H5Dcreate( group_id, dset_name.c_str(), H5T_NATIVE_INT, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
+     dset_id = H5Dcreate( sub_group_id, dset_name.c_str(), H5T_NATIVE_INT, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
      status  = H5Dwrite( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata);
      
      H5Dclose( dset_id );
      H5Sclose( space_id );
+     H5Gclose( sub_group_id );
      H5Gclose( group_id );
      H5Fclose( file );
 
 }
 
 void caHdl::HDF5_write_CA_output_double_rank_1( string fname, double t, std::vector<double> data, string dset_name ){
-     hid_t file, dset_id, space_id, group_id;
+     hid_t file, dset_id, space_id, sub_group_id, group_id;
      string s = to_string(t);
      hsize_t dims[1] = {data.size()};
      herr_t status;
 
      //string dset_name = "rho";
      string group_name = "Time_" + s;
+     string sub_group_name = "Cell_based_data";
 
      file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
   
      group_id = H5Gopen( file, group_name.c_str(), H5P_DEFAULT);
 
+     sub_group_id = H5Gopen( group_id, sub_group_name.c_str(), H5P_DEFAULT);
+
      space_id = H5Screate_simple( 1, dims, NULL );
     
      double* wdata = &data[0];
-     dset_id = H5Dcreate( group_id, dset_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
+     dset_id = H5Dcreate( sub_group_id, dset_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
      status  = H5Dwrite( dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata);
      
      H5Dclose( dset_id );
      H5Sclose( space_id );
+     H5Gclose( sub_group_id );
      H5Gclose( group_id );
      H5Fclose( file );
 
