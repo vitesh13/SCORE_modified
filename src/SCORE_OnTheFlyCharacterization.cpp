@@ -908,7 +908,8 @@ void caHdl::log_grain_IDs( double t ){
         } // loop for threads
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
-        HDF5_write_CA_output_int( fname, t, grain_ID );
+        string dset_name = "Grain_ID";
+        HDF5_write_CA_output_int( fname, t, grain_ID, dset_name );
 
 }
 
