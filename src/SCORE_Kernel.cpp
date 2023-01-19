@@ -6565,9 +6565,7 @@ void caHdl::solve_RXGROWTH( void )
         string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
         HDF5_create_CA_output( fname );
         log_grain_IDs(t);
-        log_grain_rho(t);
         log_grain_rho_smaller(t);
-        log_grain_ori(t);
         log_grain_ori_smaller(t);
         log_RX_frac(t);
 
@@ -6733,9 +6731,7 @@ void caHdl::solve_RXGROWTH( void )
 					log_OUTPUT_Diehl();
                                         if (step%output_freq == 0 && t > 0.0){
                                             log_grain_IDs(t);
-                                            log_grain_rho(t);
                                             log_grain_rho_smaller(t);
-                                            log_grain_ori(t);
                                             log_grain_ori_smaller(t);
                                             log_RX_frac(t);
                                         }
