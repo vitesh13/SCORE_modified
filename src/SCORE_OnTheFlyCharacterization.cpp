@@ -1123,6 +1123,12 @@ void caHdl::log_grain_rho_cell_based( double t ){
 
 	}
 
+double calculate_RXfrac_total( double t ){
+    double sum_RX = 0.0;
+    //sum_RX = std::accumulate(RXfrac.begin(), RXfrac.end(), 0.0);
+    return sum_RX;
+}
+
 	void caHdl::log_RX_frac( double t ){
 	     // write the RX frac for each cell to hdf5 file
 		int r, index, ixyz;
@@ -1223,6 +1229,8 @@ void caHdl::log_grain_rho_cell_based( double t ){
                 string s = to_string(t);
                 string group_name = "Time_" + s + "/Cell_based_data";
 		string dset_name = "RXfrac";
+                //double sum_RX = calculate_RXfrac_total( RXfrac );
+                //double sum_RX = calculate_RXfrac_total( t );
 		HDF5_write_CA_output_double_rank_1( fname, group_name, RXfrac, dset_name );
 
 	}
@@ -1283,6 +1291,7 @@ void caHdl::log_grain_rho_cell_based( double t ){
         HDF5_write_CA_output_double_rank_2( fname, group_name, ori_quats, dset_name );
 
 }
+
 
 
 

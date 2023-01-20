@@ -1160,6 +1160,8 @@ public:
         void log_RX_frac( double t);
         void log_grain_rho_grain_based( double t );
         void log_grain_ori_grain_based( double t);
+        //double calculate_RXfrac_total( std::vector<double> RXfrac ); 
+        double calculate_RXfrac_total( double t ); 
 
 	//post-processing solitary unit averaging
 	double get_interpCellCount( uint32_t localid, double when );
@@ -1214,6 +1216,7 @@ public:
         void HDF5_write_CA_output_double_rank_2( string fname, string group_name, std::vector<std::vector<double>>, string dset_name );
         void HDF5_writeFileAttribute( hid_t obj_id, string attribute_name, string attribute_value );
         void HDF5_writeGroupAttribute_int( hid_t obj_id, string attribute_name, uint32_t value );
+        void HDF5_writeGroupAttribute_float( hid_t obj_id, string attribute_name, uint32_t value );
 
         hid_t HDF5_openFile( string fname );        
         hid_t HDF5_openGroup( hid_t loc_id, string groupname );
