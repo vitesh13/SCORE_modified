@@ -1160,8 +1160,7 @@ public:
         void log_RX_frac( double t);
         void log_grain_rho_grain_based( double t );
         void log_grain_ori_grain_based( double t);
-        //double calculate_RXfrac_total( std::vector<double> RXfrac ); 
-        double calculate_RXfrac_total( double t ); 
+        double calculate_RXfrac_total( std::vector<double> RXfrac ); 
 
 	//post-processing solitary unit averaging
 	double get_interpCellCount( uint32_t localid, double when );
