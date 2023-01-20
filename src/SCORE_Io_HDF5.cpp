@@ -1216,6 +1216,17 @@ void caHdl::HDF5_writeGroupAttribute_int( hid_t obj_id, string attribute_name, u
      H5Aclose( attr );
 }
 
+void caHdl::HDF5_writeGroupAttribute_float( hid_t obj_id, string attribute_name, uint32_t value ){
+     hid_t attr, space_id; 
+
+     space_id = H5Screate( H5S_SCALAR );
+     attr = H5Acreate( obj_id, attribute_name.c_str(), H5T_NATIVE_FLOAT, space_id, H5P_DEFAULT, H5P_DEFAULT);
+
+     uint32_t* wdata = &value; 
+     H5Awrite( attr, H5T_NATIVE_FLOAT, wdata);
+     H5Aclose( attr );
+}
+
 hid_t caHdl::HDF5_openAttribute( hid_t obj_id, string attribute_name ){
         hid_t attr_id;
        
