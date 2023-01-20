@@ -1163,7 +1163,8 @@ void caHdl::log_grain_rho_cell_based( double t ){
 			       if (c <= CA_GRAINIDS_MAXIMUM){ //not infected either RX or deformed
 				  count = count + 1;
 				  if (c >= ndg){ // recrystallized
-				      RXfrac[index] = RXFRACTION_THRESHOLD; 
+				      //RXfrac[index] = RXFRACTION_THRESHOLD; 
+				      RXfrac[index] = 1.0; 
 				  }
 				  else { // deformed
 				      RXfrac[index] = 0.0;
@@ -1191,7 +1192,8 @@ void caHdl::log_grain_rho_cell_based( double t ){
 			       RXfrac[ixyz] = front[c].rxFrac;
 			    }
 			    else{ // just recrytsallized
-			    RXfrac[ixyz] = RXFRACTION_THRESHOLD; 
+			    //RXfrac[ixyz] = RXFRACTION_THRESHOLD; 
+			    RXfrac[ixyz] = 1.0; 
 			    }
 			 }
 		     }
@@ -1207,7 +1209,8 @@ void caHdl::log_grain_rho_cell_based( double t ){
 			       RXfrac[ixyz] = front[c].rxFrac;
 			    }
 			    else {// just recrystalized
-			    RXfrac[ixyz] = RXFRACTION_THRESHOLD; 
+			    //RXfrac[ixyz] = RXFRACTION_THRESHOLD; 
+			    RXfrac[ixyz] = 1.0; 
 			    }
 			 }
 		     }
