@@ -1215,7 +1215,8 @@ public:
         void HDF5_write_CA_output_double_rank_2( string fname, string group_name, std::vector<std::vector<double>>, string dset_name );
         void HDF5_writeFileAttribute( hid_t obj_id, string attribute_name, string attribute_value );
         void HDF5_writeGroupAttribute_int( hid_t obj_id, string attribute_name, uint32_t value );
-        void HDF5_writeGroupAttribute_float( hid_t obj_id, string attribute_name, uint32_t value );
+        void HDF5_writeGroupAttribute_float( hid_t obj_id, string attribute_name, double value );
+        void HDF5_write_float_attribute(string fname, string group_name, double frac_RX, string attribute_name);
 
         hid_t HDF5_openFile( string fname );        
         hid_t HDF5_openGroup( hid_t loc_id, string groupname );

@@ -1124,9 +1124,10 @@ void caHdl::log_grain_rho_cell_based( double t ){
 	}
 
 double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
-    double sum_RX = 0.0;
-    sum_RX = std::accumulate(RXfrac.begin(), RXfrac.end(), 0.0);
-    return sum_RX;
+    double sum_RX, frac_RX;
+    sum_RX = std::accumulate(RXfrac.begin(), RXfrac.end(), 0.0f);
+    frac_RX = sum_RX/(double(RXfrac.size()));
+    return frac_RX;
 }
 
 	void caHdl::log_RX_frac( double t ){
@@ -1228,9 +1229,9 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 		string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
                 string s = to_string(t);
                 string group_name = "Time_" + s + "/Cell_based_data";
-		string dset_name = "RXfrac";
-                double sum_RX = calculate_RXfrac_total( RXfrac );
+		string dset_name = "Activity";
 		HDF5_write_CA_output_double_rank_1( fname, group_name, RXfrac, dset_name );
+                HDF5_write_float_attribute( fname, group_name, calculate_RXfrac_total(RXfrac), "RXfrac");
 
 	}
 

@@ -1216,15 +1216,24 @@ void caHdl::HDF5_writeGroupAttribute_int( hid_t obj_id, string attribute_name, u
      H5Aclose( attr );
 }
 
-void caHdl::HDF5_writeGroupAttribute_float( hid_t obj_id, string attribute_name, uint32_t value ){
+void caHdl::HDF5_writeGroupAttribute_float( hid_t obj_id, string attribute_name, double value ){
      hid_t attr, space_id; 
 
      space_id = H5Screate( H5S_SCALAR );
-     attr = H5Acreate( obj_id, attribute_name.c_str(), H5T_NATIVE_FLOAT, space_id, H5P_DEFAULT, H5P_DEFAULT);
+     attr = H5Acreate( obj_id, attribute_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT);
 
-     uint32_t* wdata = &value; 
-     H5Awrite( attr, H5T_NATIVE_FLOAT, wdata);
+     double* wdata = &value; 
+     H5Awrite( attr, H5T_NATIVE_DOUBLE, wdata);
      H5Aclose( attr );
+}
+
+void caHdl::HDF5_write_float_attribute(string fname, string group_name, double frac_RX, string attribute_name){
+    hid_t file, group_id;
+
+    file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    group_id = H5Gopen( file, group_name.c_str(), H5P_DEFAULT);
+    
+    HDF5_writeGroupAttribute_float( group_id,attribute_name,frac_RX );
 }
 
 hid_t caHdl::HDF5_openAttribute( hid_t obj_id, string attribute_name ){
