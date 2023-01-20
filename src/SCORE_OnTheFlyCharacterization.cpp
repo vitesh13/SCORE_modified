@@ -907,7 +907,7 @@ void caHdl::log_grain_IDs( double t ){
              
         } // loop for threads
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-        string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
+        string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
         string dset_name = "Grain_ID";
         HDF5_write_CA_output_int( fname, t, grain_ID, dset_name );
 
@@ -998,7 +998,7 @@ void caHdl::log_grain_rho_cell_based( double t ){
 		// loop over the grain IDs to fill the rho array
 		
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-		string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
+		string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
 		string dset_name = "rho";
                 string s = to_string(t);
                 string group_name = "Time_" + s;
@@ -1115,7 +1115,7 @@ void caHdl::log_grain_rho_cell_based( double t ){
 		// loop over the grain IDs to fill the rho array
 		
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-		string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
+		string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
                 string s = to_string(t);
                 string group_name = "Time_" + s;
                 string dset_name = "O";
@@ -1226,7 +1226,7 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 
 		//std::cout << "In the end the RXfrac array is" << RXfrac[166509] << "at time " << t << std::endl; 
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-		string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
+		string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
                 string s = to_string(t);
                 string group_name = "Time_" + s + "/Cell_based_data";
 		string dset_name = "Activity";
@@ -1251,7 +1251,7 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 	    }
 
 	    // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-	    string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
+	    string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
             string s = to_string(t);
             string group_name = "Time_" + s + "/Grain_based_data";
 	    string dset_name = "rho_per_grain";
@@ -1284,7 +1284,7 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
         }
 
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-        string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
+        string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
         string s = to_string(t);
         string group_name = "Time_" + s + "/Grain_based_data";
 	string dset_name = "O_grain";
