@@ -1208,7 +1208,6 @@ public:
 	void hdf5_write_xmffile_3dcorectmesh( string fname, string hfname, string gname );
 
         // modular HDF5 functions
-        bool hdf5_read_DAMASK();
         void HDF5_create_CA_output( string fname );
         void HDF5_write_CA_output_int( string fname, double t, std::vector<int>, string dset_name );
         void HDF5_write_CA_output_double_rank_1( string fname, string group_name, std::vector<double>, string dset_name );

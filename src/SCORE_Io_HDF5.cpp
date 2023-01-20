@@ -1142,33 +1142,6 @@ void caHdl::write_clustersizedistr_h5( unsigned int* dist, unsigned int ndist )
 	omp_unset_lock(&h5lock);
 }
 
-bool caHdl::hdf5_read_DAMASK(){
-        hid_t file;
-        hid_t group_ID;
-        hid_t attr_id;
-        herr_t ret;
-        double *float_array;
-        int *int_array;
-
-        string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation/postProc/CA_example_tensionX_increment1000_segmented.dream3D";
-	file = HDF5_openFile( fname );
-        group_ID = HDF5_openGroup( file, "geometry");
-        attr_id  = HDF5_openAttribute( group_ID, "size");
-        float_array = HDF5_read_attribute_float(attr_id);
-        attr_id  = HDF5_openAttribute( group_ID, "cells");
-        int_array = HDF5_read_attribute_int(attr_id);
-        cout << file;
-	if (file > 0) {std::cout << "file open successful -------------" << endl;}
-        cout << group_ID;
-	if (group_ID > 0) {std::cout << "group open successful -------------" << endl;}
-        cout << attr_id;
-	if (attr_id > 0) {std::cout << "attribute open successful -------------" << endl;}
-        cout << ret;
-	if (attr_id > 0) {std::cout << "no error open successful -------------" << endl;}
-        
-        return true;
-}
-
 hid_t caHdl::HDF5_openFile( string fname ){
 // the files can be opened in parallel however as parallelization architecture is not known, only simple file opening is done
        hid_t file;
