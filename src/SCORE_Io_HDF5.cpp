@@ -1205,6 +1205,17 @@ void caHdl::HDF5_writeFileAttribute( hid_t obj_id, string attribute_name, string
        H5Aclose(attr);
 }
 
+void caHdl::HDF5_writeGroupAttribute_int( hid_t obj_id, string attribute_name, uint32_t value ){
+     hid_t attr, space_id; 
+
+     space_id = H5Screate( H5S_SCALAR );
+     attr = H5Acreate( obj_id, attribute_name.c_str(), H5T_NATIVE_UINT, space_id, H5P_DEFAULT, H5P_DEFAULT);
+
+     uint32_t* wdata = &value; 
+     H5Awrite( attr, H5T_NATIVE_UINT, wdata);
+     H5Aclose( attr );
+}
+
 hid_t caHdl::HDF5_openAttribute( hid_t obj_id, string attribute_name ){
         hid_t attr_id;
        
@@ -1417,19 +1428,28 @@ void caHdl::HDF5_create_CA_output( string fname ){
 }
 
 void caHdl::HDF5_write_CA_output_int( string fname, double t, std::vector<int> data, string dset_name){
-     hid_t file, dset_id, space_id, sub_group_id, group_id;
+     hid_t file, dset_id, space_id, sub_group_id, sub_group_id_1, group_id;
      string s = to_string(t);
      hsize_t dims[1] = {data.size()};
      herr_t status;
 
      string group_name = "Time_" + s;
      string sub_group_name = "Cell_based_data";
+     string sub_group_name_1 = "Grain_based_data";
 
      file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
   
+     // create the groups and sub-groups here
      group_id = H5Gcreate( file, group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
 
+     sub_group_id_1 = H5Gcreate( group_id, sub_group_name_1.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+
      sub_group_id = H5Gcreate( group_id, sub_group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+ 
+     // add attributes to the group
+     HDF5_writeGroupAttribute_int( sub_group_id, "Nx", this->myCAGeometry.nboxedge_rd);
+     HDF5_writeGroupAttribute_int( sub_group_id, "Ny", this->myCAGeometry.nboxedge_td);
+     HDF5_writeGroupAttribute_int( sub_group_id, "Nz", this->myCAGeometry.nboxedge_nd);
 
      space_id = H5Screate_simple( 1, dims, NULL );
     
@@ -1439,6 +1459,7 @@ void caHdl::HDF5_write_CA_output_int( string fname, double t, std::vector<int> d
      
      H5Dclose( dset_id );
      H5Sclose( space_id );
+     H5Gclose( sub_group_id_1 );
      H5Gclose( sub_group_id );
      H5Gclose( group_id );
      H5Fclose( file );
@@ -1467,15 +1488,15 @@ void caHdl::HDF5_write_CA_output_double_rank_1( string fname, string group_name,
 
 }
 
-void caHdl::HDF5_write_CA_output_double_rank_2( string fname, double t, std::vector<std::vector<double>> data, string dset_name){
+void caHdl::HDF5_write_CA_output_double_rank_2( string fname, string group_name, std::vector<std::vector<double>> data, string dset_name){
      hid_t file, dset_id, space_id, group_id;
-     string s = to_string(t);
+     //string s = to_string(t);
      hsize_t dims[2] = {data.size(),data[0].size()};
      herr_t status;
      int i,j,index;
      std::vector<double> cont_data(data.size()*data[0].size());
 
-     string group_name = "Time_" + s;
+     //string group_name = "Time_" + s;
 
      file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
   
@@ -1490,9 +1511,7 @@ void caHdl::HDF5_write_CA_output_double_rank_2( string fname, double t, std::vec
              cont_data[index] = data[i][j];
          }
      }
-     //double* wdata = &data[0][0];
      double* wdata = &cont_data[0];
-     //double wdata1[dims[0]*dims[1]];//= &data[0][0];
      
      
      dset_id = H5Dcreate( group_id, dset_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
