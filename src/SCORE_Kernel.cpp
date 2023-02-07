@@ -6562,7 +6562,7 @@ void caHdl::solve_RXGROWTH( void )
 
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         //string fname = "/home/georg.falkinger/Rolling_partial_RX/CA_example/simulation_check/postProc/CA_output.hdf5";
-        string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/CA_output.hdf5";
+        string fname = "/home/georg.falkinger/Tphase_simulations/Tphase_2mm_ZG_high_T/simulation/postProc/CA_output.hdf5";
         HDF5_create_CA_output( fname );
         log_grain_IDs(t);
         log_grain_rho_grain_based(t);

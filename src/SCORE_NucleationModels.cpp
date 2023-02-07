@@ -754,7 +754,7 @@ void caHdl::solve_nucmodelling_dislo_ori_based( void )
         bool valid = false;
 
         // read the nucleation flag dataset from HDF5
-        string fname = "/home/georg.falkinger/Tphase_simulations/example/simulation/postProc/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
+        string fname = "/home/georg.falkinger/Tphase_simulations/Tphase_2mm_ZG_high_T/simulation/postProc/Tphase_Vf_01_KW_with_ZG_tensionX_remeshed_increment15000_segmented.dream3D";
         
         file = HDF5_openFile( fname );
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
