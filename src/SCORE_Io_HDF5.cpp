@@ -1216,6 +1216,18 @@ void caHdl::HDF5_writeGroupAttribute_int( hid_t obj_id, string attribute_name, u
      H5Aclose( attr );
 }
 
+void caHdl::HDF5_writeGroupAttribute_int_rank_1( hid_t obj_id, string attribute_name, std::vector<uint32_t> value ){
+     hid_t attr, space_id; 
+     hsize_t dims[1] = {value.size()};  
+
+     space_id = H5Screate_simple( 1, dims, NULL );
+     attr = H5Acreate( obj_id, attribute_name.c_str(), H5T_NATIVE_UINT, space_id, H5P_DEFAULT, H5P_DEFAULT);
+
+     uint32_t* wdata = &value[0]; 
+     H5Awrite( attr, H5T_NATIVE_UINT, wdata);
+     H5Aclose( attr );
+}
+
 void caHdl::HDF5_writeGroupAttribute_float( hid_t obj_id, string attribute_name, double value ){
      hid_t attr, space_id; 
 
@@ -1447,6 +1459,8 @@ void caHdl::HDF5_create_CA_output( string fname ){
      
      file = H5Fcreate( fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);   
      HDF5_writeFileAttribute( file, "InputFileName","example.uds" ); 
+     HDF5_writeFileAttribute( file, "Material", "Aluminium");
+     HDF5_writeFileAttribute( file, "Crystal Structure", "FCC");
      H5Fclose( file );
 }
 
@@ -1455,6 +1469,9 @@ void caHdl::HDF5_write_CA_output_int( string fname, double t, std::vector<int> d
      string s = to_string(t);
      hsize_t dims[1] = {data.size()};
      herr_t status;
+     std::vector<uint32_t> def_grain_lims{0,this->mydefgpool.size() - 1};
+     std::vector<uint32_t> rx_grain_lims{this->mydefgpool.size(),this->mydefgpool.size() + this->myrxgpool.size() - 1};
+
 
      string group_name = "Time_" + s;
      string sub_group_name = "Cell_based_data";
@@ -1469,10 +1486,14 @@ void caHdl::HDF5_write_CA_output_int( string fname, double t, std::vector<int> d
 
      sub_group_id = H5Gcreate( group_id, sub_group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
  
-     // add attributes to the group
+     // add attributes to the cell based data group
      HDF5_writeGroupAttribute_int( sub_group_id, "Nx", this->myCAGeometry.nboxedge_rd);
      HDF5_writeGroupAttribute_int( sub_group_id, "Ny", this->myCAGeometry.nboxedge_td);
      HDF5_writeGroupAttribute_int( sub_group_id, "Nz", this->myCAGeometry.nboxedge_nd);
+
+     // add attributes to the grain based data group
+     HDF5_writeGroupAttribute_int_rank_1( sub_group_id_1, "Deformed Grains", def_grain_lims);
+     HDF5_writeGroupAttribute_int_rank_1( sub_group_id_1, "Recrystallized Grains", rx_grain_lims);
 
      space_id = H5Screate_simple( 1, dims, NULL );
     
