@@ -1234,6 +1234,9 @@ void caHdl::HDF5_write_float_attribute(string fname, string group_name, double f
     group_id = H5Gopen( file, group_name.c_str(), H5P_DEFAULT);
     
     HDF5_writeGroupAttribute_float( group_id,attribute_name,frac_RX );
+    
+    H5Gclose( group_id );
+    H5Fclose( file );
 }
 
 hid_t caHdl::HDF5_openAttribute( hid_t obj_id, string attribute_name ){
