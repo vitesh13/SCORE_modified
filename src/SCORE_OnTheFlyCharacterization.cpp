@@ -1231,7 +1231,11 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
                 string group_name = "Time_" + s + "/Cell_based_data";
 		string dset_name = "Activity";
 		HDF5_write_CA_output_double_rank_1( fname, group_name, RXfrac, dset_name );
-                HDF5_write_float_attribute( fname, group_name, calculate_RXfrac_total(RXfrac), "RXfrac");
+                std::cout << "The RX frac is:" << calculate_RXfrac_total(RXfrac) << std::endl;
+                std::cout << "Current temperature is:" << CurrentTemperature << std::endl;
+                string attr_group_name = "Time_" + s;
+                HDF5_write_float_attribute( fname, attr_group_name, calculate_RXfrac_total(RXfrac), "RXfrac");
+                HDF5_write_float_attribute( fname, attr_group_name, CurrentTemperature, "T");
 
 	}
 
