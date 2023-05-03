@@ -1,5 +1,5 @@
 /* 
-*	Copyright Markus Kühbach, 2014-2017
+*	Copyright Markus Kï¿½hbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
@@ -14,16 +14,16 @@
 *	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kï¿½hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
 *	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
+*	M. Kï¿½hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
 
 *	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
 *	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
+*	by RWTH Aachen University and the FZ Jï¿½lich within the scope of the JARAHPC project JARA0076.
 
 
 *	This file is part of SCORE.
@@ -41,6 +41,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 
 
 //MK::the SCORE --- statistical cellular operator for recrystallization --- modeling approach rests on the assumption
@@ -77,11 +78,10 @@
 
 //#include <mpi.h>
 
-
 //maximum dimensions and hard limits owing to uint32_t based datastructures and algorithms
 //MK::DO APPLY GREATEST CARE WHEN CHANGING THESE WELL BALANCED DEFAULTS AS WELL AS HARD LIMITATIONS OF THE CODE!
 #define CA_DIMENSIONS_MAXIMUM				1600		//to stay within UINT32_MAX range, remaining headroom of the uint range can be utilized for all sorts of flags
-#define CA_DIMENSIONS_MINIMUM				50			//so that nxyz / nxy is not resulting in wrap around and inside/outside bounds check not run in wraparound
+#define CA_DIMENSIONS_MINIMUM				10			//so that nxyz / nxy is not resulting in wrap around and inside/outside bounds check not run in wraparound
 #define MINIMUM_REGION_SIZE					10			//smallest dimension of a thread region
 
 #define CA_ALLOCATION_MAXIMUM				4096000000
@@ -366,5 +366,17 @@
 //HDF5 library
 #define HDF5_MAXIMUM_SINGLE_WRITE			((1600)*(1024)*(1024)) //1.2GB
 #define MPIIO_MAXIMUM_SINGLE_WRITE			((50)*(1024)*(1024)) //50MB
+
+//carry over preprocessor definitions
+//low level stuff to parse the GitSHA of the parent commit into the executable upon build using cmake
+//GITSHA gets defined from cmake -DGITSHA="
+#ifndef GITSHA									//otherwise we could not compile without adding -DGITSHA="d123" a dummy GitSha
+	#define GITSHA								0
+#endif
+
+//stringification of strings passed from cmake at compile time
+//https://gcc.gnu.org/onlinedocs/gcc-4.8.5/cpp/Stringification.html
+#define xstr(s)									mystr(s)
+#define mystr(s) 								#s
 
 #endif

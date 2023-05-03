@@ -1,3 +1,4 @@
+/*
 #include <time.h>	//clock_gettime
 #include <string>
 
@@ -56,3 +57,4 @@ public:
 	struct timespec ts,te;
 	uint64_t diff;
 };
+*/

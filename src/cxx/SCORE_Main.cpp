@@ -1,5 +1,5 @@
 /* 
-*	Copyright Markus Kühbach, 2014-2017
+*	Copyright Markus Kï¿½hbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
@@ -14,16 +14,16 @@
 *	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kï¿½hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
 *	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
+*	M. Kï¿½hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
 
 *	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
 *	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
+*	by RWTH Aachen University and the FZ Jï¿½lich within the scope of the JARAHPC project JARA0076.
 
 
 *	This file is part of SCORE.
@@ -60,8 +60,6 @@ using namespace std;
 #include <unistd.h>
 
 
-
-
 void die( const char* message, bool inmpi ) {
 	cout << "ERROR::" << message << endl;
 	if ( inmpi == true ) 
@@ -69,8 +67,9 @@ void die( const char* message, bool inmpi ) {
 }
 
 void versioninfo( int myrank, int nranks ) {
-		cout << "SCORE starting rank " << myrank << " within " << nranks << endl;
-		cout << "SCORE v" << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_REVISION;
+	cout << "SCORE GITSHA " << string(xstr(GITSHA)) << "\n";
+	cout << "SCORE starting rank " << myrank << " within " << nranks << "\n";
+	cout << "SCORE v" << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_REVISION;
 #ifdef IS_BETAVERSION_YES
 		cout << "beta" << endl;
 #else
@@ -145,14 +144,112 @@ bool checkworkingdirectory( string dirname ) {
 }
 
 
-int main(int argc, char** argv) {
+void test_hdf5()
+{
+	//HDF5 examples
+	string nexus_results_file_name = "SCORE.Results.SimID.Test.nxs";
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( nexus_results_file_name );
+	if( h5w.nexus_create() != MYHDF5_SUCCESS ) {
+		cerr << "Unable to create " << nexus_results_file_name << "\n";
+		return;
+	}
+
+	string grpnm = "/entry";
+	ioAttributes anno = ioAttributes();
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXentry") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
+
+	anno = ioAttributes();
+	anno.add( "unit", string("nm") );
+	//contiguous
+	//()
+	string dsnm = "/entry/u32_0d_cnt";
+	vector<unsigned int> uint;
+	for( unsigned int i = 0; i < 1; i++ ) { uint.push_back(i); }
+	if ( h5w.nexus_write_at_once( dsnm, io_info(), uint, anno ) != MYHDF5_SUCCESS ) { return; }
+	uint = vector<unsigned int>();
+
+	//(2,)
+	dsnm = "/entry/u32_1d_cnt";
+	for( unsigned int i = 0; i < 2; i++ ) { uint.push_back(i); }
+	if ( h5w.nexus_write_at_once( dsnm, io_info({2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
+	uint = vector<unsigned int>();
+
+	//(3,2)
+	dsnm = "/entry/u32_2d_cnt";
+	for( unsigned int i = 0; i < 3*2; i++ ) { uint.push_back(i); }
+	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
+	uint = vector<unsigned int>();
+
+	//(4,3,2)
+	dsnm = "/entry/u32_3d_cnt";
+	for( unsigned int i = 0; i < 4*3*2; i++ ) { uint.push_back(i); }
+	//should be interpreted as 4 is the x changing fastest, 3 changing slower, 2, two images changing slowest
+	//see how for d >= 3 the dimension shape sequence has to be reversed i.e. 2, 3, 4 instead of 4, 3, 2 !!!
+	if ( h5w.nexus_write_at_once( dsnm, io_info({2, 3, 4}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
+	uint = vector<unsigned int>();
+
+	//(6*5*4*3)
+	dsnm = "/entry/u32_4d_cnt";
+	for( unsigned int i = 0; i < 6*5*4*3; i++ ) { uint.push_back(i); }
+	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 4, 5, 6}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
+	uint = vector<unsigned int>();
+
+	//chunked
+	//(2,)
+	dsnm = "/entry/u32_1d_chk";
+	for( unsigned int i = 0; i < 2; i++ ) { uint.push_back(i); }
+	if ( h5w.nexus_write_at_once( dsnm, io_info({2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
+	uint = vector<unsigned int>();
+
+	//(3,2)
+	dsnm = "/entry/u32_2d_chk";
+	for( unsigned int i = 0; i < 3*2; i++ ) { uint.push_back(i); }
+	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 2}, {3, 2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
+	uint = vector<unsigned int>();
+
+	//(4,3,2)
+	dsnm = "/entry/u32_3d_chk";
+	for( unsigned int i = 0; i < 4*3*2; i++ ) { uint.push_back(i); }
+	if ( h5w.nexus_write_at_once( dsnm, io_info({2, 3, 4}, {2, 3, 4}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
+	uint = vector<unsigned int>();
+
+	//(6*5*4*3)
+	dsnm = "/entry/u32_4d_chk";
+	for( unsigned int i = 0; i < 6*5*4*3; i++ ) { uint.push_back(i); }
+	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 4, 5, 6}, {3, 4, 5, 6}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
+	uint = vector<unsigned int>();
+
+	//string_array
+	vector<string> str;
+	str.push_back("string_array");
+	dsnm = "/entry/string_array";
+	if ( h5w.nexus_write_at_once( dsnm, str, anno ) != MYHDF5_SUCCESS ) { return; }
+}
+
+
+int main(int argc, char** argv)
+{
+	//test_hdf5();
 	//set environment and working folders probe if input files are there and load them
 	ensembleHdlP myensemble = new ensembleHdl;
 	myensemble->simid = strtoul(argv[ID], NULL, 0 );
+	myensemble->uds_config_file_name = argv[INPUTFILE];
+	myensemble->nexus_results_file_name = "SCORE.Results.SimID." + to_string(myensemble->simid) + ".nxs";
+	myensemble->init_nexus_results_file();
+
 	string dirnm = "SCORE_" + std::to_string(myensemble->simid);
 	myensemble->simwrkdir = dirnm;
 	if ( checkworkingdirectory( dirnm ) == false ) { die("Unable to generate working directories!", false ); }
 	cout << "SCORE initialized working directory " << dirnm.c_str() << " ..." << endl;
+
+	//##MK::2023-V
+	string uds_file_fnm = argv[INPUTFILE];
+	string uds_file_sha256 = SHA256( uds_file_fnm.c_str() );
+	cout << "uds_file_fnm " << uds_file_fnm << "\n";
+	cout << "uds_file_sha256 " << uds_file_sha256 << "\n";
+	cout << "iso8601 timestamp now " << timestamp_now_iso8601() << "\n";
 
 	if( !myensemble->open(READ, argv[INPUTFILE], &(myensemble->score_input)) ) { die("Reading input file!", false); }
 	cout << "SCORE loaded input data " << argv[INPUTFILE] << " ..." << endl;
@@ -218,7 +315,9 @@ int main(int argc, char** argv) {
 		MPI_Finalize();
 	}
 
-	delete myensemble; return 0;
+	myensemble->finish_nexus_results_file();
+	delete myensemble;
+	return 0;
 }
 
 /*
