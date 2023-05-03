@@ -152,6 +152,8 @@ ensembleHdl::ensembleHdl()
 	outopt_generateDAMASKgeom = OUTPUT_DAMASK_GEOMETRYFILE_NO;
 	outopt_artsemebsd = OUTPUT_SEMEBSD_NO;
 
+	damask_file_name = "";
+
 	onthefly_defragmentation = false;
 	ensembleSuccess = true;
 	postProcessing = true;
@@ -5715,6 +5717,7 @@ caHdl::caHdl()
 	loginfo_defrag_cnt = 0;
 	loginfo_percolation_cnt = 0;
 
+	damask_file_name = "";
 	myensRank = MASTER;
 	nRanks = 1;
 
@@ -6272,6 +6275,8 @@ void caHdl::init_parameter( void )
 	outopt_localsinglegrainevo = myens->outopt_singlegrainevo;
 	outopt_localgenDAMASKgeom = myens->outopt_generateDAMASKgeom;
 	outopt_localartsemebsd = myens->outopt_artsemebsd;
+
+	damask_file_name = myens->damask_file_name;
 
 	maxfillperstep = myens->maxfillperstep;
 	initialRelCellCaching = myens->initialRelCellCaching;

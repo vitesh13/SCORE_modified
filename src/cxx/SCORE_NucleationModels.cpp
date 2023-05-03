@@ -762,7 +762,7 @@ void caHdl::solve_nucmodelling_dislo_ori_based( void )
 
         // read the nucleation flag dataset from HDF5
         //string fname = "/home/SCORE_orig/example_files/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
-        string fname = "/home/mkuehbach/SCORE-VITESH/SCORE_modified/example_files/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
+        string fname = damask_file_name; //"/home/mkuehbach/SCORE-VITESH/SCORE_modified/example_files/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
 
         
         file = HDF5_openFile( fname );

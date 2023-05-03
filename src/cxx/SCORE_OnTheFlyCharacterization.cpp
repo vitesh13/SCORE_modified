@@ -1056,7 +1056,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 	}
 
 	anno = ioAttributes();
-	//anno.add( "unit", string("") );
+	anno.add( "unit", string("rad") );
 	if ( h5w.nexus_write_at_once(
 		dsnm,
 		io_info({f64.size() / 3, 3},

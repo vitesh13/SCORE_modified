@@ -55,6 +55,7 @@ using namespace std;
 #define EBSDMAPPING				3
 #define PRNGSEED				4
 
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -255,12 +256,16 @@ int main(int argc, char** argv)
 	cout << "SCORE loaded input data " << argv[INPUTFILE] << " ..." << endl;
 
 	if ( argc > (1+2) ) {
+		myensemble->damask_file_name = string(argv[EBSDMAPPING]);
+		cout << "Loading initial microstructure from " << myensemble->damask_file_name << "\n";
+		/*
 		if ( myensemble->init_ebsdmap_read( argv[EBSDMAPPING] ) == false ) {
 			die("EBSDMapping input desired but failed!", true ); delete myensemble; return 0;
 		} //if readmap didnt fail data are now loaded!
 		else {
 			cout << "SCORE loaded SEM/EBSD map " << argv[EBSDMAPPING] << " ..." << endl;
 		}
+		*/
 	}
 
 	//MK::Init MPI capable of hybrid MPI/OpenMP even though SCORE currently at no point calls MPI within a parallel region
@@ -278,13 +283,15 @@ int main(int argc, char** argv)
 
 		//preparation phase
 		myensemble->prof_t0 = MPI_Wtime();
-		if ( argc > (1+3) )
+		if ( argc > (1+3) ) {
 			if ( atoi(argv[PRNGSEED]) > 0 )
 				myensemble->init_ensprng( atoi(argv[PRNGSEED]) );
 			else
 				myensemble->init_ensprng( true );
-		else
+		}
+		else {
 			myensemble->init_ensprng( true );
+		}
 
 		myensemble->init_mpidatatypes();
 		if ( myensemble->init_parameter() == false ) { die("Invalid parameterization and/or input data!", true ); delete myensemble; return 0; }

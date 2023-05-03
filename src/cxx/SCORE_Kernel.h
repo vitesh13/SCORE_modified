@@ -986,6 +986,7 @@ public:
 	unsigned char outopt_generateDAMASKgeom;
 	unsigned char outopt_artsemebsd;
 	char * filename;
+	string damask_file_name;
 
 	bool onthefly_defragmentation;
 	bool ensembleSuccess;
@@ -1397,6 +1398,7 @@ public:
 	bool renderingForThisCA;
 
         char * filename;
+    string damask_file_name;
 
 	struct aabb myrenderwindow;
 	randomClass localprng;
