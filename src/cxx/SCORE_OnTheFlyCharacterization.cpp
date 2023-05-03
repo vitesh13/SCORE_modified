@@ -719,7 +719,6 @@ void caHdl::nexus_write_automaton_geometry()
 	dsnm = grpnm + "/symmetry";
 	string value = "cubic";
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << "\n";
 		return;
@@ -745,7 +744,6 @@ void caHdl::nexus_write_automaton_geometry()
 	u32.push_back( myCAGeometry.nboxedge_td );
 	u32.push_back( myCAGeometry.nboxedge_nd );
 	anno = ioAttributes();
-	anno.add( "unit", string("px") );
 	if ( h5w.nexus_write_at_once(
 		dsnm,
 		io_info({u32.size() / 3, 3}),
@@ -773,7 +771,6 @@ void caHdl::nexus_write_automaton_geometry()
 	dsnm = grpnm + "/dimensionality";
 	unsigned int dimensionality = 3;
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, dimensionality, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
@@ -791,10 +788,9 @@ void caHdl::nexus_write_automaton_geometry()
 		return;
 	}
 
-	dsnm = grpnm + "/identifier_offset"; //##MK::2023, NX_INT
-	unsigned int offset = 0;
+	dsnm = grpnm + "/identifier_offset";
+	int offset = 0;
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, offset, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
@@ -811,7 +807,6 @@ void caHdl::nexus_write_automaton_geometry()
 	dsnm = grpnm + "/number_of_boundaries";
 	unsigned int n_bnd = 6;
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, n_bnd, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
@@ -819,11 +814,26 @@ void caHdl::nexus_write_automaton_geometry()
 
 	//dsnm = grpnm + "/boundaries"; //##MK::2023
 	//Name of the boundaries. E.g. left, right, front, back, bottom, top, The field must have as many entries as there are number_of_boundaries.
+	/*
+	vector<string> bnd_names;
+	dsnm = grpnm + "/boundaries";
+	bnd_names.push_back("left"); bnd_names.push_back("right"); //x
+	bnd_names.push_back("front"); bnd_names.push_back("back"); //y
+	bnd_names.push_back("bottom"); bnd_names.push_back("top"); //z
+	anno = ioAttributes();
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({bnd_names.size() / 1, 1}),
+		bnd_names,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	*/
 
 	dsnm = grpnm + "/boundary_conditions";
 	vector<int> bnd_cond = vector<int>( 6, 2 );
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write_at_once(
 		dsnm,
 		io_info({bnd_cond.size() / 1, 1}),
@@ -847,7 +857,6 @@ void caHdl::nexus_write_snapshot_kinetics()
 	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step);
 	dsnm = grpnm + "/iteration";
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, this->step, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !";
 		return;
@@ -873,7 +882,6 @@ void caHdl::nexus_write_snapshot_kinetics()
 	dsnm = grpnm + "/target";
 	//is target because does not take into account the partially RXed active cells only fully transformed ones
 	anno = ioAttributes();
-	anno.add( "unit", string("1") );
 	if ( h5w.nexus_write( dsnm, this->X, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !";
 		return;
@@ -1273,7 +1281,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	}
 	u08 = vector<unsigned char>();
 
-	dsnm = grpnm + "/is_boundary";
+	dsnm = grpnm + "/halo_region";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1292,7 +1300,6 @@ void caHdl::nexus_write_snapshot_front_based()
 	} //next region
 
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write_at_once(
 		dsnm,
 		io_info({u08.size() / 1, 1},
@@ -1325,7 +1332,6 @@ void caHdl::nexus_write_snapshot_front_based()
 	} //next region
 
 	anno = ioAttributes();
-	anno.add( "unit", string("1") ); //NX_DIMENSIONLESS") );
 	if ( h5w.nexus_write_at_once(
 		dsnm,
 		io_info({f64.size() / 1, 1},
@@ -1357,7 +1363,6 @@ void caHdl::nexus_write_snapshot_front_based()
 	} //next region
 
 	anno = ioAttributes();
-	anno.add( "unit", string("1") ); //NX_DIMENSIONLESS") );
 	if ( h5w.nexus_write_at_once(
 		dsnm,
 		io_info({f64.size() / 1, 1},

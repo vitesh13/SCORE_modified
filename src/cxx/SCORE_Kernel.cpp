@@ -1851,14 +1851,15 @@ void ensembleHdl::init_nexus_results_file()
 	grpnm = "/entry";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXentry") );
-	anno.add( "version", string("https://fairmat-experimental.github.io/nexus-fairmat-proposal/9636feecb79bb32b828b1a9804269573256d7696/classes/contributed_definitions/NXms_score_results.html#nxms-score-results") );
+	anno.add( "version", string("nexus-fairmat-proposal successor of 9636feecb79bb32b828b1a9804269573256d7696") );
+	//https://fairmat-experimental.github.io/nexus-fairmat-proposal/9636feecb79bb32b828b1a9804269573256d7696/classes/contributed_definitions/NXms_score_results.html#nxms-score-results") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << grpnm << " failed !" << "\n";
 		return;
 	}
 
 	dsnm = grpnm + "/definition";
-	string appdef_name = "NXapm_score_results";
+	string appdef_name = "NXms_score_results";
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, appdef_name, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1915,7 +1916,7 @@ void ensembleHdl::init_nexus_results_file()
 		return;
 	}
 
-	dsnm = grpnm + "/program_name";
+	dsnm = grpnm + "/program";
 	string program_name = "SCORE";
 	anno = ioAttributes();
 	anno.add( "version", string(xstr(GITSHA)) );
@@ -1948,8 +1949,7 @@ void ensembleHdl::init_nexus_results_file()
 		anno = ioAttributes();
 		anno.add( "depends_on", string(".") );
 		anno.add( "offset", string("{MYZERO, MYZERO, MYZERO}, storing 1d array as an attribute value not yet implemented") ); //##MK::not yet implemented
-		anno.add( "offset_units", string("nm") );
-		anno.add( "transformation_type", string("translation") );
+		anno.add( "offset_units", string("m") );
 		if ( h5w.nexus_write(
 				dsnm,
 				io_info({3, 1},
@@ -1970,7 +1970,6 @@ void ensembleHdl::init_nexus_results_file()
 	}
 
 	grpnm = "/entry/conventions/rotation_conventions";
-	//##MK::2023
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXprocess") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
@@ -1978,8 +1977,17 @@ void ensembleHdl::init_nexus_results_file()
 		return;
 	}
 
+	dsnm = grpnm + "/reference_frame_type";
+	string value = "right_handed_cartesian";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
 	dsnm = grpnm + "/three_dimensional_rotation_handedness";
-	string value = "counter_clockwise";
+	value = "counter_clockwise";
 	anno = ioAttributes();
 	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
@@ -1988,7 +1996,7 @@ void ensembleHdl::init_nexus_results_file()
 	}
 
 	dsnm = grpnm + "/rotation_convention";
-	value = "undefined"; //should be passive but not sure!
+	value = "passive"; //should be passive but not sure!
 	anno = ioAttributes();
 	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
@@ -2016,8 +2024,12 @@ void ensembleHdl::init_nexus_results_file()
 
 	dsnm = grpnm + "/orientation_parameterization_sign_convention";
 	value = "undefined";
-	if ( P_EIJK > 0 ) { value = "p_plus_one"; }
-	else { value = "p_minus_one"; }
+	if ( P_EIJK > 0 ) {
+		value = "p_plus_one";
+	}
+	else {
+		value = "p_minus_one";
+	}
 	anno = ioAttributes();
 	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
@@ -2192,21 +2204,24 @@ void ensembleHdl::finish_nexus_results_file()
 	}
 
 	dsnm = grpnm + "/current_working_directory";
-	//##MK::2023
-	/*
-	string cwd = get_current_working_directory();
+	string cwd = "n/a";
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write( dsnm, cwd, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
-	*/
+
+	dsnm = grpnm + "/command_line_call";
+	string cli = "n/a";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, cli, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
 
 	dsnm = grpnm + "/number_of_processes";
 	unsigned int uint = (unsigned int) nRanks;
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write( dsnm, uint, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
@@ -2215,7 +2230,6 @@ void ensembleHdl::finish_nexus_results_file()
 	dsnm = grpnm + "/number_of_threads";
 	uint = (apt_uint) omp_get_max_threads();
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write( dsnm, uint, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
@@ -2224,7 +2238,6 @@ void ensembleHdl::finish_nexus_results_file()
 	dsnm = grpnm + "/number_of_gpus";
 	uint = 0;
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write( dsnm, uint, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
