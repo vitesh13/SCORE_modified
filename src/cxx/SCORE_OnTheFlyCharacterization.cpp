@@ -1,5 +1,5 @@
 /* 
-*	Copyright Markus Kühbach, 2014-2017
+*	Copyright Markus Kï¿½hbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
@@ -14,16 +14,16 @@
 *	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kï¿½hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
 *	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
+*	M. Kï¿½hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
 
 *	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
 *	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
+*	by RWTH Aachen University and the FZ Jï¿½lich within the scope of the JARAHPC project JARA0076.
 
 
 *	This file is part of SCORE.
@@ -520,7 +520,7 @@ void caHdl::log_OUTPUT( void )
 	//2D and 3D sections
 	if ( renderingForThisCA == true ) {
 		//##MK::old way of accounting was volume based i.e. Xcells / myCAGeometry.nboxvol_rdtdnd >= rendering_atthisX[loginfo_rendering_cnt] && loginfo_rendering_cnt < rendering_atthisX.size() ) {
-		//##MK::Diehl/Kühbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
+		//##MK::Diehl/Kï¿½hbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
 		double Xarea_exp = log_rxareafraction( 0.0 );
 		double Xarea_hlf = log_rxareafraction( 0.5 );
 
@@ -608,13 +608,13 @@ void caHdl::log_OUTPUT_Diehl()
 
 	//previous the outputting of CA sections was controlled by passing volume or area rx fractions above predefined thresholds
 	//and then output was rendered for all defined sections
-	//for Diehl/Kühbach, MMM2018 Special Issue paper though we monitor first the recrystallized fraction on specific planes
+	//for Diehl/Kï¿½hbach, MMM2018 Special Issue paper though we monitor first the recrystallized fraction on specific planes
 	//and output individually when these reach predefined thresholds
 
 	//MK::NO PARALLEL RENDERING AT THE MOMENT
 	//2D and 3D sections
 	if ( renderingForThisCA == true ) {
-		//##MK::Diehl/Kühbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
+		//##MK::Diehl/Kï¿½hbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
 
 		uint32_t z00_logcnt = loginfo_rendering_sectionbased_cnt.at(0);
 		if ( z00_logcnt < rendering_atthisX.size() ) {
@@ -683,6 +683,882 @@ void caHdl::log_OUTPUT_Diehl()
 			}
 		} //done for this CA
 	}
+}
+
+
+void caHdl::log_OUTPUT_NeXus()
+{
+	//CALLED FROM WITHIN PARALLEL REGION BUT BY THE MASTER THREAD ONLY
+	if ( renderingForThisCA == true ) {
+		if ( Xcells >= output_atthisX[loginfo_grainevo_cnt] && loginfo_grainevo_cnt < output_atthisX.size() ) {
+			nexus_write_snapshot();
+
+			loginfo_grainevo_cnt++;
+		}
+	}
+}
+
+
+void caHdl::nexus_write_automaton_geometry()
+{
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
+	grpnm = "/entry/rve/grid";
+	if ( h5w.nexus_group_exists(grpnm) == true ) {
+		return;
+	}
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXcg_grid") );
+	if ( h5w.nexus_write_group(grpnm, anno) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/symmetry";
+	string value = "cubic";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << "\n";
+		return;
+	}
+
+	vector<double> f64 = vector<double>( 3, myCAGeometry.cellsize );
+	dsnm = grpnm + "/cell_dimensions";
+	anno = ioAttributes();
+	anno.add( "unit", string("m") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({f64.size() / 3, 3}),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+
+	vector<unsigned int> u32;
+	dsnm = grpnm + "/extent";
+	u32.push_back( myCAGeometry.nboxedge_rd );
+	u32.push_back( myCAGeometry.nboxedge_td );
+	u32.push_back( myCAGeometry.nboxedge_nd );
+	anno = ioAttributes();
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({u32.size() / 3, 3}),
+		u32,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u32 = vector<unsigned int>();
+
+	f64 = vector<double>( 3, 0. );
+	dsnm = grpnm + "/origin";
+	anno = ioAttributes();
+	anno.add( "unit", string("m") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({f64.size() / 3, 3}),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+
+	dsnm = grpnm + "/dimensionality";
+	unsigned int dimensionality = 3;
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, dimensionality, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/cardinality";
+	unsigned int cardinality = 1;
+	cardinality *= myCAGeometry.nboxedge_rd;
+	cardinality *= myCAGeometry.nboxedge_td;
+	cardinality *= myCAGeometry.nboxedge_nd;
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, cardinality, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/identifier_offset";
+	int offset = 0;
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, offset, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/rve/grid/boundary";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXcg_polyhedron_set") );
+	if ( h5w.nexus_write_group(grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/number_of_boundaries";
+	unsigned int n_bnd = 6;
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, n_bnd, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	//dsnm = grpnm + "/boundaries"; //##MK::2023
+	//Name of the boundaries. E.g. left, right, front, back, bottom, top, The field must have as many entries as there are number_of_boundaries.
+	/*
+	vector<string> bnd_names;
+	dsnm = grpnm + "/boundaries";
+	bnd_names.push_back("left"); bnd_names.push_back("right"); //x
+	bnd_names.push_back("front"); bnd_names.push_back("back"); //y
+	bnd_names.push_back("bottom"); bnd_names.push_back("top"); //z
+	anno = ioAttributes();
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({bnd_names.size() / 1, 1}),
+		bnd_names,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	*/
+
+	dsnm = grpnm + "/boundary_conditions";
+	vector<int> bnd_cond = vector<int>( 6, 2 );
+	anno = ioAttributes();
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({bnd_cond.size() / 1, 1}),
+		bnd_cond,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	bnd_cond = vector<int>();
+	//0 - undefined 1 - open 2 - periodic 3 - mirror 4 - von Neumann 5 - Dirichlet
+}
+
+
+void caHdl::nexus_write_snapshot_kinetics()
+{
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
+
+	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step);
+	dsnm = grpnm + "/iteration";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, this->step, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !";
+		return;
+	}
+
+	dsnm = grpnm + "/time";
+	anno = ioAttributes();
+	anno.add( "unit", string("s") );
+	if ( h5w.nexus_write( dsnm, this->t, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !";
+		return;
+	}
+
+	dsnm = grpnm + "/temperature";
+	anno = ioAttributes();
+	anno.add( "unit", string("K") );
+	if ( h5w.nexus_write( dsnm, this->CurrentTemperature, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !";
+		return;
+	}
+
+	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_kinetics";
+	dsnm = grpnm + "/target";
+	//is target because does not take into account the partially RXed active cells only fully transformed ones
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, this->X, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !";
+		return;
+	}
+}
+
+
+void caHdl::nexus_write_snapshot_texture()
+{
+
+}
+
+
+void caHdl::nexus_write_snapshot_grain_based()
+{
+	//MAY ONLY BE CALLED BY ONE THREAD!
+	//there are two strategies to compute how much volume of the CA is associated to each grain (defg or rx)
+	//either we bookkeep over all regions and all cells in these and read their grain ID
+	//better is to read only the list of defg and rx grains as these should ideally be in sync with the first method
+	//however, the key difficulty is that each cell in the RX front is partially rxg and thus we need to account for the fractional
+	//volume as otherwise in particular for a large number of cells relative to the total number of cells the bookkeeping would be wrong!
+	//we have to remind ourselves here that each cell is infected only once and this infection then filled through this simplifies the bookkeeping
+	//also keep in mind that the global list of cells does not keep information which of these cells are currently infected
+	//mainly to avoid unnecessary bookkeeping of these information for the sake of saving memory and improved performance
+	double cellvolume = CUBE(this->myCAGeometry.cellsize);
+	uint32_t ndisjoint_grains = mydefgpool.size() + myrxgpool.size();
+
+	//consider first discrete counts, in this case each cell is either fully deformed or fully recrystallized
+	vector<double> f64 = vector<double>( ndisjoint_grains, 0. );
+	uint32_t ndefg = mydefgpool.size();
+	for ( uint32_t dg = 0; dg < ndefg; dg++ ) {
+		f64[dg] = (double) mydefgpool[dg].cellcount;
+	}
+	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
+		f64[rg] = (double) myrxgpool[rg-ndefg].cellcount;
+	}
+
+	//then correct for partial recrystallized fraction via individual contributions from cells of the RX front
+	uint32_t nreg = this->regions.size();
+	unsigned int nbx = myCAGeometry.nboxedge_rd;
+	unsigned int nby = myCAGeometry.nboxedge_td;
+	uint32_t ncandidates = 0;
+	cellP front = NULL;
+	uint32_t idx = 0;
+
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		//analyze cells inside
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+		front = this->regions[r]->myRXFrontInside;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				//unsigned int ixyz = front[c].ix + (front[c].iy * nbx) + (front[c].iz * nbxy);
+				//ix, ... are short but positive! so short to unsigned int conversion is not a problem
+				uint32_t defgid = front[c].mydefgid;
+				uint32_t rxgid = front[c].myrxgid;
+				//double consumed_by_rxg = cellvolume * 0.;
+				//if ( front[c].rxFrac <= 1. ) {
+				//double consumed_by_rxg = cellvolume * front[c].rxFrac;
+				//}
+				f64[defgid] -= front[c].rxFrac;
+				f64[ndefg + rxgid] += front[c].rxFrac;
+			}
+		}
+		//analyze cells border
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+		front = this->regions[r]->myRXFrontBorder;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				//unsigned int ixyz = front[c].ix + (front[c].iy * nbx) + (front[c].iz * nbxy);
+				uint32_t defgid = front[c].mydefgid;
+				uint32_t rxgid = front[c].myrxgid;
+				//double consumed_by_rxg = cellvolume * 0.;
+				//if ( front[c].rxFrac <= 1. ) {
+				//	double consumed_by_rxg = cellvolume * front[c].rxFrac;
+				//}
+				f64[defgid] -= front[c].rxFrac;
+				f64[ndefg + rxgid] += front[c].rxFrac;
+			}
+		}
+	} //next region
+
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
+
+	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grain_ensemble";
+
+	vector<unsigned char> u08 = vector<unsigned char>( ndisjoint_grains, 0x01 );
+	dsnm = grpnm + "/is_deformed";
+	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
+		u08[rg] = 0x00;
+	}
+	anno = ioAttributes();
+	//anno.add( "unit", string("") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({u08.size() / 1, 1},
+				{u08.size() / 1, 1},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		u08,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u08 = vector<unsigned char>();
+
+	u08 = vector<unsigned char>( ndisjoint_grains, 0x01 );
+	dsnm = grpnm + "/is_recrystallized";
+	for ( uint32_t dg = 0; dg < ndefg; dg++ ) {
+		u08[dg] = 0x00;
+	}
+	anno = ioAttributes();
+	//anno.add( "unit", string("") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({u08.size() / 1, 1},
+				{u08.size() / 1, 1},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		u08,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u08 = vector<unsigned char>();
+
+	dsnm = grpnm + "/volume";
+	anno = ioAttributes();
+	anno.add( "unit", string("voxel volume equivalent") );  //1 px = CUBE(cellsize) which is in m^3
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({f64.size() / 1, 1},
+				{f64.size() / 1, 1},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_kinetics";
+	dsnm = grpnm + "/value";
+	//is target because does not take into account the partially RXed active cells
+	//only fully transformed ones
+	double Xexact = 0.;
+	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
+		Xexact += f64[rg];
+	}
+	double XX = (Xexact / ((double) myCAGeometry.nboxvol_rdtdnd));
+	anno = ioAttributes();
+	anno.add( "unit", string("1") );
+	if ( h5w.nexus_write( dsnm, XX, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+
+	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grain_ensemble";
+	dsnm = grpnm + "/euler";
+	f64.reserve(ndisjoint_grains * 3);
+	for ( uint32_t dg = 0; dg < ndefg; dg++ ) {
+		uint32_t ori_idx = mydefgpool[dg].caori;
+		f64.push_back( myoripool[ori_idx].bunge1 );
+		f64.push_back( myoripool[ori_idx].bunge2 );
+		f64.push_back( myoripool[ori_idx].bunge3 );
+	}
+	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
+		uint32_t ori_idx = myrxgpool[rg-ndefg].caori;
+		f64.push_back( myoripool[ori_idx].bunge1 );
+		f64.push_back( myoripool[ori_idx].bunge2 );
+		f64.push_back( myoripool[ori_idx].bunge3 );
+	}
+
+	anno = ioAttributes();
+	anno.add( "unit", string("rad") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({f64.size() / 3, 3},
+				{f64.size() / 3, 3},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+
+	dsnm = grpnm + "/dislocation_density";
+	f64.reserve(ndisjoint_grains);
+	for ( uint32_t dg = 0; dg < ndefg; dg++ ) {
+		f64.push_back( mydefgpool[dg].rho );
+	}
+	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
+		f64.push_back( RHOMAX_WELLANNEALED );
+	}
+	anno = ioAttributes();
+	anno.add( "unit", string("1/m^2") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({f64.size() / 1, 1},
+				{f64.size() / 1, 1},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+}
+
+
+void caHdl::nexus_write_snapshot_front_based()
+{
+	//MAY ONLY BE CALLED BY ONE THREAD!
+	uint32_t nreg = this->regions.size();
+	unsigned int nbx = myCAGeometry.nboxedge_rd;
+	unsigned int nby = myCAGeometry.nboxedge_td;
+	uint32_t ncandidates = 0;
+	cellP front = NULL;
+
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
+	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_front";
+
+	vector<short> i16;
+	dsnm = grpnm + "/coordinate";
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		//analyze cells inside
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+		front = this->regions[r]->myRXFrontInside;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				//unsigned int ixyz = front[c].ix + (front[c].iy * nbx) + (front[c].iz * nbxy);
+				//ix, ... are short but positive! so short to unsigned int conversion is not a problem
+				i16.push_back( front[c].ix );
+				i16.push_back( front[c].iy );
+				i16.push_back( front[c].iz );
+			}
+		}
+		//analyze cells border
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+		front = this->regions[r]->myRXFrontBorder;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				//unsigned int ixyz = front[c].ix + (front[c].iy * nbx) + (front[c].iz * nbxy);
+				i16.push_back( front[c].ix );
+				i16.push_back( front[c].iy );
+				i16.push_back( front[c].iz );
+			}
+		}
+	} //next region
+
+	anno = ioAttributes();
+	anno.add( "unit", string("px") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({i16.size() / 3, 3},
+				{i16.size() / 3, 3},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		i16,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	i16 = vector<short>();
+
+	vector<unsigned short> u16;
+	dsnm = grpnm + "/thread_identifier";
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+		front = this->regions[r]->myRXFrontInside;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				u16.push_back( (unsigned short) r ); // should be safe I have not seen a CPU with more than 65k OpenMP threads
+			}
+		}
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+		front = this->regions[r]->myRXFrontBorder;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				u16.push_back( (unsigned short) r );
+			}
+		}
+	} //next region
+
+	anno = ioAttributes();
+	//anno.add( "unit", string("NX_UNITLESS") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({u16.size() / 1, 1},
+				{u16.size() / 1, 1},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		u16,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u16 = vector<unsigned short>();
+
+	vector<unsigned int> u32;
+	dsnm = grpnm + "/deformed_grain_identifier";
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+		front = this->regions[r]->myRXFrontInside;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				u32.push_back( front[c].mydefgid );
+			}
+		}
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+		front = this->regions[r]->myRXFrontBorder;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				u32.push_back( front[c].mydefgid );
+			}
+		}
+	} //next region
+
+	anno = ioAttributes();
+	//anno.add( "unit", string("NX_UNITLESS") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({u32.size() / 1, 1},
+				{u32.size() / 1, 1},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		u32,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u32 = vector<unsigned int>();
+
+	dsnm = grpnm + "/recrystallized_grain_identifier";
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+		front = this->regions[r]->myRXFrontInside;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				u32.push_back( front[c].myrxgid );
+			}
+		}
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+		front = this->regions[r]->myRXFrontBorder;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				u32.push_back( front[c].myrxgid );
+			}
+		}
+	} //next region
+
+	anno = ioAttributes();
+	//anno.add( "unit", string("NX_UNITLESS") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({u32.size() / 1, 1},
+				{u32.size() / 1, 1},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		u32,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u32 = vector<unsigned int>();
+
+	vector<unsigned char> u08;
+	dsnm = grpnm + "/infection_direction";
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+		front = this->regions[r]->myRXFrontInside;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				u08.push_back( front[c].infector );
+			}
+		}
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+		front = this->regions[r]->myRXFrontBorder;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				u08.push_back( front[c].infector );
+			}
+		}
+	} //next region
+
+	anno = ioAttributes();
+	//anno.add( "unit", string("NX_UNITLESS") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({u08.size() / 1, 1},
+				{u08.size() / 1, 1},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		u08,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u08 = vector<unsigned char>();
+
+	dsnm = grpnm + "/halo_region";
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+		front = this->regions[r]->myRXFrontInside;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				u08.push_back( 0x00 );
+			}
+		}
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+		front = this->regions[r]->myRXFrontBorder;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				u08.push_back( 0x01 );
+			}
+		}
+	} //next region
+
+	anno = ioAttributes();
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({u08.size() / 1, 1},
+				{u08.size() / 1, 1},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		u08,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u08 = vector<unsigned char>();
+
+	vector<double> f64;
+	dsnm = grpnm + "/recrystallized_volume_fraction";
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+		front = this->regions[r]->myRXFrontInside;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				f64.push_back( front[c].rxFrac );
+			}
+		}
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+		front = this->regions[r]->myRXFrontBorder;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				f64.push_back( front[c].rxFrac );
+			}
+		}
+	} //next region
+
+	anno = ioAttributes();
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({f64.size() / 1, 1},
+				{f64.size() / 1, 1},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+
+	dsnm = grpnm + "/mobility_weight";
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+		front = this->regions[r]->myRXFrontInside;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				f64.push_back( front[c].P );
+			}
+		}
+		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+		front = this->regions[r]->myRXFrontBorder;
+		for ( uint32_t c = 0; c < ncandidates; c++ ) {
+			if ( front[c].activity == ACTIVE ) {
+				f64.push_back( front[c].P );
+			}
+		}
+	} //next region
+
+	anno = ioAttributes();
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({f64.size() / 1, 1},
+				{f64.size() / 1, 1},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+}
+
+
+void caHdl::nexus_write_snapshot_cell_based()
+{
+	//MAY ONLY BE CALLED BY ONE THREAD!
+	//region topology how many memory regions in x, y, and z?
+	vector<unsigned int> u32 = vector<unsigned int>(
+			this->myensHdl->ensCAGeometry.nboxvol_rdtdnd, INVALID_CELLASSIGNMENT );
+
+	uint32_t nreg = this->regions.size();
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		uint32_t xmi = this->regions[r]->myGeom.nreg_rdmin; //global coordinates all inclusive [imi, imx]
+		uint32_t ymi = this->regions[r]->myGeom.nreg_tdmin;
+		uint32_t zmi = this->regions[r]->myGeom.nreg_ndmin;
+
+		uint32_t xmx = this->regions[r]->myGeom.nreg_rdmax;
+		uint32_t ymx = this->regions[r]->myGeom.nreg_tdmax;
+		uint32_t zmx = this->regions[r]->myGeom.nreg_ndmax;
+
+		uint32_t rxmx = this->regions[r]->myGeom.nreg_rd;
+		uint32_t rymx = this->regions[r]->myGeom.nreg_td;
+		uint32_t rzmx = this->regions[r]->myGeom.nreg_nd;
+
+		uint32_t gx = this->myCAGeometry.nboxedge_rd; //global SU extent
+		uint32_t gxy = this->myCAGeometry.nboxarea_rdtd;
+
+		//copy dislocation densities from the buffer
+		uint32_t* thegrid = this->regions[r]->mycellgrid;
+		//uint32_t reg_ndgp = this->regions[r]->reg_nmydefgpool;
+		uint32_t c = 0;
+		uint32_t index = 0;
+		uint32_t gridvalue = INVALID_CELLASSIGNMENT;
+		for ( uint32_t z = 0; z < rzmx; z++ ) {
+			uint32_t zoff = (z + zmi)*gxy;
+			for ( uint32_t y = 0; y < rymx; y++ ) {
+				uint32_t yzoff = (y + ymi)*gx + zoff;
+				for ( uint32_t x = 0; x < rxmx; x++ ) {
+					index = (x + xmi) + yzoff;
+					gridvalue = thegrid[c];
+
+					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) {
+						u32[index] = gridvalue;
+					}
+					else if ( gridvalue == CURRENTLY_INFECTED ) {
+						u32[index] = CURRENTLY_INFECTED;
+					}
+					else if ( gridvalue == CELL_IS_A_PARTICLE ) {
+						u32[index] = CELL_IS_A_PARTICLE;
+					}
+					else {
+						u32[index] = INVALID_CELLASSIGNMENT;
+					}
+					c++;
+				} //scan +x line
+			} //scan +y line
+		} //scan +z lines
+	} //for each thread
+
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
+	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grid";
+
+	dsnm = grpnm + "/grain_identifier";
+	anno = ioAttributes();
+	//anno.add( "unit", string("NX_UNITLESS") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
+				{this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		u32,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u32 = vector<unsigned int>();
+
+	vector<unsigned short> u16 = vector<unsigned short>(
+			this->myensHdl->ensCAGeometry.nboxvol_rdtdnd, MASTER );
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		uint32_t xmi = this->regions[r]->myGeom.nreg_rdmin; //global coordinates all inclusive [imi, imx]
+		uint32_t ymi = this->regions[r]->myGeom.nreg_tdmin;
+		uint32_t zmi = this->regions[r]->myGeom.nreg_ndmin;
+
+		uint32_t xmx = this->regions[r]->myGeom.nreg_rdmax;
+		uint32_t ymx = this->regions[r]->myGeom.nreg_tdmax;
+		uint32_t zmx = this->regions[r]->myGeom.nreg_ndmax;
+
+		uint32_t rxmx = this->regions[r]->myGeom.nreg_rd;
+		uint32_t rymx = this->regions[r]->myGeom.nreg_td;
+		uint32_t rzmx = this->regions[r]->myGeom.nreg_nd;
+
+		uint32_t gx = this->myCAGeometry.nboxedge_rd; //global SU extent
+		uint32_t gxy = this->myCAGeometry.nboxarea_rdtd;
+
+		uint32_t index = 0;
+		for ( uint32_t z = 0; z < rzmx; z++ ) {
+			uint32_t zoff = (z + zmi)*gxy;
+			for ( uint32_t y = 0; y < rymx; y++ ) {
+				uint32_t yzoff = (y + ymi)*gx + zoff;
+				for ( uint32_t x = 0; x < rxmx; x++ ) {
+					index = (x + xmi) + yzoff;
+					u16[index] = r;
+				} //scan +x line
+			} //scan +y line
+		} //scan +z lines
+	} //for each thread
+
+	dsnm = grpnm + "/thread_identifier";
+	anno = ioAttributes();
+	//anno.add( "unit", string("NX_UNITLESS") );
+	if ( h5w.nexus_write_at_once(
+		dsnm,
+		io_info({this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
+				{this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
+				MYHDF5_COMPRESSION_GZIP, 0x01),
+		u16,
+		anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u16 = vector<unsigned short>();
+}
+
+
+void caHdl::nexus_write_snapshot()
+{
+	//CALLED FROM WITHIN PARALLEL REGION BUT BY THE MASTER THREAD ONLY
+
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
+
+	string grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step);
+	ioAttributes anno = ioAttributes();
+	anno.add( "NX_class", string("NXms_snapshot") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grid";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXcg_grid") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_kinetics";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXprocess") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_front";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXprocess") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grain_ensemble";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXprocess") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	nexus_write_automaton_geometry();
+
+	nexus_write_snapshot_kinetics();
+
+	nexus_write_snapshot_texture();
+
+	nexus_write_snapshot_grain_based();
+
+	nexus_write_snapshot_front_based();
+
+	nexus_write_snapshot_cell_based();
 }
 
 
@@ -835,7 +1711,7 @@ void caHdl::log_grain_IDs( double t ){
      // write the grain IDs to a hdf5 file
      // First need to get the grain IDs from different regions
      // Following the code from EBSD Importing
-        int r, index, ixyz;
+        int index, ixyz;
 	//no domain partitioning into regions along x, but along y and z
 	uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
 	uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
@@ -852,7 +1728,6 @@ void caHdl::log_grain_IDs( double t ){
 	    uint32_t rz = this->regions[r]->myGeom.nreg_nd;
             uint32_t rymin = this->regions[r]->myGeom.nreg_tdmin;
             uint32_t rzmin = this->regions[r]->myGeom.nreg_ndmin;
-	    uint32_t rxy = rx*ry;
             uint32_t yzoffset;
 	    uint32_t c = 0;
 
@@ -907,10 +1782,12 @@ void caHdl::log_grain_IDs( double t ){
              
         } // loop for threads
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-        string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
+        /*
+        //##MK::2023-V
+		string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
         string dset_name = "Grain_ID";
         HDF5_write_CA_output_int( fname, t, grain_ID, dset_name );
-
+        */
 }
 
 void caHdl::log_grain_rho_cell_based( double t ){
@@ -998,19 +1875,20 @@ void caHdl::log_grain_rho_cell_based( double t ){
 		// loop over the grain IDs to fill the rho array
 		
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
+        /*
+        //##MK::2023-V
 		string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
 		string dset_name = "rho";
                 string s = to_string(t);
                 string group_name = "Time_" + s;
 		HDF5_write_CA_output_double_rank_1( fname, group_name, rho, dset_name );
-
+		*/
 	}
 
 	void caHdl::log_grain_ori_cell_based( double t ){
 	     // write the orientations (quaternions) of the grains to a hdf5 file
 		int r, index, ixyz, oid;
 		//no domain partitioning into regions along x, but along y and z
-		uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
 		uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
 		std::vector<int> grain_ID(myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td*myCAGeometry.nboxedge_nd);
 		std::vector<std::vector<double>> ori_quats(myCAGeometry.nboxedge_rd*myCAGeometry.nboxedge_td*myCAGeometry.nboxedge_nd, std::vector<double>(4));
@@ -1115,12 +1993,14 @@ void caHdl::log_grain_rho_cell_based( double t ){
 		// loop over the grain IDs to fill the rho array
 		
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
+		/*
+        //##MK::2023-V
 		string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
                 string s = to_string(t);
                 string group_name = "Time_" + s;
                 string dset_name = "O";
 		HDF5_write_CA_output_double_rank_2( fname, group_name, ori_quats, dset_name );
-
+		*/
 	}
 
 double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
@@ -1226,15 +2106,15 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 
 		//std::cout << "In the end the RXfrac array is" << RXfrac[166509] << "at time " << t << std::endl; 
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
+        /*
+        //##MK::2023-V
 		string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
                 string s = to_string(t);
                 string group_name = "Time_" + s + "/Cell_based_data";
 		string dset_name = "Activity";
 		HDF5_write_CA_output_double_rank_1( fname, group_name, RXfrac, dset_name );
-                string attr_group_name = "Time_" + s;
-                HDF5_write_float_attribute( fname, attr_group_name, calculate_RXfrac_total(RXfrac), "RXfrac");
-                HDF5_write_float_attribute( fname, attr_group_name, CurrentTemperature, "T");
-
+                HDF5_write_float_attribute( fname, group_name, calculate_RXfrac_total(RXfrac), "RXfrac");
+		*/
 	}
 
 	void caHdl::log_grain_rho_grain_based( double t ){
@@ -1253,17 +2133,18 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 	    }
 
 	    // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
+	    /*
 	    string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
             string s = to_string(t);
             string group_name = "Time_" + s + "/Grain_based_data";
 	    string dset_name = "rho_per_grain";
 	    HDF5_write_CA_output_double_rank_1( fname, group_name, rho, dset_name );
-
+	    */
 	}
 
 	void caHdl::log_grain_ori_grain_based( double t ){
 	     // write the orientations (quaternions) of the grains to a hdf5 file
-		int r, oid;
+		int oid;
 		uint32_t ndg = this->mydefgpool.size();
 		uint32_t ngrains = ndg + this->myrxgpool.size();
 		std::vector<std::vector<double>> ori_quats(ngrains, std::vector<double>(4));
@@ -1286,11 +2167,14 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
         }
 
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
-        string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
+		/*
+        //##MK::2023-V
+		string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
         string s = to_string(t);
         string group_name = "Time_" + s + "/Grain_based_data";
 	string dset_name = "O_grain";
         HDF5_write_CA_output_double_rank_2( fname, group_name, ori_quats, dset_name );
+        */
 
 }
 

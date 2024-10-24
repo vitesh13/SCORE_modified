@@ -1,14 +1,14 @@
 || RuntimeControl		|| *(ss)		|| Parameter, Value
 "XMAX"							"1.000"		// when does the integration scheme stop at the latest
 "TIMEMAX"						"3600.0"	// after which simulated annealing time should the integration stop at the latest
-"NMAX"							"100000"	// after how many integration steps should the integration be stopped regardless the local X or annealing time
+"NMAX"							"10000"		// 10000 after how many integration steps should the integration be stopped regardless the local X or annealing time
 "PERCOLATIONANALYSIS"			"0"			// 0 - no percolation test, 1 - testing surplus output of DAMASK HDF5 geometry file when first percolating, 2 - as 1 but surplus  the cluster size distribution for each time step as one HDF5 file
 "MAXFILLPERSTEP"				"0.1"		// how much partial volume of a cell does the fastest boundary sweep in one timestep
 "RediscretizationSteps"			"10000"		// in how many time steps should the real time interval be rediscretized
 "InitialCacheSizeRXCells"		"0.20"		// multiplier to set preallocated fraction of the total CA cells for processing infections
 "ReCacheSizeRXCells"			"1.0"		// to set how multiple times more memory of the already allocated is realloced for processing infections
 "OnTheFlyDefragmentation"		"1"			// 0 - inactive, 1 - defragment for inactive cells
-"SolitaryUnitPostProcessing"	"1"			// 0 - execute SU but do not collect into statistical ensemble, 1 - collect as developed in Markus Kuehbachs thesis
+"SolitaryUnitPostProcessing"	"0"			// 0 - execute SU but do not collect into statistical ensemble, 1 - collect as developed in Markus Kuehbachs thesis
 "ReadEBSDMapping				"0"			// 0 - inactive, 1 - read additional SEM/EBSD dataset to synthesize structure, 2D maps will be extended according to Kuehbach, Diehl et al
 "ReadEBSDStepsize"				"0.25E-06"	// step size of the mapping in METER
 "OutputFrequency"                       "100"            // frequency of output in terms of the integration steps
@@ -23,14 +23,14 @@
 "RenderingSectionYMAX"			"1.0"
 "RenderingSectionZMAX"			"1.0"
 "RenderingColorModel"			"2"			// 1 - disjoint grains with unsigned int IDs, 2 - IPFZ coloring, 3 - dislocation density
-"RenderingFileFormat"			"1"			// 1 - traditional each snapshot in own file raw binary implicit also for 2D images x,y, z, 2 - HDF5 file with XDMF meta file requires HDF5 library
+"RenderingFileFormat"			"2"			// 1 - traditional each snapshot in own file raw binary implicit also for 2D images x,y, z, 2 - HDF5 file with XDMF meta file requires HDF5 library
 "RenderingBoundaries"			"0"			// 1 - identify which voxel is located at a boundaries and to which grain it belongs
 "OutputLogBoundaries"			"0"			// 1 - write detailed output for all detected boundaries, else not
 "OutputRXFrontStats"			"0" 		// 1 - yes, all CA output detailed loginformation on the interface cell list, else they dont
-"OutputThreadProfiling"			"1"			// 1 - yes, all CA output a detailed profiling log how much time was spent to process cells within each thread
-"OutputSingleGrainStats"		"1"			// 1 - ASCII file, 2 - binary MPIIO per automaton large files be careful
+"OutputThreadProfiling"			"1"			// was 1  1 - yes, all CA output a detailed profiling log how much time was spent to process cells within each thread
+"OutputSingleGrainStats"		"0"			// was 1  1 - ASCII file, 2 - binary MPIIO per automaton large files be careful
 "OutputDAMASKGeometryFile"		"0"			// 1 - outputs a geom file that can be utilized to pass the microstructure into the DAMASK crystal plasticity solver	
-"OutputArtificialSEMEBSD"		"1"			// was 1  1 - yes, write for each solitary unit at all z sections also one layer complete virtual SEM EBSD mappings
+"OutputArtificialSEMEBSD"		"0"			// was 1  1 - yes, write for each solitary unit at all z sections also one layer complete virtual SEM EBSD mappings
 
 || EnsembleDefinition		|| *(ss)		|| Parameter, Value
 "CAEnsembleSize"				"1"			// how many solitary unit domains should be simulated

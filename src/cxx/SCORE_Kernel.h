@@ -1,5 +1,5 @@
 /* 
-*	Copyright Markus Kühbach, 2014-2017
+*	Copyright Markus Kï¿½hbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
@@ -14,16 +14,16 @@
 *	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kï¿½hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
 *	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
+*	M. Kï¿½hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
 
 *	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
 *	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
+*	by RWTH Aachen University and the FZ Jï¿½lich within the scope of the JARAHPC project JARA0076.
 
 
 *	This file is part of SCORE.
@@ -60,11 +60,12 @@
 
 
 #include <omp.h>
+
 #include "hdf5.h"
-#include "thirdparty/lodepng.h"
+
+#include "thirdparty/mandatory/lodepng/lodepng.h"
 //##MK::in case of local installation of HDF5 library
 //#include "thirdparty/hdf5-1.10.0-patch1/hdf5/include/hdf5.h"
-
 
 
 using namespace std;
@@ -912,6 +913,9 @@ public:
 
 	void destroy_myCAs( void );
 
+	void init_nexus_results_file();
+	void finish_nexus_results_file();
+
 	vector<double> UserDefLogPoint_X_CellListDefragment;
 	vector<double> UserDefLogPoint_X_Output;
 	vector<double> UserDefLogPoint_MS_Rendering;
@@ -942,7 +946,6 @@ public:
 	map<uint32_t,uint32_t> expUniqueGrainIDs;
 	vector<ebsdgrain> expGrains;
 
-
 	struct rediscr_window ensRediscretization;
 	struct userCAGeom ensCAGeometry;
 	struct physData ensPhysData;
@@ -961,7 +964,7 @@ public:
 	double TMAX;
 	uint32_t NTSTEPSMAX;
 	uint32_t simid;
-        uint32_t output_freq;
+	uint32_t output_freq;
 
 	int myRank;														//my MPI ID in the MPI_COMM_WORLD
 	int nRanks;														//total number of MPI processes that work in the world
@@ -982,7 +985,8 @@ public:
 	unsigned char outopt_singlegrainevo;
 	unsigned char outopt_generateDAMASKgeom;
 	unsigned char outopt_artsemebsd;
-        char * filename;
+	char * filename;
+	string damask_file_name;
 
 	bool onthefly_defragmentation;
 	bool ensembleSuccess;
@@ -995,6 +999,8 @@ public:
 	randomClass ensembleprng;
 	mathMethods ensmath;
 	FILE * score_input;
+	string uds_config_file_name;
+	string nexus_results_file_name;
 
 	//MPIDatatypes
 	MPI_Datatype MPI_IO_CAProfilingInfoData_Type;
@@ -1152,6 +1158,16 @@ public:
 	void log_ca_physics( loginfo_ca_physicsP  container );
 	void log_OUTPUT( void );
 	void log_OUTPUT_Diehl();
+	void log_OUTPUT_NeXus();
+
+	void nexus_write_automaton_geometry();
+	void nexus_write_snapshot_kinetics();
+	void nexus_write_snapshot_texture();
+	void nexus_write_snapshot_grain_based();
+	void nexus_write_snapshot_front_based();
+	void nexus_write_snapshot_cell_based();
+	void nexus_write_snapshot();
+
 	void binarize_partiallyrxed_microstructure( vector<bool>* out );
 	void log_PERCOLATION( void );
         void log_grain_IDs( double t);
@@ -1208,6 +1224,7 @@ public:
 	void hdf5_write_xmffile_3dcorectmesh( string fname, string hfname, string gname );
 
         // modular HDF5 functions
+		//##MK::2023-V
         void HDF5_create_CA_output( string fname );
         void HDF5_write_CA_output_int( string fname, double t, std::vector<int>, string dset_name );
         void HDF5_write_CA_output_double_rank_1( string fname, string group_name, std::vector<double>, string dset_name );
@@ -1382,6 +1399,7 @@ public:
 	bool renderingForThisCA;
 
         char * filename;
+    string damask_file_name;
 
 	struct aabb myrenderwindow;
 	randomClass localprng;
