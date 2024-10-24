@@ -159,7 +159,7 @@ void caHdl::update_myrhomax( void ) {
 		}
 	}
 
-	if ( this->myensRank == MASTER ) std::cout << "Updated myrhomax/dg/cnt now " << rmax << "\t\t" << dg << "\t\t" << mydgoptimize[dg].cnt << std::endl;
+	//if ( this->myensRank == MASTER ) std::cout << "Updated myrhomax/dg/cnt now " << rmax << "\t\t" << dg << "\t\t" << mydgoptimize[dg].cnt << std::endl;
 
 	this->myrhomax = rmax;
 }

@@ -1,5 +1,5 @@
 /* 
-*	Copyright Markus Kühbach, 2014-2017
+*	Copyright Markus Kï¿½hbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
@@ -14,16 +14,16 @@
 *	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kï¿½hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
 *	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
+*	M. Kï¿½hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
 
 *	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
 *	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
+*	by RWTH Aachen University and the FZ Jï¿½lich within the scope of the JARAHPC project JARA0076.
 
 
 *	This file is part of SCORE.
@@ -52,6 +52,8 @@
 ensembleHdl::ensembleHdl()
 {
 	simid = DEFAULT_SIMID;
+	uds_config_file_name = "";
+	nexus_results_file_name = "";
 
 	ensRediscretization.ensRediscrTime = NULL;
 	ensRediscretization.tensmin = 0.0;
@@ -150,6 +152,8 @@ ensembleHdl::ensembleHdl()
 	outopt_generateDAMASKgeom = OUTPUT_DAMASK_GEOMETRYFILE_NO;
 	outopt_artsemebsd = OUTPUT_SEMEBSD_NO;
 
+	damask_file_name = "";
+
 	onthefly_defragmentation = false;
 	ensembleSuccess = true;
 	postProcessing = true;
@@ -159,7 +163,6 @@ ensembleHdl::ensembleHdl()
 
 	score_input = NULL;
 	ensembleprng.init( DEFAULT_PRNG_SEED );
-
 
 	prof_t0 = 0.0;
 	prof_tstart = 0.0;
@@ -273,6 +276,8 @@ bool ensembleHdl::init_parameter_runtime( void ) {
 	NTSTEPSMAX = geTInt("NMAX", runtimecontrol );
 	if ( (NTSTEPSMAX < 1 || NTSTEPSMAX > DEFAULT_NMAX || NTSTEPSMAX >= INTEGER_RANGE_MAX) && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument for NMAX." << endl; }
 
+        output_freq = geTInt("OutputFrequency", runtimecontrol);
+
 	percolation = PERCOLATION_ANALYZE_NO;
 	if ( geTInt("PERCOLATIONANALYSIS", runtimecontrol) == 1 ) percolation = PERCOLATION_ANALYZE_YES_NOSZDISTR;
 	if ( geTInt("PERCOLATIONANALYSIS", runtimecontrol) == 2 ) percolation = PERCOLATION_ANALYZE_YES_SZDISTR;
@@ -294,6 +299,17 @@ bool ensembleHdl::init_parameter_runtime( void ) {
 	onthefly_defrag = geTInt( "OnTheFlyDefragmentation", runtimecontrol );
 	if ( onthefly_defrag == 1 ) onthefly_defragmentation = true;
 
+        // trying to read the filename
+        //char * filename_1;
+        filename = geTString( "InputFileName", runtimecontrol);
+        std::cout << "The input file name is: " << filename << "\n" << std::endl;
+        //filename = geTString( "InputFileName", runtimecontrol);
+        //std::cout << "The input file name is: " << filename << "\n" << std::endl;
+        //std::cout << "The address of the pointer is: " << (void *) filename << "\n" << std::endl;
+        char * filename_1;
+        filename_1 = filename;
+        std::cout << "The copied input file name is: " << filename_1 << "\n" << std::endl;
+
 	//possibility to switch off postProcessing in order to utilize only the CA solver
 	postProcessing = false;
 	uint32_t kuehbach_su_analysis = 0;
@@ -304,10 +320,10 @@ bool ensembleHdl::init_parameter_runtime( void ) {
 	uint32_t support_ebsddata = 0;
 	support_ebsddata = geTInt("ReadEBSDMapping", runtimecontrol );
 	if ( support_ebsddata == 1 ) experimentInput = true;
+	//experimentInput = true;
 
 	this->ebsdstepsize = geTReal("ReadEBSDStepsize", runtimecontrol );
 	if ( ebsdstepsize <= DEFAULT_EBSDSTEPSIZE_MINIMUM ) { status = false; cout << "ERROR::Invalid argument in ReadEBSDStepsize." << endl; }
-
 
 	delete runtimecontrol;
 
@@ -367,7 +383,8 @@ bool ensembleHdl::init_parameter_output( void ) {
 	if ( geTInt( "OutputRXFrontStats", outputopts) == 1 )
 		outopt_rxfront = OUTPUT_RXFRONTSTATS_YES;
 
-	outopt_threadprofiling = OUTPUT_THREADPROFILING_NO;
+	outopt_threadprofiling = OUTPUT_THREADPROFILING_YES;
+	//MK::2023-V there is a bug related to this option maybe a race when this is switched off?
 	if ( geTInt( "OutputThreadProfiling", outputopts ) == 1 )
 		outopt_threadprofiling = OUTPUT_THREADPROFILING_YES;
 
@@ -455,6 +472,10 @@ bool ensembleHdl::init_parameter_ensemble( void ) {
 	if ( val == 4 ) defmsmethod = SEMEBSD_2D3D_COLUMNSINGLE;
 	if ( val == 5 ) defmsmethod = SEMEBSD_2D3D_COLUMNSTACK;
 	if ( val == 6 ) defmsmethod = SEMEBSD_2D3D_COLUMNSHIFT;
+
+        if (val == 3 ){
+            damaskInput = true;
+        } 
 
 	ensPhysData.defgmean_poisson = geTReal("MeanDefSizePoissonDiameter", ensembledef) * MICRON2METER;
 	if ( (ensPhysData.defgmean_poisson < mindiscretization && myRank == MASTER ) ) { status = false; cout << "ERROR::Invalid argument for the average size of deformed grain for method poisson." << endl; }
@@ -1260,6 +1281,16 @@ bool ensembleHdl::init_parameter_defgpool_exp( void )
 	return true;
 }
 
+bool ensembleHdl::init_parameter_defgpool_damask( void )
+{
+	//in Martin Diehl's project nuclei will be generated from the structure so no importing of a priori information on nucleation spectrum required
+	return true;
+}
+bool ensembleHdl::init_parameter_rxgpool_damask( void )
+{
+	//in Martin Diehl's project nuclei will be generated from the structure so no importing of a priori information on nucleation spectrum required
+	return true;
+}
 bool ensembleHdl::init_parameter_rxgpool_exp( void )
 {
 	//in Martin Diehl's project nuclei will be generated from the structure so no importing of a priori information on nucleation spectrum required
@@ -1550,6 +1581,7 @@ bool ensembleHdl::init_parameter( void )
 		good = init_parameter_runtime();
 		cout << "Initialized runtime..." << "\n";
 	}
+        std::cout << "Does filename come out?" << filename << "\n" << std::endl;
 	if ( good == true )	 {
 		good = init_parameter_output();
 		cout << "Initialized output..." << "\n";
@@ -1591,6 +1623,10 @@ bool ensembleHdl::init_parameter( void )
 			good = init_parameter_defgpool();
 			cout << "Initialized defgpool..." << "\n";
 		}
+                else if (damaskInput == true){
+                    good = init_parameter_defgpool_damask();
+	            cout << "Initialized defgpooldamask..." << "\n";
+                }
 		else {
 			good = init_parameter_defgpool_exp();
 			cout << "Initialized defgpoolexp..." << "\n";
@@ -1601,6 +1637,10 @@ bool ensembleHdl::init_parameter( void )
 			good = init_parameter_rxgpool();
 			cout << "Initialized rxgpool..." << "\n";
 		}
+                else if (damaskInput == true){
+                    good = init_parameter_rxgpool_damask();
+	            cout << "Initialized defgpooldamask..." << "\n";
+                }
 		else {
 			good = init_parameter_rxgpool_exp();
 			cout << "Initialized rxgpoolexp..." << "\n";
@@ -1723,7 +1763,9 @@ void ensembleHdl::SIMULATE_myCAs( void )
 
 			//##MK::nucleation does not run OpenMP parallel
 			if ( theca->myNucleationModel.csrnucleation != CSRNUCLEATION_NO || theca->myNucleationModel.gbnucleation != GBNUCLEATION_NO ) {
+                                printf("Starting nucleation model");
 				theca->solve_NUCLEATIONMODELING();
+                                printf("Nucleation passed ---------------------");
 			}
 			timer[4] = MPI_Wtime();
 			prof.MPIWTimeSpendNucleation = timer[4] - timer[3];
@@ -1731,6 +1773,7 @@ void ensembleHdl::SIMULATE_myCAs( void )
 
 			theca->solve_REPLACE_CA_STRUCTURE();
 			//MK::now everything is prepared for placing nuclei from myrxgpool let them grow
+
 
 			theca->solve_RXGROWTH();
 
@@ -1791,6 +1834,445 @@ void ensembleHdl::destroy_myCAs( void )
 			//cout << myRank << "\t\t" << tid << "\t\t" << tidlocalca << "\t\tmyRank;tid;tidlocalca successful." << endl;
 		}
 	}
+}
+
+
+void ensembleHdl::init_nexus_results_file()
+{
+	//##MK::2023
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( nexus_results_file_name );
+	if( h5w.nexus_create() != MYHDF5_SUCCESS ) {
+		cerr << "Unable to create " << nexus_results_file_name << "\n";
+		return;
+	}  // nexus_create must be called only once for the entire simulation!
+
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
+
+	grpnm = "/entry";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXentry") );
+	anno.add( "version", string("nexus-fairmat-proposal successor of 9636feecb79bb32b828b1a9804269573256d7696") );
+	//https://fairmat-experimental.github.io/nexus-fairmat-proposal/9636feecb79bb32b828b1a9804269573256d7696/classes/contributed_definitions/NXms_score_results.html#nxms-score-results") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/definition";
+	string appdef_name = "NXms_score_results";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, appdef_name, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/start_time";
+	string start_time_stamp = timestamp_now_iso8601();
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, start_time_stamp, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/analysis_identifier";
+	string analysis_identifier = to_string(simid);
+	//apt_uint identifier = ConfigShared::SimID;
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, analysis_identifier, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	//dsnm = grpnm + "/analysis_description";
+	//##MK::2023
+
+	dsnm = grpnm + "/config_filename";
+	anno = ioAttributes();
+	anno.add( "version", string(SHA256(this->uds_config_file_name.c_str())) );
+	//anno.add( "comment", string("SHA256 checksum"));
+	if ( h5w.nexus_write( dsnm, this->uds_config_file_name, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	//dsnm = grpnm + "/results_path";
+	//##MK::2023
+
+	dsnm = grpnm + "/experiment_or_simulation";
+	string what = "simulation";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, what, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/program1";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXprogram") );
+	anno.add( "compile_date", string(__DATE__) );
+	anno.add( "compile_time", string(__TIME__) );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/program";
+	string program_name = "SCORE";
+	anno = ioAttributes();
+	anno.add( "version", string(xstr(GITSHA)) );
+	if ( h5w.nexus_write( dsnm, program_name, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/coordinate_system_set";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXcoordinate_system_set") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/coordinate_system_set/score";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXtransformations") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	vector<string> axis_name = { "/x", "/y", "/z" };
+	for( size_t i = 0; i < 3; i++ ) {
+		dsnm = grpnm + axis_name[i];
+		vector<apt_real> real = vector<apt_real>( 3, MYZERO );
+		real[i] = MYONE;
+		anno = ioAttributes();
+		anno.add( "depends_on", string(".") );
+		anno.add( "offset", string("{MYZERO, MYZERO, MYZERO}, storing 1d array as an attribute value not yet implemented") ); //##MK::not yet implemented
+		anno.add( "offset_units", string("m") );
+		if ( h5w.nexus_write(
+				dsnm,
+				io_info({3, 1},
+						{3, 1}),
+				real,
+				anno) != MYHDF5_SUCCESS ) {
+			cerr << "Writing " << dsnm << " failed !" << "\n";
+			return;
+		}
+	}
+
+	grpnm = "/entry/conventions";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXem_ebsd_conventions") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/conventions/rotation_conventions";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXprocess") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/reference_frame_type";
+	string value = "right_handed_cartesian";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/three_dimensional_rotation_handedness";
+	value = "counter_clockwise";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/rotation_convention";
+	value = "passive"; //should be passive but not sure!
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/euler_angle_convention";
+	value = "zxz";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/axis_angle_convention";
+	value = "rotation_angle_on_interval_zero_to_pi";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/orientation_parameterization_sign_convention";
+	value = "undefined";
+	if ( P_EIJK > 0 ) {
+		value = "p_plus_one";
+	}
+	else {
+		value = "p_minus_one";
+	}
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/conventions/processing_reference_frame";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXprocess") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/reference_frame_type";
+	value = "right_handed_cartesian";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/xaxis_direction";
+	value = "east";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/xaxis_alias";
+	value = "rolling direction (RD)";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/yaxis_direction";
+	value = "in";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/yaxis_alias";
+	value = "transverse direction (TD)";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/zaxis_direction";
+	value = "north";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/zaxis_alias";
+	value = "normal direction (ND)";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/origin";
+	value = "front_bottom_right";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/conventions/sample_reference_frame";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXprocess") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/reference_frame_type";
+	value = "right_handed_cartesian";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/xaxis_direction";
+	value = "east";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/yaxis_direction";
+	value = "in";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/zaxis_direction";
+	value = "north";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/origin";
+	value = "front_bottom_right";
+	anno = ioAttributes();
+	//anno.add( "", string("") );
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/rve";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXcg_roi_set") );
+	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry/rve/snapshot_set";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXms_snapshot_set") );
+	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+}
+
+
+void ensembleHdl::finish_nexus_results_file()
+{
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( nexus_results_file_name );
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
+
+	grpnm = "/entry/performance";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXcs_profiling") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/current_working_directory";
+	string cwd = "n/a";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, cwd, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/command_line_call";
+	string cli = "n/a";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, cli, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/number_of_processes";
+	unsigned int uint = (unsigned int) nRanks;
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, uint, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/number_of_threads";
+	uint = (apt_uint) omp_get_max_threads();
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, uint, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/number_of_gpus";
+	uint = 0;
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, uint, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry";
+	dsnm = grpnm + "/end_time";
+	string end_time = timestamp_now_iso8601();
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, end_time, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/status";
+	string status = "success";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, status, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	/*
+	//##MK::2023
+	double wall_clock = end_time - start_time;
+	dsnm = grpnm + "/total_elapsed_time";
+	anno = ioAttributes();
+	anno.add( "unit", string("s") );
+	if ( h5w.nexus_write( dsnm, wall_clock, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	*/
 }
 
 
@@ -4241,7 +4723,9 @@ void caregionMemHdl::ompshar_sim_myCA_calcGrowthStepBorder( void )
 }
 
 
-void caregionMemHdl::omp_infect_OutOfRXFrontInside ( uint32_t rxgpoolid, uint32_t rxfrontid, bool intoborder, short dx, short dy, short dz, unsigned char direction, double carryOver )
+void caregionMemHdl::omp_infect_OutOfRXFrontInside (
+		uint32_t rxgpoolid, uint32_t rxfrontid, bool intoborder,
+		short dx, short dy, short dz, unsigned char direction, double carryOver )
 {
 	//CALLED FROM WITHIN PARALLEL REGION BUT OPERATING ON caregionMemHdl class object's local cellgrid
 	
@@ -4336,7 +4820,10 @@ void caregionMemHdl::omp_infect_OutOfRXFrontInside ( uint32_t rxgpoolid, uint32_
 }
 
 
-void caregionMemHdl::omp_infect_OutOfRXFrontBorder ( uint32_t rxgpoolid, uint32_t rxfrontid, short dx, short dy, short dz, unsigned char direction, double carryOver )
+void caregionMemHdl::omp_infect_OutOfRXFrontBorder (
+		uint32_t rxgpoolid, uint32_t rxfrontid,
+		short dx, short dy, short dz,
+		unsigned char direction, double carryOver )
 {
 	//CALLED FROM WITHIN PARALLEL REGION
 	//Three possible locations where the target cell is located:: inside, border, or in another region on top of that periodic bound checks necessary!
@@ -4360,12 +4847,12 @@ void caregionMemHdl::omp_infect_OutOfRXFrontBorder ( uint32_t rxgpoolid, uint32_
 	if ( y >= myGeom.nedge_global_td )
 		y -= myGeom.nedge_global_td;
 	if ( z < 0 ) {
-		return; //MK::modification for in-situ experiments of Martin Diehl that should not have periodicity in the +-ND direction
-		//z += myGeom.nedge_global_nd;
+		//return; //MK::modification for in-situ experiments of Martin Diehl that should not have periodicity in the +-ND direction
+		z += myGeom.nedge_global_nd;
 	}
 	if ( z >= myGeom.nedge_global_nd ) {
-		return; //MK::modification for in-situ experiments of Martin Diehl that should not have periodicity in the +-ND direction
-		//z -= myGeom.nedge_global_nd;
+		//return; //MK::modification for in-situ experiments of Martin Diehl that should not have periodicity in the +-ND direction
+		z -= myGeom.nedge_global_nd;
 	}
 
 //##DEBUG#pragma omp critical { cout << x << "\t" << y << "\t" << z << "\t" << rxgpoolid << endl; }
@@ -5230,6 +5717,7 @@ caHdl::caHdl()
 	loginfo_defrag_cnt = 0;
 	loginfo_percolation_cnt = 0;
 
+	damask_file_name = "";
 	myensRank = MASTER;
 	nRanks = 1;
 
@@ -5306,6 +5794,7 @@ void caHdl::update_atomisticproperties( void )
 
 	//cache Gbhalfsq
 	Gbhalfsq = 0.5 * myPhysData.G * SQR( myPhysData.b );
+        
 }
 
 
@@ -5322,6 +5811,7 @@ void caHdl::update_intrinsicmobilities( void )
 	QUICKASSERT ( mHAGB >= mLAGB );
 	QUICKASSERT ( mGS >= mHAGB );
 	QUICKASSERT ( mRHHAGB > 0.0 );
+
 }
 
 
@@ -5711,6 +6201,7 @@ void caHdl::init_parameter( void )
 	XMAX = myens->XMAX;
 	TMAX = myens->TMAX;
 	NTSTEPSMAX = myens->NTSTEPSMAX;
+        output_freq = myens->output_freq;
 
 	myCAGeometry.cellsize = myens->ensCAGeometry.cellsize; //MK::within my thesis all SUs of the same geometry
 	this->_cellsize = (1.0 / myCAGeometry.cellsize);
@@ -5785,6 +6276,8 @@ void caHdl::init_parameter( void )
 	outopt_localgenDAMASKgeom = myens->outopt_generateDAMASKgeom;
 	outopt_localartsemebsd = myens->outopt_artsemebsd;
 
+	damask_file_name = myens->damask_file_name;
+
 	maxfillperstep = myens->maxfillperstep;
 	initialRelCellCaching = myens->initialRelCellCaching;
 	transientRelCellRecaching = myens->transientRelCellRecaching;
@@ -5811,6 +6304,16 @@ void caHdl::init_parameter( void )
 	myCADefMS.defmstype = myens->defmsmethod;
 
 	onthefly_defragmentation = myens->onthefly_defragmentation;
+
+        filename = myens->filename;
+        std::cout << "The filename carried to caHdl class" << myens->filename << "\n" << std::endl;
+        std::cout << "The filename carried to caHdl class" << filename << "\n" << std::endl;
+        
+        //filename = malloc(strlen(myens->filename) + 1);
+        //strcpy(filename,myens->filename);
+        //filename = strdup(myens->filename);
+        //std::cout << "The filename carried to caHdl class" << myens->filename << "\n" << std::endl;
+        //std::cout << "The filename carried to caHdl class" << filename << "\n" << std::endl;
 
 	//MK::ideal orientations are only relevant at the ensembleHdl level at which I/O proceeds but reference possible with myens
 
@@ -5877,28 +6380,6 @@ void caHdl::solve_INITIALIZATION( void )
 	init_processing();
 	init_zenerdrag();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 void caHdl::ompshar_initialize_region_myrxgpools( int regionid )
@@ -6100,7 +6581,10 @@ void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA( void )
 
 void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK( void )
 {
-            hdf5_read_DAMASK();
+        DAMASKtoCA();
+	for ( uint32_t mr = 0; mr < regions.size(); mr++ ) {
+		regions[mr]->reg_nmydefgpool = mydefgpool.size();
+	}
 
 }
 
@@ -6120,16 +6604,17 @@ void caHdl::solve_SYNTHESIZE_DEFORMATIONSTRUCTURE( void )
 	if ( myCADefMS.defmstype == CUBOID_DEFMS ) {
 		solve_SYNTHESIZED_DEFORMEDSTRUCTURE_CUBOIDBLOCKS();
 	}
-        //else if ( myCADefMS.defmstype == CPFEMDAMASK_DEFMS ){
+        else if ( myCADefMS.defmstype == CPFEMDAMASK_DEFMS ){
         // currently setup that it still runs with the default simulation settings
-	else if ( 	myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSINGLE ||
-				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSTACK ||
-				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSHIFT  ) {
+	//else if ( 	myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSINGLE ||
+	//			myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSTACK ||
+	//			myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSHIFT  ) {
                 solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
         }
 	else if ( 	myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSINGLE ||
 				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSTACK ||
 				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSHIFT  ) {
+                //solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
 		solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA();
 	}
 	else {
@@ -6311,7 +6796,8 @@ void caHdl::solve_NUCLEATIONMODELING( void )
 	if ( 	myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMSO3 ||
 			myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMDEFORI	||
 			myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_SCATTEREXISTENT  ) {
-		solve_nucmodeling_csrdiehl();
+		//solve_nucmodeling_csrdiehl();
+                solve_nucmodelling_dislo_ori_based();
 	}
 
 	if ( myNucleationModel.clustnucleation == CLUSTERNUCLEATION_YES_PICKRND ) {
@@ -6342,6 +6828,7 @@ void caHdl::solve_REPLACE_CA_STRUCTURE( void )
 	{
 		threadid = omp_get_thread_num(); //MK::hereby it is dictacted that each thread works on disjoint data!
 		nxyz = regions[threadid]->myGeom.nregvol_rdtdnd;
+                
 
 		//threads initialize local copy of the myrxgpool and the mydefgpoolcell counters
 		//such that during updating the cells in the growth simulation, the bookkeeping is race free and thread-locality maximized
@@ -6370,11 +6857,13 @@ void caHdl::solve_REPLACE_CA_STRUCTURE( void )
 		uint32_t cadefgid;
 		uint32_t ocategory;
 		scaler = (1.0 / SCALING_DEFAULT_DISDENS);
+		//scaler = (1.0 / 1.0E13);
 		for ( c = 0; c < nxyz; c++ ) {
 			cadefgid = regions[threadid]->mycellgrid[c];
 
 			regions[threadid]->reg_mydfgp_counts[cadefgid] += 1;
 
+                        //std::cout << "index & Dislocation density after replacement \t" << c << ";\t" << mydefgpool[cadefgid].rho0 * scaler << std::endl;
 			reg_storedenergy = reg_storedenergy + (mydefgpool[cadefgid].rho0 * scaler);
 		}
 
@@ -6495,11 +6984,23 @@ void caHdl::solve_RXGROWTH( void )
 
 #ifdef REPORTSTYLE_USER
 	if ( this->myensRank == MASTER ) 
-		cout << this->jobid << "\tstep;t;X;dt;CurrTemperature;Sv\t\t" << this->step << "\t\t" << this->t << "\t\t" << this->X  << "\t\t" << this->dt << "\t\t" << this->CurrentTemperature << "\t\t" << this->Sv << endl;
+		//cout << this->jobid << "\tstep;t;X;dt;CurrTemperature;Sv\t\t" << this->step << "\t\t" << this->t << "\t\t" << this->X  << "\t\t" << this->dt << "\t\t" << this->CurrentTemperature << "\t\t" << this->Sv << endl;
 #endif
 
 	//get initial delta time for the numerical integration scheme
 	dt = get_dtmax_minimum();
+
+        // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
+        /*
+        // ##MK::2023-V
+		string fname = "/home/SCORE_orig/example_files/CA_output.hdf5";
+        HDF5_create_CA_output( fname );
+        log_grain_IDs(t);
+        log_grain_rho_grain_based(t);
+        log_grain_ori_grain_based(t);
+        log_RX_frac(t);
+        */
+
 
 	//mechanism to enable the writing of HDF5 files (though sequentially) from within a threaded region
 	omp_init_lock(&(this->h5lock)); //only the calling thread who sets a lock is allowed to unlock it again, so outside a parallel region locker is the master thread
@@ -6522,11 +7023,12 @@ void caHdl::solve_RXGROWTH( void )
 					ompcrit_write_zsection_looping_ipfz( 0.0, COLORIZE_RX_RHOGREYSCALE_DEFORMED );
 				}
 				else
-					cout << "ERROR::2D output in RAW format supports currently only IPFZ coloring!" << endl;
+                                    cout << "ERROR::2D output in RAW format supports currently only IPFZ coloring!" << endl;
 			}
-			if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ) 
-				cout << "ERROR::2D output of complete 2D structure with HDF5 currently not supported!" << endl;
-		}
+			if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ){
+                           cout << "ERROR::2D output of complete 2D structure with HDF5 currently not supported!" << endl;
+		        }
+                }
 
 		//##MK:for study with Martin Diehl, MMM2018 Proceedings Paper
 		//switched off initial ang file
@@ -6570,7 +7072,7 @@ void caHdl::solve_RXGROWTH( void )
 				if ( regions[r]->reg_myMobilityWeightMax >= myMobilityWeightMax ) { myMobilityWeightMax = regions[r]->reg_myMobilityWeightMax; }
 				nmynuclei = nmynuclei + regions[r]->reg_nmynuclei;
 			}
-			//cout << "Starting RX Growth with myMobilityWeightMax = " << myMobilityWeightMax << " and " << nmynuclei << " nuclei." << endl;
+			cout << "Starting RX Growth with myMobilityWeightMax = " << myMobilityWeightMax << " and " << nmynuclei << " nuclei." << endl;
 		}
 		//barrier necessary, as otherwise the threads would start iterating even though myMobilityWeightMax is not yet consistent because pragma omp master construct has no implicit barrier
 		#pragma omp barrier
@@ -6658,7 +7160,17 @@ void caHdl::solve_RXGROWTH( void )
 					update_myrhomax();
 
 					//log_OUTPUT();
-					log_OUTPUT_Diehl();
+					//log_OUTPUT_Diehl();
+					log_OUTPUT_NeXus();
+
+					/* ##MK::2023-V
+					if (step%output_freq == 0 && t > 0.0){
+						log_grain_IDs(t);
+						log_grain_rho_grain_based(t);
+						log_grain_ori_grain_based(t);
+						log_RX_frac(t);
+					}
+					*/
 
 					log_PERCOLATION();
 
@@ -6680,8 +7192,8 @@ void caHdl::solve_RXGROWTH( void )
 					step++;
 
 //#ifdef REPORTSTYLE_USER
-					if ( this->myensRank == MASTER ) 
-						cout << "\tstep;t;X;dt;CurrTemperature;Sv\t\t" << this->step << "\t\t" << this->t << "\t\t" << this->X  << "\t\t" << this->dt << "\t\t" << this->CurrentTemperature << "\t\t" << this->Sv << endl;
+				        //	if ( this->myensRank == MASTER ) 
+						//cout << "\tstep;t;X;dt;CurrTemperature;Sv\t\t" << this->step << "\t\t" << this->t << "\t\t" << this->X  << "\t\t" << this->dt << "\t\t" << this->CurrentTemperature << "\t\t" << this->Sv << endl;
 //#endif
 				}
 			}

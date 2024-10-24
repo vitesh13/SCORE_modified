@@ -1142,33 +1142,6 @@ void caHdl::write_clustersizedistr_h5( unsigned int* dist, unsigned int ndist )
 	omp_unset_lock(&h5lock);
 }
 
-bool caHdl::hdf5_read_DAMASK(){
-        hid_t file;
-        hid_t group_ID;
-        hid_t attr_id;
-        herr_t ret;
-        double *float_array;
-        int *int_array;
-
-        string fname = "/home/georg.falkinger/Rolling_partial_RX/L_ST_W_2_edge_0_percent_RX/simulation/L_ST_W_2_edge_0_percent_RX_tensionX.hdf5";
-	file = HDF5_openFile( fname );
-        group_ID = HDF5_openGroup( file, "geometry");
-        attr_id  = HDF5_openAttribute( group_ID, "size");
-        float_array = HDF5_read_attribute_float(attr_id);
-        attr_id  = HDF5_openAttribute( group_ID, "cells");
-        int_array = HDF5_read_attribute_int(attr_id);
-        cout << file;
-	if (file > 0) {std::cout << "file open successful -------------" << endl;}
-        cout << group_ID;
-	if (group_ID > 0) {std::cout << "group open successful -------------" << endl;}
-        cout << attr_id;
-	if (attr_id > 0) {std::cout << "attribute open successful -------------" << endl;}
-        cout << ret;
-	if (attr_id > 0) {std::cout << "no error open successful -------------" << endl;}
-        
-        return true;
-}
-
 hid_t caHdl::HDF5_openFile( string fname ){
 // the files can be opened in parallel however as parallelization architecture is not known, only simple file opening is done
        hid_t file;
@@ -1185,6 +1158,70 @@ hid_t caHdl::HDF5_openGroup( hid_t loc_id, string groupname ){
         
         group_ID = H5Gopen( loc_id, groupname.c_str(), H5P_DEFAULT );
         return group_ID;
+}
+
+void caHdl::HDF5_writeFileAttribute( hid_t obj_id, string attribute_name, string attribute_value ){
+        
+       hid_t attr, type_id, space_id;
+
+       // the string needs tobe converted to a char pointer and then it works (this is similar to what DAMASK HDF5 does
+       //https://forum.hdfgroup.org/t/write-data-to-variable-length-string-attribute/8101
+       const char* val[1] = {attribute_value.c_str()};
+  
+       type_id = H5Tcopy(H5T_C_S1);
+       H5Tset_size(type_id,H5T_VARIABLE);
+
+       space_id = H5Screate(H5S_SCALAR);
+       attr = H5Acreate( obj_id, attribute_name.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
+
+       H5Awrite(attr, type_id, val);
+       H5Aclose(attr);
+}
+
+void caHdl::HDF5_writeGroupAttribute_int( hid_t obj_id, string attribute_name, uint32_t value ){
+     hid_t attr, space_id; 
+
+     space_id = H5Screate( H5S_SCALAR );
+     attr = H5Acreate( obj_id, attribute_name.c_str(), H5T_NATIVE_UINT, space_id, H5P_DEFAULT, H5P_DEFAULT);
+
+     uint32_t* wdata = &value; 
+     H5Awrite( attr, H5T_NATIVE_UINT, wdata);
+     H5Aclose( attr );
+}
+
+void caHdl::HDF5_writeGroupAttribute_int_rank_1( hid_t obj_id, string attribute_name, std::vector<uint32_t> value ){
+     hid_t attr, space_id; 
+     hsize_t dims[1] = {value.size()};  
+
+     space_id = H5Screate_simple( 1, dims, NULL );
+     attr = H5Acreate( obj_id, attribute_name.c_str(), H5T_NATIVE_UINT, space_id, H5P_DEFAULT, H5P_DEFAULT);
+
+     uint32_t* wdata = &value[0]; 
+     H5Awrite( attr, H5T_NATIVE_UINT, wdata);
+     H5Aclose( attr );
+}
+
+void caHdl::HDF5_writeGroupAttribute_float( hid_t obj_id, string attribute_name, double value ){
+     hid_t attr, space_id; 
+
+     space_id = H5Screate( H5S_SCALAR );
+     attr = H5Acreate( obj_id, attribute_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT);
+
+     double* wdata = &value; 
+     H5Awrite( attr, H5T_NATIVE_DOUBLE, wdata);
+     H5Aclose( attr );
+}
+
+void caHdl::HDF5_write_float_attribute(string fname, string group_name, double frac_RX, string attribute_name){
+    hid_t file, group_id;
+
+    file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    group_id = H5Gopen( file, group_name.c_str(), H5P_DEFAULT);
+    
+    HDF5_writeGroupAttribute_float( group_id,attribute_name,frac_RX );
+    
+    H5Gclose( group_id );
+    H5Fclose( file );
 }
 
 hid_t caHdl::HDF5_openAttribute( hid_t obj_id, string attribute_name ){
@@ -1221,6 +1258,148 @@ double* caHdl::HDF5_read_attribute_float(hid_t attr_id){
        return float_array;
 }
 
+//int* caHdl::HDF5_read_dataset_int_rank_1(hid_t loc_id, string datasetname ){
+std::vector<int> caHdl::HDF5_read_dataset_int_rank_1(hid_t loc_id, string datasetname ){
+       hid_t mem_type_id, aspace, dset_id, dapl_id;
+       herr_t ret;
+       int i, ndims;
+       double *float_array;
+       int *rdata;
+       size_t npoints;
+       hsize_t adims[1] = {0}, 
+               dims[1] = {0};
+       
+       dset_id = H5Dopen( loc_id, datasetname.c_str(),H5P_DEFAULT );
+       mem_type_id = H5Dget_type( dset_id );
+
+       aspace = H5Dget_space( dset_id );
+
+       ndims = H5Sget_simple_extent_dims( aspace, dims, NULL );
+       npoints = H5Sget_simple_extent_npoints( aspace );
+
+       //rdata = (int *)malloc(sizeof(int)*(int)dims[0]);
+       //ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
+       std::vector<int> rdata_vec(dims[0]);
+       ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, static_cast<void*>(rdata_vec.data()));
+
+       //for( i = 0; i < (int)dims[0]; i++) printf("%d \n", rdata[i]);
+       for( i = 0; i < (int)dims[0]; i++) printf("%d \n", rdata_vec[i]);
+       //return rdata;
+       return rdata_vec;
+}
+
+std::vector<std::vector<int>> caHdl::HDF5_read_dataset_int_rank_2(hid_t loc_id, string datasetname ){
+//int* caHdl::HDF5_read_dataset_int_rank_2(hid_t loc_id, string datasetname ){
+       hid_t mem_type_id, aspace, dset_id, dapl_id;
+       herr_t ret;
+       int i, j, ndims;
+       size_t npoints;
+       hsize_t dims[2] = {0,0};
+       
+       dset_id = H5Dopen( loc_id, datasetname.c_str(),H5P_DEFAULT );
+       mem_type_id = H5Dget_type( dset_id );
+
+       aspace = H5Dget_space( dset_id );
+
+       ndims = H5Sget_simple_extent_dims( aspace, dims, NULL );
+       npoints = H5Sget_simple_extent_npoints( aspace );
+
+       int rdata[dims[0]][dims[1]];
+       int* rdata_1D;
+       rdata_1D = (int *)malloc(sizeof(int)*(int)dims[0]*dims[1]);
+       std::vector<std::vector<int>> rdata_vec(dims[0], std::vector<int>(dims[1]));
+       //ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, static_cast<void*>(rdata_vec.data()));
+       ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
+
+       for(i = 0; i < (int)dims[0]; i++){
+          for( j = 0; j < (int)dims[1]; j++){
+              printf("%d \n", rdata[i][j]);
+              //rdata_1D[i*dims[0] + j] = rdata[i][j];
+              rdata_vec.at(i).at(j) = rdata[i][j];
+              //printf("%d \n", rdata_vec.at(i).at(j));
+          }
+       }
+
+       //return reinterpret_cast<int *>(rdata);
+       //return rdata_1D;
+       return rdata_vec;
+}
+
+std::vector<std::vector<double>> caHdl::HDF5_read_dataset_float_rank_2(hid_t loc_id, string datasetname ){ 
+//void caHdl::HDF5_read_dataset_float_rank_2(hid_t loc_id, string datasetname ){
+       hid_t mem_type_id, aspace, dset_id, dapl_id;
+       herr_t ret;
+       int i, j, ndims;
+       double *float_array;
+       size_t npoints;
+       hsize_t dims[2] = {0,0};
+       
+       dset_id = H5Dopen( loc_id, datasetname.c_str(),H5P_DEFAULT );
+       mem_type_id = H5Dget_type( dset_id );
+
+       //ndims = H5Tget_array_dims( mem_type_id, adims );
+
+       // assuming a float array as attribute
+       // reference for code:  https://support.hdfgroup.org/ftp/HDF5/examples/misc-examples/attrs.c
+
+       aspace = H5Dget_space( dset_id );
+
+       ndims = H5Sget_simple_extent_dims( aspace, dims, NULL );
+       npoints = H5Sget_simple_extent_npoints( aspace );
+
+       double rdata[dims[0]][dims[1]];
+       std::vector<std::vector<double>> rdata_vec(dims[0], std::vector<double>(dims[1]));;
+       ret = H5Dread( dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
+
+       for(i = 0; i < (int)dims[0]; i++){
+          for( j = 0; j < (int)dims[1]; j++){
+              //printf("%f \n", rdata[i][j]);
+              rdata_vec.at(i).at(j) = rdata[i][j];
+          }
+       }
+
+       //return rdata;
+       return rdata_vec;
+}
+
+std::vector<int> caHdl::HDF5_read_dataset_int_rank_4(hid_t loc_id, string datasetname ){
+//int* caHdl::HDF5_read_dataset_int_rank_2(hid_t loc_id, string datasetname ){
+       hid_t mem_type_id, aspace, dset_id, dapl_id;
+       herr_t ret;
+       int i, j, k, l, index, ndims;
+       size_t npoints;
+       hsize_t dims[4] = {0,0,0,0};
+       
+       dset_id = H5Dopen( loc_id, datasetname.c_str(),H5P_DEFAULT );
+       mem_type_id = H5Dget_type( dset_id );
+
+       aspace = H5Dget_space( dset_id );
+
+       ndims = H5Sget_simple_extent_dims( aspace, dims, NULL );
+       npoints = H5Sget_simple_extent_npoints( aspace );
+
+       int rdata[dims[0]][dims[1]][dims[2]][dims[3]];
+       std::vector<int> rdata_vec(dims[0]*dims[1]*dims[2]*dims[3]);
+       //ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, static_cast<void*>(rdata_vec.data()));
+       ret = H5Dread( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
+
+       for(i = 0; i < (int)dims[0]; i++){
+          for( j = 0; j < (int)dims[1]; j++){
+             for( k = 0; k < (int)dims[2]; k++){
+                   //printf("%d \n", rdata[i][j][k][0]);
+                   //rdata_1D[i*dims[0] + j] = rdata[i][j];
+                   index = k + j*dims[2] + i*dims[2]*dims[1];
+                   rdata_vec.at(index) = rdata[i][j][k][0];  //grain ID for CA starts from 0, DAMASK is flexible about this and doesnt care
+                   //printf("%d \n", rdata_vec.at(i).at(j));
+          }
+       }
+       }
+
+       //return reinterpret_cast<int *>(rdata);
+       //return rdata_1D;
+       return rdata_vec;
+}
+
 int* caHdl::HDF5_read_attribute_int(hid_t attr_id){
        hid_t mem_type_id, aspace;
        herr_t ret;
@@ -1248,29 +1427,118 @@ int* caHdl::HDF5_read_attribute_int(hid_t attr_id){
        return int_array;
 }
 
-	/*
-	memca.localtime = mycaHdl->t;
-	memca.localX = mycaHdl->X;
-	memca.localmemory = regMemGuard;
-	memca.localPmax = mycaHdl->myMobilityWeightMax;
-	memca.localstep = mycaHdl->step;
+void caHdl::HDF5_create_CA_output( string fname ){
+     hid_t file;
+     
+     file = H5Fcreate( fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);   
+     HDF5_writeFileAttribute( file, "InputFileName","example.uds" ); 
+     HDF5_writeFileAttribute( file, "Material", "Aluminium");
+     HDF5_writeFileAttribute( file, "Crystal Structure", "FCC");
+     H5Fclose( file );
+}
 
-	memca.ntotalRXFrontInside = ntotalRXFrontInside;
-	memca.ntotalRXFrontBorder = ntotalRXFrontBorder;
-	memca.nCurrentlyActiveInside = nCurrentlyActiveInside;
-	memca.nCurrentlyActiveBorder = nCurrentlyActiveBorder;
+void caHdl::HDF5_write_CA_output_int( string fname, double t, std::vector<int> data, string dset_name){
+     hid_t file, dset_id, space_id, sub_group_id, sub_group_id_1, group_id;
+     string s = to_string(t);
+     hsize_t dims[1] = {data.size()};
+     herr_t status;
+     std::vector<uint32_t> def_grain_lims{0,this->mydefgpool.size() - 1};
+     std::vector<uint32_t> rx_grain_lims{this->mydefgpool.size(),this->mydefgpool.size() + this->myrxgpool.size() - 1};
 
-	memca.ntotalFullRXListInside = ntotalFullRXListInside;
-	memca.ntotalFullRXListBorder = ntotalFullRXListBorder;
-	memca.nextSlotToFullRXInside = nextSlotToFullRXInside;
 
-	memca.ntotalRecyclingListInside = ntotalRecyclingListInside;
-	memca.ntotalRecyclingListBorder = ntotalRecyclingListBorder;
-	memca.nextSlotThatBecomesRecycledInside = nextSlotThatBecomesRecycledInside;
-	memca.nextSlotThatBecomesRecycledBorder = nextSlotThatBecomesRecycledBorder;
-	memca.firstNotRecycledYetInside = firstNotRecycledYetInside;
-	memca.firstNotRecycledYetBorder = firstNotRecycledYetBorder;
-	*/
+     string group_name = "Time_" + s;
+     string sub_group_name = "Cell_based_data";
+     string sub_group_name_1 = "Grain_based_data";
 
+     file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+  
+     // create the groups and sub-groups here
+     group_id = H5Gcreate( file, group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+
+     sub_group_id_1 = H5Gcreate( group_id, sub_group_name_1.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+
+     sub_group_id = H5Gcreate( group_id, sub_group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+ 
+     // add attributes to the cell based data group
+     HDF5_writeGroupAttribute_int( sub_group_id, "Nx", this->myCAGeometry.nboxedge_rd);
+     HDF5_writeGroupAttribute_int( sub_group_id, "Ny", this->myCAGeometry.nboxedge_td);
+     HDF5_writeGroupAttribute_int( sub_group_id, "Nz", this->myCAGeometry.nboxedge_nd);
+
+     // add attributes to the grain based data group
+     HDF5_writeGroupAttribute_int_rank_1( sub_group_id_1, "Deformed Grains", def_grain_lims);
+     HDF5_writeGroupAttribute_int_rank_1( sub_group_id_1, "Recrystallized Grains", rx_grain_lims);
+
+     space_id = H5Screate_simple( 1, dims, NULL );
+    
+     int* wdata = &data[0];
+     dset_id = H5Dcreate( sub_group_id, dset_name.c_str(), H5T_NATIVE_INT, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
+     status  = H5Dwrite( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata);
+     
+     H5Dclose( dset_id );
+     H5Sclose( space_id );
+     H5Gclose( sub_group_id_1 );
+     H5Gclose( sub_group_id );
+     H5Gclose( group_id );
+     H5Fclose( file );
+
+}
+
+void caHdl::HDF5_write_CA_output_double_rank_1( string fname, string group_name, std::vector<double> data, string dset_name ){
+     hid_t file, dset_id, space_id, group_id;
+     hsize_t dims[1] = {data.size()};
+     herr_t status;
+
+     file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+  
+     group_id = HDF5_openGroup( file, group_name);
+
+     space_id = H5Screate_simple( 1, dims, NULL );
+    
+     double* wdata = &data[0];
+     dset_id = H5Dcreate( group_id, dset_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
+     status  = H5Dwrite( dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata);
+     
+     H5Dclose( dset_id );
+     H5Sclose( space_id );
+     H5Gclose( group_id );
+     H5Fclose( file );
+
+}
+
+void caHdl::HDF5_write_CA_output_double_rank_2( string fname, string group_name, std::vector<std::vector<double>> data, string dset_name){
+     hid_t file, dset_id, space_id, group_id;
+     //string s = to_string(t);
+     hsize_t dims[2] = {data.size(),data[0].size()};
+     herr_t status;
+     int i,j,index;
+     std::vector<double> cont_data(data.size()*data[0].size());
+
+     //string group_name = "Time_" + s;
+
+     file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+  
+     group_id = H5Gopen( file, group_name.c_str(), H5P_DEFAULT);
+
+     space_id = H5Screate_simple( 2, dims, NULL );
+    
+     // convert 2D data to 1D contiguous array
+     for (i = 0; i < dims[0]; i++){
+         for(j = 0; j < dims[1]; j++){
+             index = i*dims[1] + j;
+             cont_data[index] = data[i][j];
+         }
+     }
+     double* wdata = &cont_data[0];
+     
+     
+     dset_id = H5Dcreate( group_id, dset_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
+     status  = H5Dwrite( dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata);
+     
+     H5Dclose( dset_id );
+     H5Sclose( space_id );
+     H5Gclose( group_id );
+     H5Fclose( file );
+
+}
 
 #endif
