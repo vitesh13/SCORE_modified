@@ -51,7 +51,7 @@
 //https://github.com/HowardHinnant/date
 //https://stackoverflow.com/questions/9527960/how-do-i-construct-an-iso-8601-datetime-in-c
 //interface to Howard Hinnart's customized datetime library building on chrono
-#include "date.h"
+#include "../date/include/date/date.h"
 
 
 template <class Precision>

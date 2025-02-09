@@ -53,8 +53,8 @@ enum MYHDF5_DATATYPES {
 };
 
 //comment in to obtain detailed reportings of the HDF5 library calls
-#define MYHDF5_VERBOSE_LEVEL_TWO
-#define MYHDF5_VERBOSE_LEVEL_ONE
+//#define MYHDF5_VERBOSE_LEVEL_TWO
+//#define MYHDF5_VERBOSE_LEVEL_ONE
 
 //return codes for wrapped H5 functions
 #define MYHDF5_SUCCESS								+1 //MK::following the HDF5 convention that error values are positiv in case of success or negative else

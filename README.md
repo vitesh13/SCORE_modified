@@ -21,6 +21,22 @@ echo $PWD
 
 2. Compile the HDF5 library from its source code `src/thirdparty/hdf5`.
 
+
+Install zlib in an install e.g. https://github.com/madler/zlib
+```
+./configure --prefix=$PWD/install
+make
+make install
+```
+Install szlib in an install e.g. instructions https://github.com/erdc/szip/blob/master/INSTALL
+```
+./configure --prefix=$PWD/install
+make
+make install
+```
+
+Install hdf5, configure config/cmake/scripts/HDF5Options.cmake, v1.14.6, see release_docs/INSTALL_CMake.txt
+settings end up in lib/libhdf5.settings
 ```
 mkdir -p src/cxx/thirdparty/mandatory/hdf5
 cd src/cxx/thirdparty/mandatory/hdf5
