@@ -14,10 +14,12 @@ set(CMAKE_BUILD_DIR "build")
 include("Dependencies.cmake")
 message([STATUS] "MYPROJECTPATH: ${MYPROJECTPATH}")
 message([STATUS] "MYHDFPATH: ${MYHDFPATH}")
-message([STATUS] "LIB_SZPATH: ${LIB_SZPATH}")
-message([STATUS] "LIB_ZPATH: ${LIB_ZPATH}")
-message([STATUS] "LIB_AECPATH: ${LIB_AECPATH}")
+#message([STATUS] "LIB_SZPATH: ${LIB_SZPATH}")
+#message([STATUS] "LIB_ZPATH: ${LIB_ZPATH}")
+#message([STATUS] "LIB_AECPATH: ${LIB_AECPATH}")
 message([STATUS] "MYHDFLINKPATH: ${MYHDFLINKFLAGS}")
+message([STATUS] "MYRYMLLINKPATH: ${MYRYMLLINKFLAGS}")
+
 
 ################################################################################################################
 ##AUTOMATIC SECTION#############################################################################################
@@ -69,6 +71,7 @@ add_executable(${MYPROJECTNAME}
 	${MYSRCPATH}/thirdparty/mandatory/chrono/CHRONOTimeAndDateHandling.cpp
 	${MYSRCPATH}/thirdparty/mandatory/openssl/OPENSSLInterface.cpp
 	${MYSRCPATH}/thirdparty/mandatory/hdf5core/HDF5Core.cpp
+	# ${MYSRCPATH}/thirdparty/mandatory/yamlcore/RAPIDYAMLCore.h
 	${MYSRCPATH}/SCORE_Random.cpp
 	${MYSRCPATH}/SCORE_Math.cpp
 	${MYSRCPATH}/SCORE_Io.cpp
@@ -92,7 +95,7 @@ add_executable(${MYPROJECTNAME}
 )
 
 #linking process
-target_link_libraries(${MYPROJECTNAME} ${MYOMP} ${MPI_LIBRARIES} ${MYHDFLINKFLAGS} ${MYSSLLINKFLAGS})
+target_link_libraries(${MYPROJECTNAME} ${MYOMP} ${MPI_LIBRARIES} ${MYHDFLINKFLAGS} ${MYSSLLINKFLAGS} ${MYRYMLLINKFLAGS})
 
 #MPI compilation settings
 if(MPI_COMPILE_FLAGS)

@@ -47,6 +47,16 @@ tar -xvf CMake-hdf5-1.14.0.tar.gz && cd CMake-hdf5-1.14.0
 cd ../../../../../../
 ```
 
+Install rapidyaml
+```
+# python e.g. 3.11
+# git clone --recursive https://github.com/biojppm/rapidyaml.git
+# cd tools && python amalgamate.py ryml_all.hpp && cd ..
+# mkdir build && cd build
+# cmake -DCMAKE_BUILD_TYPE=Release ..
+# make -j8 && cd ..
+```
+
    Alternatively customize the reference to this library in `CMakeLists.txt`
    so that the paths point to an already installed version.
 

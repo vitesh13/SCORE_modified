@@ -44,8 +44,9 @@
 
 
 #include "SCORE_Kernel.h"
+//#include "thirdparty/mandatory/yamlcore/RAPIDYAMLCore.h"
 
-using namespace std;
+//using namespace std;
 
 //MK::dont forget to initialize proper environment by setting OMP_NUM_THREADS and 
 //utilize process + thread pinning via $export OMP_NUM_THREADS=<n> and $export KMP_AFFINITY=verbose,scatter
@@ -55,11 +56,11 @@ using namespace std;
 #define EBSDMAPPING				3
 #define PRNGSEED				4
 
-
+/*
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
+*/
 
 void die( const char* message, bool inmpi ) {
 	cout << "ERROR::" << message << endl;
@@ -143,93 +144,6 @@ bool checkworkingdirectory( string dirname ) {
 	//##MK::add further folders to organize data storage
 	return true;
 }
-
-
-/*
-void test_hdf5()
-{
-	//HDF5 examples
-	string nexus_results_file_name = "SCORE.Results.SimID.Test.nxs";
-	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( nexus_results_file_name );
-	if( h5w.nexus_create() != MYHDF5_SUCCESS ) {
-		cerr << "Unable to create " << nexus_results_file_name << "\n";
-		return;
-	}
-
-	string grpnm = "/entry";
-	ioAttributes anno = ioAttributes();
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXentry") );
-	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
-
-	anno = ioAttributes();
-	anno.add( "unit", string("nm") );
-	//contiguous
-	//()
-	string dsnm = "/entry/u32_0d_cnt";
-	vector<unsigned int> uint;
-	for( unsigned int i = 0; i < 1; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info(), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(2,)
-	dsnm = "/entry/u32_1d_cnt";
-	for( unsigned int i = 0; i < 2; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(3,2)
-	dsnm = "/entry/u32_2d_cnt";
-	for( unsigned int i = 0; i < 3*2; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(4,3,2)
-	dsnm = "/entry/u32_3d_cnt";
-	for( unsigned int i = 0; i < 4*3*2; i++ ) { uint.push_back(i); }
-	//should be interpreted as 4 is the x changing fastest, 3 changing slower, 2, two images changing slowest
-	//see how for d >= 3 the dimension shape sequence has to be reversed i.e. 2, 3, 4 instead of 4, 3, 2 !!!
-	if ( h5w.nexus_write_at_once( dsnm, io_info({2, 3, 4}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(6*5*4*3)
-	dsnm = "/entry/u32_4d_cnt";
-	for( unsigned int i = 0; i < 6*5*4*3; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 4, 5, 6}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//chunked
-	//(2,)
-	dsnm = "/entry/u32_1d_chk";
-	for( unsigned int i = 0; i < 2; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(3,2)
-	dsnm = "/entry/u32_2d_chk";
-	for( unsigned int i = 0; i < 3*2; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 2}, {3, 2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(4,3,2)
-	dsnm = "/entry/u32_3d_chk";
-	for( unsigned int i = 0; i < 4*3*2; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({2, 3, 4}, {2, 3, 4}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(6*5*4*3)
-	dsnm = "/entry/u32_4d_chk";
-	for( unsigned int i = 0; i < 6*5*4*3; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 4, 5, 6}, {3, 4, 5, 6}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//string_array
-	vector<string> str;
-	str.push_back("string_array");
-	dsnm = "/entry/string_array";
-	if ( h5w.nexus_write_at_once( dsnm, str, anno ) != MYHDF5_SUCCESS ) { return; }
-}
-*/
 
 
 int main(int argc, char** argv)

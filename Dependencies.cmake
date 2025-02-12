@@ -25,8 +25,8 @@ add_definitions("-DGITSHA=${MYCLEANGITSHA}")
 set(MYSRCPATH "${MYPROJECTPATH}/src/cxx")
 
 #SPECIFY LOCATION OF UTILITIES
-set(MYSZPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/szip/szip-2.1.1/install")
-set(MYZPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/zlib/zlib-1.3.1/install")
+# set(MYSZPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/szip/szip-2.1.1/install")
+# set(MYZPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/zlib/zlib-1.3.1/install")
 # set(LIB_AECPATH "/usr/local/")
 
 # set(MYHDFPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/hdf5/hdf5-1.14.6/build/HDF5-1.14.6-Linux/HDF_Group/HDF5/1.14.6")
@@ -34,9 +34,17 @@ set(MYHDFPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/hdf5/CMake-hdf5-1.1
 include_directories("${MYHDFPATH}/include")
 link_directories("${MYHDFPATH}/lib")
 #link against static libraries
-set(MYHDFLINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPATH}/lib/libhdf5.a ${MYHDFPATH}/lib/libz.a")  #  ${MYHDFPATH}/lib/libaec.a -ldl")
-#  ${MYZPATH}/lib/libz.a ${MYSZPATH}/lib/libsz.a")  #  ${MYHDFPATH}/lib/libaec.a -ldl")
+set(MYHDFLINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPATH}/lib/libhdf5.a ${MYHDFPATH}/lib/libz.a")
+# ${MYHDFPATH}/lib/libaec.a -ldl")
+# ${MYZPATH}/lib/libz.a ${MYSZPATH}/lib/libsz.a")  #  ${MYHDFPATH}/lib/libaec.a -ldl")
 
+# python e.g. 3.11
+# git clone --recursive https://github.com/biojppm/rapidyaml.git
+# cd tools && python amalgamate.py ryml_all.hpp && cd ..
+# mkdir build && cd build
+# cmake -DCMAKE_BUILD_TYPE=Release ..
+# make -j8 && cd ..
+set(MYRYMLLINKFLAGS "-L${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/rapidyaml/build/libryml.a")
 
 #find installed locations of files from libssl-dev package via typing dpkg -L libssl-dev on the command line
 

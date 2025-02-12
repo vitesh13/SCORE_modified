@@ -47,6 +47,7 @@
 
 #include "SCORE_Kernel.h"
 //#include <omp.h>
+#include "thirdparty/mandatory/yamlcore/RAPIDYAMLCore.h"
 
 
 ensembleHdl::ensembleHdl()
@@ -1572,6 +1573,32 @@ void ensembleHdl::ipf_colormap( double ipf_stretch_r, double ipf_stretch_g, doub
 
 bool ensembleHdl::init_parameter( void )
 {
+	string fname = "NXmicrostructure_score_config.SimID.2.yaml";
+	cout << fname << "\n";
+	string contents = file_get_contents<string>(fname.c_str());
+	ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(contents)); // immutable (csubstr) overload
+	ryml::ConstNodeRef root = tree.rootref();  // a const node reference
+
+	double bar = 0;
+	string john_str;
+	string bar_str;
+	string clk_str;
+
+	vector<double> val_vec = ryml_wrapper_read_array<double>(root, "entry1/discretization/grid/extent");
+	for ( auto it = val_vec.begin(); it != val_vec.end(); it++ ) {
+		cout << "\t\t" << *it << "\n";
+	}
+	bar = ryml_wrapper_read_value<double>(root, "entry1/discretization/grid/cell_dimensions/value");
+	cout << "cell_dimensions_value " << bar << "\n";
+
+	bar_str = ryml_wrapper_read_value<string>(root, "entry1/discretization/grid/cell_dimensions/units");
+	cout << "cell_dimensions_units " << bar_str << "\n";
+
+	vector<string> str_vec = ryml_wrapper_read_array<string>(root, "string_array");
+	for ( auto jt = str_vec.begin(); jt != str_vec.end(); jt++ ) {
+		cout << "\t\t" << *jt << "\n";
+	}
+
 	//read user input, master checks data integrity
 	if ( myRank == MASTER ) 
 		cout << "Initializing parameter/physics..." << endl;
@@ -1581,7 +1608,7 @@ bool ensembleHdl::init_parameter( void )
 		good = init_parameter_runtime();
 		cout << "Initialized runtime..." << "\n";
 	}
-        std::cout << "Does filename come out?" << filename << "\n" << std::endl;
+	std::cout << "Does filename come out?" << filename << "\n" << std::endl;
 	if ( good == true )	 {
 		good = init_parameter_output();
 		cout << "Initialized output..." << "\n";
@@ -1623,10 +1650,10 @@ bool ensembleHdl::init_parameter( void )
 			good = init_parameter_defgpool();
 			cout << "Initialized defgpool..." << "\n";
 		}
-                else if (damaskInput == true){
-                    good = init_parameter_defgpool_damask();
-	            cout << "Initialized defgpooldamask..." << "\n";
-                }
+		else if (damaskInput == true){
+			good = init_parameter_defgpool_damask();
+			cout << "Initialized defgpooldamask..." << "\n";
+		}
 		else {
 			good = init_parameter_defgpool_exp();
 			cout << "Initialized defgpoolexp..." << "\n";
@@ -1637,10 +1664,10 @@ bool ensembleHdl::init_parameter( void )
 			good = init_parameter_rxgpool();
 			cout << "Initialized rxgpool..." << "\n";
 		}
-                else if (damaskInput == true){
-                    good = init_parameter_rxgpool_damask();
-	            cout << "Initialized defgpooldamask..." << "\n";
-                }
+		else if (damaskInput == true){
+			good = init_parameter_rxgpool_damask();
+			cout << "Initialized defgpooldamask..." << "\n";
+		}
 		else {
 			good = init_parameter_rxgpool_exp();
 			cout << "Initialized rxgpoolexp..." << "\n";

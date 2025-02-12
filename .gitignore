@@ -11,3 +11,6 @@ src/cxx/thirdparty/mandatory/lodepng
 src/cxx/thirdparty/mandatory/szip
 src/cxx/thirdparty/mandatory/zlib
 src/cxx/thirdparty/mandatory/trng4
+src/cxx/thirdparty/mandatory/rapidyaml
+
+deleteme
