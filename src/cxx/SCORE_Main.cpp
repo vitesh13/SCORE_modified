@@ -145,6 +145,7 @@ bool checkworkingdirectory( string dirname ) {
 }
 
 
+/*
 void test_hdf5()
 {
 	//HDF5 examples
@@ -228,6 +229,7 @@ void test_hdf5()
 	dsnm = "/entry/string_array";
 	if ( h5w.nexus_write_at_once( dsnm, str, anno ) != MYHDF5_SUCCESS ) { return; }
 }
+*/
 
 
 int main(int argc, char** argv)

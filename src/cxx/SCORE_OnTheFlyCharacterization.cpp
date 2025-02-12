@@ -706,7 +706,7 @@ void caHdl::nexus_write_automaton_geometry()
 	string grpnm = "";
 	string dsnm = "";
 	grpnm = "/entry/rve/grid";
-	if ( h5w.nexus_group_exists(grpnm) == true ) {
+	if ( h5w.nexus_path_exists(grpnm) == true ) {
 		return;
 	}
 	anno = ioAttributes();
@@ -728,9 +728,9 @@ void caHdl::nexus_write_automaton_geometry()
 	dsnm = grpnm + "/cell_dimensions";
 	anno = ioAttributes();
 	anno.add( "unit", string("m") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 3, 3}),
+		io_info({f64.size() / 3, 3}, {f64.size() / 3, 3}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -744,9 +744,9 @@ void caHdl::nexus_write_automaton_geometry()
 	u32.push_back( myCAGeometry.nboxedge_td );
 	u32.push_back( myCAGeometry.nboxedge_nd );
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u32.size() / 3, 3}),
+		io_info({u32.size() / 3, 3}, {u32.size() / 3, 3}),
 		u32,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -758,9 +758,9 @@ void caHdl::nexus_write_automaton_geometry()
 	dsnm = grpnm + "/origin";
 	anno = ioAttributes();
 	anno.add( "unit", string("m") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 3, 3}),
+		io_info({f64.size() / 3, 3}, {f64.size() / 3, 3}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -821,9 +821,9 @@ void caHdl::nexus_write_automaton_geometry()
 	bnd_names.push_back("front"); bnd_names.push_back("back"); //y
 	bnd_names.push_back("bottom"); bnd_names.push_back("top"); //z
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({bnd_names.size() / 1, 1}),
+		io_info({bnd_names.size() / 1, 1}, {bnd_names.size() / 1, 1}),
 		bnd_names,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -834,9 +834,9 @@ void caHdl::nexus_write_automaton_geometry()
 	dsnm = grpnm + "/boundary_conditions";
 	vector<int> bnd_cond = vector<int>( 6, 2 );
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({bnd_cond.size() / 1, 1}),
+		io_info({bnd_cond.size() / 1, 1}, {bnd_cond.size() / 1, 1}),
 		bnd_cond,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -977,11 +977,9 @@ void caHdl::nexus_write_snapshot_grain_based()
 	}
 	anno = ioAttributes();
 	//anno.add( "unit", string("") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1},
-				{u08.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -996,11 +994,9 @@ void caHdl::nexus_write_snapshot_grain_based()
 	}
 	anno = ioAttributes();
 	//anno.add( "unit", string("") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1},
-				{u08.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1011,11 +1007,9 @@ void caHdl::nexus_write_snapshot_grain_based()
 	dsnm = grpnm + "/volume";
 	anno = ioAttributes();
 	anno.add( "unit", string("voxel volume equivalent") );  //1 px = CUBE(cellsize) which is in m^3
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1},
-				{f64.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({f64.size() / 1, 1}, {f64.size() / 1, 1}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1057,11 +1051,9 @@ void caHdl::nexus_write_snapshot_grain_based()
 
 	anno = ioAttributes();
 	anno.add( "unit", string("rad") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 3, 3},
-				{f64.size() / 3, 3},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({f64.size() / 3, 3}, {f64.size() / 3, 3}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1079,11 +1071,9 @@ void caHdl::nexus_write_snapshot_grain_based()
 	}
 	anno = ioAttributes();
 	anno.add( "unit", string("1/m^2") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1},
-				{f64.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({f64.size() / 1, 1}, {f64.size() / 1, 1}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1138,11 +1128,9 @@ void caHdl::nexus_write_snapshot_front_based()
 
 	anno = ioAttributes();
 	anno.add( "unit", string("px") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({i16.size() / 3, 3},
-				{i16.size() / 3, 3},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({i16.size() / 3, 3}, {i16.size() / 3, 3}),
 		i16,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1171,11 +1159,9 @@ void caHdl::nexus_write_snapshot_front_based()
 
 	anno = ioAttributes();
 	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u16.size() / 1, 1},
-				{u16.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u16.size() / 1, 1}, {u16.size() / 1, 1}),
 		u16,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1204,11 +1190,9 @@ void caHdl::nexus_write_snapshot_front_based()
 
 	anno = ioAttributes();
 	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u32.size() / 1, 1},
-				{u32.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u32.size() / 1, 1}, {u32.size() / 1, 1}),
 		u32,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1236,11 +1220,9 @@ void caHdl::nexus_write_snapshot_front_based()
 
 	anno = ioAttributes();
 	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u32.size() / 1, 1},
-				{u32.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u32.size() / 1, 1}, {u32.size() / 1, 1}),
 		u32,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1269,11 +1251,9 @@ void caHdl::nexus_write_snapshot_front_based()
 
 	anno = ioAttributes();
 	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1},
-				{u08.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1300,11 +1280,9 @@ void caHdl::nexus_write_snapshot_front_based()
 	} //next region
 
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1},
-				{u08.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1332,11 +1310,9 @@ void caHdl::nexus_write_snapshot_front_based()
 	} //next region
 
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1},
-				{f64.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({f64.size() / 1, 1}, {f64.size() / 1, 1}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1363,11 +1339,9 @@ void caHdl::nexus_write_snapshot_front_based()
 	} //next region
 
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1},
-				{f64.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({f64.size() / 1, 1}, {f64.size() / 1, 1}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1442,11 +1416,10 @@ void caHdl::nexus_write_snapshot_cell_based()
 	dsnm = grpnm + "/grain_identifier";
 	anno = ioAttributes();
 	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
 		io_info({this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
-				{this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+				{this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd}),
 		u32,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1488,11 +1461,10 @@ void caHdl::nexus_write_snapshot_cell_based()
 	dsnm = grpnm + "/thread_identifier";
 	anno = ioAttributes();
 	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
 		io_info({this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
-				{this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+				{this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd}),
 		u16,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";

@@ -20,7 +20,6 @@
 
 #include "../STLInterface.h"
 
-
 //use functions from the HDF5 library
 #include "hdf5.h"
 
@@ -52,7 +51,7 @@ enum MYHDF5_DATATYPES {
 	H5_STR
 };
 
-//comment in to obtain detailed reportings of the HDF5 library calls
+//comment in to obtain detailed reportings of the HDF5 library calls to hunt down bugs in the HDF5 wrapper
 //#define MYHDF5_VERBOSE_LEVEL_TWO
 //#define MYHDF5_VERBOSE_LEVEL_ONE
 
@@ -113,6 +112,7 @@ enum MYHDF5_DATATYPES {
 #define MYHDF5_ATTROPEN_FAILED						-71
 #define MYHDF5_ATTRACCESS_FAILED					-72
 #define MYHDF5_ATTRREAD_FAILED						-73
+#define MYHDF5_ATTRWCOLL_FAILED						-74
 #define MYHDF5_ATTRWRITE_FAILED						-78
 #define MYHDF5_ATTRCLOSE_FAILED						-79
 
@@ -154,7 +154,8 @@ ostream& operator << (ostream& in, io_info const & val);
 class ioAttributes
 {
 public:
-	//individual "dictionaries" of typed attributes
+	//individual "dictionaries"
+	//scalar
 	map<string, unsigned char> u8;
 	map<string, char> i8;
 	map<string, unsigned short> u16;
@@ -166,19 +167,47 @@ public:
 	map<string, float> f32;
 	map<string, double> f64;
 	map<string, string> str;
+	//list_single, or list_long
+	map<string, vector<unsigned char>> u8_arr;
+	map<string, vector<char>> i8_arr;
+	map<string, vector<unsigned short>> u16_arr;
+	map<string, vector<short>> i16_arr;
+	map<string, vector<unsigned int>> u32_arr;
+	map<string, vector<int>> i32_arr;
+	map<string, vector<unsigned long>> u64_arr;
+	map<string, vector<long>> i64_arr;
+	map<string, vector<float>> f32_arr;
+	map<string, vector<double>> f64_arr;
 	map<string, vector<string>> str_arr;
 	map<string, bool> exists;
 
 	ioAttributes();
 	~ioAttributes();
 
+	//handle scalar
 	template<typename T> void add( const string keyword, const T value );
 	void add( const string keyword, const string value );
-	void add( const string keyword, vector<string> & values );
-	template<typename T> T query( const string keyword );
-	string query( const string keyword );
+	//handle list
+	template<typename T> void add( const string keyword, vector<T> values );
+	void add( const string keyword, vector<string> values );
+
 	void report();
 };
+
+
+#define MYHDF5_SCALAR		0x00
+#define MYHDF5_LIST_SINGLE	0x01
+#define MYHDF5_LIST_LONG	0x02
+
+#define MYHDF5_IS_FIXED		0x00
+#define MYHDF5_IS_VARIABLE	0x01
+
+#define MYHDF5_NULLTERM		0x00
+#define MYHDF5_NULLPAD		0x01
+#define MYHDF5_SPACEPAD		0x02
+
+#define MYHDF5_ASCII		0x00
+#define MYHDF5_UTF8			0x01
 
 
 class HdfFiveSeqHdl
@@ -188,33 +217,55 @@ public:
 	HdfFiveSeqHdl( const string h5fn );
 	~HdfFiveSeqHdl();
 
-	//low-level, should not be called in tool executable code directly but only from within high-level functions!
+	//low-level, should not be called in tool executable code directly use high-level functions instead !
 	vector<string> split_absolute_path( const string h5_absolute_path );
+	int nexus_create();
+	bool nexus_path_exists( const string h5_absolute_path );
 	int nexus_open( const unsigned flags );
+	int nexus_attribute_close( const int previous_status );
 	int nexus_close( const int previous_status );
 
-	template<typename T> int nexus_write_attribute_value( const string keyword, vector<T> & value );
-	int nexus_write_attributes( const string loc_name, ioAttributes const & attrs );
-
+	//attributes
 	//high-level
-	int nexus_create();
-	bool nexus_group_exists( const string h5_absolute_path );
-	int nexus_read_attributes( const string dsnm, ioAttributes & attrs );
+	int nexus_write_attributes( const string loc_name, ioAttributes const & attrs );
+	//low-level
+	int nexus_write_basic_scalar_attributes( const string loc_name, ioAttributes const & attrs );
+	int nexus_write_string_scalar_attributes( const string loc_name, ioAttributes const & attrs );
+	int nexus_write_basic_array_attributes( const string loc_name, ioAttributes const & attrs );
+	int nexus_write_string_array_attributes( const string loc_name, ioAttributes const & attrs );
 
+	/* int nexus_read_attributes( const string dsnm, ioAttributes & attrs ); */
+	//low-level
+	template<typename T> int nexus_write_attribute_value( const string keyword, const T val );
+	int nexus_write_attribute_value( const string keyword, const string val );
+	template<typename T> int nexus_write_attribute_value( const string keyword, vector<T> & val );
+	int nexus_write_attribute_value( const string keyword, vector<string> & val );
+
+	//datasets
+	//high-level
 	template<typename T> int nexus_read( const string dsnm, T & retval );
+	int nexus_read( const string dsnm, string & retval );
 	template<typename T> int nexus_read( const string dsnm, vector<T> & retval );
+	int nexus_read( const string dsnm, vector<string> & retval );
 
 	int nexus_write_group( const string grpnm, ioAttributes const & attrs );
+	template<typename T> int nexus_write( const string dsnm, const T val, ioAttributes const & attrs );
+	int nexus_write( const string dsnm, const string val, ioAttributes const & attrs );
 
-	template<typename T> int nexus_write( const string dsnm, T val, ioAttributes const & attrs );
-	/*
-	template<typename T> int nexus_write( const string dsnm, T & val, ioAttributes const & attrs );
-	*/
 	template<typename T> int nexus_write( const string dsnm, io_info const & ifo, vector<T> & val, ioAttributes const & attrs );
+	int nexus_write( const string dsnm, io_info const & ifo, vector<string> & val, ioAttributes const & attrs );
+	int nexus_write( const string dsnm, vector<string> & val, const unsigned char dimensionality,
+			const unsigned char memory, const unsigned char terminator, const unsigned char encoding, ioAttributes const & attrs );
+	int nexus_write_string_dataset( const string dsnm, vector<string> & val, const size_t max_characters,
+			const unsigned char dimensionality, const unsigned char memory,
+			const unsigned char terminator, const unsigned char encoding, ioAttributes const & attrs );
 
-	template<typename T> int nexus_write_at_once( const string dsnm, io_info const & ifo, vector<T> & val, ioAttributes const & attrs );
-	int nexus_write_at_once( const string dsnm, vector<string> & val, ioAttributes const & attrs );
+	hid_t adtypid;
+	hid_t aspcid;
+	hid_t attrid;
 
+	hid_t mtypid;
+	hid_t dtypid;
 	hid_t dspcid;
 	hid_t plistid;
 	hid_t dsetid;
