@@ -12,5 +12,6 @@ src/cxx/thirdparty/mandatory/szip
 src/cxx/thirdparty/mandatory/zlib
 src/cxx/thirdparty/mandatory/trng4
 src/cxx/thirdparty/mandatory/rapidyaml
-
+src/python/.*
+src/python/__pycache__/*
 deleteme
