@@ -49,6 +49,9 @@
 //#include <omp.h>
 #include "thirdparty/mandatory/yamlcore/RAPIDYAMLCore.h"
 
+//if defined will use the new yaml input files
+//if undefined will use the legacy IMM UDS format
+
 
 ensembleHdl::ensembleHdl()
 {
@@ -263,7 +266,431 @@ void ensembleHdl::init_mpidatatypes( void )
 	MPI_Type_commit(&MPI_IO_FGSDComplete_Type);
 }
 
-bool ensembleHdl::init_parameter_runtime( void ) {
+
+#ifdef PARSE_CONFIG_FROM_YML
+bool ensembleHdl::init_parameter_from_yml_runtime() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref(); // a const node reference
+	string grpnm = "entry1/numerics/";
+
+	XMAX = ryml_wrapper_read_value<double>(root, grpnm + "max_x");
+	if ( (XMAX < 0.0 || XMAX > 1.0) && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument in XMAX." << endl; }
+
+	TMAX = ryml_wrapper_read_value<double>(root, grpnm + "max_time");
+	if ( (TMAX < 0.0 || TMAX > DEFAULT_TMAX) && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument in TMAX." << endl; }
+
+	NTSTEPSMAX = ryml_wrapper_read_value<uint32_t>(root, grpnm + "max_iteration");
+	if ( (NTSTEPSMAX < 1 || NTSTEPSMAX > DEFAULT_NMAX || NTSTEPSMAX >= INTEGER_RANGE_MAX) && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument for NMAX." << endl; }
+
+    //##TODO::output_freq = geTInt("OutputFrequency", runtimecontrol);
+
+	percolation = PERCOLATION_ANALYZE_NO;
+	//if ( geTInt("PERCOLATIONANALYSIS", runtimecontrol) == 1 ) percolation = PERCOLATION_ANALYZE_YES_NOSZDISTR;
+	//if ( geTInt("PERCOLATIONANALYSIS", runtimecontrol) == 2 ) percolation = PERCOLATION_ANALYZE_YES_SZDISTR;
+
+	maxfillperstep = ryml_wrapper_read_value<double>(root, grpnm + "max_delta_x");
+	if ( (maxfillperstep < DEFAULT_MINFILLIN || maxfillperstep > DEFAULT_MAXFILLIN) && myRank == MASTER ) { maxfillperstep = DEFAULT_MAXFILLPERSTEP; cout << "WARNING::MAXFILLPERSTEP was chosen wrong, should be 0.01 < 0.2, was reset to = " << maxfillperstep << endl; }
+
+	int rediscr_nslots = ryml_wrapper_read_value<int>(root, "entry1/solitary_unit/rediscretization");
+	if ( rediscr_nslots < REDISCR_TIMESLOTS_MIN || rediscr_nslots > REDISCR_TIMESLOTS_MAX || rediscr_nslots >= INTEGER_RANGE_MAX ) { cout << "WARNING::Rediscretization time slots reset to " << REDISCR_TIMESLOTS_DEFAULT << endl; }
+	ensRediscretization.nslots = rediscr_nslots;
+
+	initialRelCellCaching = ryml_wrapper_read_value<double>(root, grpnm + "initial_cell_cache");
+	if ( (initialRelCellCaching < DEFAULT_MINRELCELL || initialRelCellCaching > DEFAULT_MAXRELCELL) && myRank == MASTER ) { initialRelCellCaching = DEFAULT_RELCELLCACHING; cout << "WARNING::InitialCacheSizeRXCells was chosen unwise, it is reset to = " << initialRelCellCaching << endl; }
+	transientRelCellRecaching = ryml_wrapper_read_value<double>(root, grpnm + "realloc_cell_cache")  //##TODO::?? "ReCacheSizeRXCells", runtimecontrol );
+	if ( (transientRelCellRecaching < DEFAULT_MINTRANSRELCELL || transientRelCellRecaching > DEFAULT_MAXTRANSRELCELL) && myRank == MASTER ) { transientRelCellRecaching = DEFAULT_TRANSRELCELL; cout << "WARNING::ReCacheSizeRXCells was chosen unwise, it is reset to = " << transientRelCellRecaching << endl; }
+
+	onthefly_defragmentation = false;
+	//##TODO::
+	/*
+	uint32_t onthefly_defrag = 0;
+	onthefly_defrag = geTInt( "OnTheFlyDefragmentation", runtimecontrol );
+	if ( onthefly_defrag == 1 ) onthefly_defragmentation = true;
+	*/
+
+	//##TODO::
+	// trying to read the filename
+	//char * filename_1;
+	filename = ryml_wrapper_read_value<string>(root, "entry1/deformation/ebsd/path");
+	//( "InputFileName", runtimecontrol);
+	std::cout << "The input file name is: " << filename << "\n" << std::endl;
+	//filename = geTString( "InputFileName", runtimecontrol);
+	//std::cout << "The input file name is: " << filename << "\n" << std::endl;
+	//std::cout << "The address of the pointer is: " << (void *) filename << "\n" << std::endl;
+
+	//possibility to switch off postProcessing in order to utilize only the CA solver
+	postProcessing = false;
+	/* ##TODO::
+	uint32_t kuehbach_su_analysis = 0;
+	kuehbach_su_analysis = ryml_wrapper_read_value<uint32_t>(root, "entry1/solitary_unit/apply"); //##TODO if true
+	if ( kuehbach_su_analysis == 1 ) postProcessing = true;
+	*/
+
+	experimentInput = false;
+	/* ##TODO::
+	uint32_t support_ebsddata = 0;
+	support_ebsddata = ryml_wrapper_read_value<uint32_t>(root, "entry1/deformation/ebsd/path");
+	if ( support_ebsddata == 1 ) experimentInput = true;
+	*/
+
+	ebsdstepsize = ryml_wrapper_read_value<double>(root, "entry1/deformation/ebsd/step_size");
+	if ( ebsdstepsize <= DEFAULT_EBSDSTEPSIZE_MINIMUM ) {
+		status = false; cout << "ERROR::Invalid argument in ReadEBSDStepsize." << endl;
+	}
+	return status;
+}
+
+bool ensembleHdl::init_parameter_from_yml_output() {
+	bool status = true;
+	outopt_rendermethod = RENDERING_MSNO;
+	outopt_rendercolormodel = RENDERING_COLOR_GRAINID;
+	//##TODO::assure that NeXus gets used
+	outopt_renderfileformat = RENDERING_FILEFORMAT_RAW;
+	outopt_localrenderboundaries = RENDERING_BOUNDARIES_NO;
+	outopt_logboundaries = OUTPUT_LOGBND_NO;
+	outopt_rxfront = OUTPUT_RXFRONTSTATS_NO;
+	outopt_threadprofiling = OUTPUT_THREADPROFILING_YES;
+	outopt_singlegrainevo = OUTPUT_SINGLEGRAIN_NO;
+	outopt_generateDAMASKgeom = OUTPUT_DAMASK_GEOMETRYFILE_NO;
+	outopt_artsemebsd = OUTPUT_SEMEBSD_NO;
+	return status;
+}
+
+bool ensembleHdl::init_parameter_from_yml_ensemble() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref();
+	string grpnm = "entry1/"
+
+	nworldCAs = ryml_wrapper_read_value<int>(root, grpnm + "solitary_unit/number_of_domains");
+	if ( (nworldCAs < 1 || nworldCAs >= INTEGER_RANGE_MAX || nworldCAs > DEFAULT_MAX_NCAS || nworldCAs < nRanks ) && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument for the number of domains." << endl; }
+
+	//##TODO::
+	ensCAGeometry.cellsize = ryml_wrapper_read_value<double>(root, grpnm + "grid/cell_size") * MICRON2METER;
+	if ( (ensCAGeometry.cellsize < DEFAULT_CELLSIZE_MIN || ensCAGeometry.cellsize > DEFAULT_CELLSIZE_MAX) && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument for the cellsize." << endl; }
+
+	//##TODO::only when not EBSD
+	vector<uint32_t> extent = ryml_wrapper_read_array<uint32_t>(root, grpnm + "grid/extent");
+	if ( extent.size() != 3) { status = false; cout << "Invalid extent" << endl; }
+	
+	ensCAGeometry.nboxedge_rd = extent.at(0);
+	//if ( (ensCAGeometry.nboxedge_rd < CA_DIMENSIONS_MINIMUM || ensCAGeometry.nboxedge_rd > CA_DIMENSIONS_MAXIMUM) && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument for automaton size RD." << endl; }
+	if ( ensCAGeometry.nboxedge_rd < CA_DIMENSIONS_MINIMUM && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument for automaton size RD." << endl; }
+
+	ensCAGeometry.nboxedge_td = extent.at(1);
+	//if ( (ensCAGeometry.nboxedge_td < CA_DIMENSIONS_MINIMUM || ensCAGeometry.nboxedge_td > CA_DIMENSIONS_MAXIMUM) && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument for automaton size TD." << endl; }
+	if ( ensCAGeometry.nboxedge_td < CA_DIMENSIONS_MINIMUM && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument for automaton size TD." << endl; }
+
+	ensCAGeometry.nboxedge_nd = extent.at(2);
+	//if ( (ensCAGeometry.nboxedge_nd < CA_DIMENSIONS_MINIMUM || ensCAGeometry.nboxedge_nd > CA_DIMENSIONS_MAXIMUM) && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument for automaton size ND." << endl; }
+	if ( ensCAGeometry.nboxedge_nd < CA_DIMENSIONS_MINIMUM && myRank == MASTER ) { status = false; cout << "ERROR::Invalid argument for automaton size ND." << endl; }
+	extent = vector<uint32_t>();
+
+	ensCAGeometry.nboxarea_rdtd = ensCAGeometry.nboxedge_rd * ensCAGeometry.nboxedge_td;
+	ensCAGeometry.nboxvol_rdtdnd = ensCAGeometry.nboxe
+	/*
+	double bar = 0;
+	string john_str;
+	string bar_str;
+	string clk_str;
+	vector<double> val_vec = ryml_wrapper_read_array<double>(root, "entry1/discretization/grid/extent");
+	for ( auto it = val_vec.begin(); it != val_vec.end(); it++ ) {
+		cout << "\t\t" << *it << "\n";
+	}
+	bar = ryml_wrapper_read_value<double>(root, "entry1/discretization/grid/cell_dimensions/value");
+	cout << "cell_dimensions_value " << bar << "\n";
+	bar_str = ryml_wrapper_read_value<string>(root, "entry1/discretization/grid/cell_dimensions/units");
+	cout << "cell_dimensions_units " << bar_str << "\n";
+	vector<string> str_vec = ryml_wrapper_read_array<string>(root, "string_array");
+	for ( auto jt = str_vec.begin(); jt != str_vec.end(); jt++ ) {
+		cout << "\t\t" << *jt << "\n";
+	}
+	*/
+dge_rd * ensCAGeometry.nboxedge_td * ensCAGeometry.nboxedge_nd;
+	if ( ensCAGeometry.nboxvol_rdtdnd > CUBE(CA_DIMENSIONS_MAXIMUM) && myRank == MASTER ) { status = false; cout << "ERROR::In total the resulting CA would contain more cells than what the implementation can handle currently!" << endl; }
+
+	ensCAGeometry.boxedge_rd = ensCAGeometry.cellsize * ensCAGeometry.nboxedge_rd;
+	ensCAGeometry.boxedge_td = ensCAGeometry.cellsize * ensCAGeometry.nboxedge_td;
+	ensCAGeometry.boxedge_nd = ensCAGeometry.cellsize * ensCAGeometry.nboxedge_nd;
+	ensCAGeometry.boxarea_rdtd = ensCAGeometry.nboxarea_rdtd * SQR(ensCAGeometry.cellsize);
+	ensCAGeometry.boxvol_rdtdnd = ensCAGeometry.nboxvol_rdtdnd * CUBE(ensCAGeometry.cellsize);
+
+	//modify the render window, not required because not used
+	renderwindow.xmi = 0;
+	renderwindow.xmx = ensCAGeometry.nboxedge_rd;
+	renderwindow.ymi = 0;
+	renderwindow.ymx = ensCAGeometry.nboxedge_td;
+	renderwindow.zmi = 0;
+	renderwindow.zmx = ensCAGeometry.nboxedge_nd;
+	//set limits to inclusive coordinates
+	if ( renderwindow.xmx == ensCAGeometry.nboxedge_rd ) renderwindow.xmx--; //does not substract from 0 because SU has dimensions of at least CA_DIMENSIONS_MINIMUM > 0
+	if ( renderwindow.ymx == ensCAGeometry.nboxedge_td ) renderwindow.ymx--;
+	if ( renderwindow.zmx == ensCAGeometry.nboxedge_nd ) renderwindow.zmx--;
+	QUICKASSERT( renderwindow.xmi >= 0 );
+	QUICKASSERT( renderwindow.xmx < ensCAGeometry.nboxedge_rd );
+	QUICKASSERT( renderwindow.ymi >= 0 );
+	QUICKASSERT( renderwindow.ymx < ensCAGeometry.nboxedge_td );
+	QUICKASSERT( renderwindow.zmi >= 0 );
+	QUICKASSERT( renderwindow.zmx < ensCAGeometry.nboxedge_nd );
+
+	//##TODO::
+	vector<double> defg_size_mean = ryml_wrapper_read_array<double>(root, grpnm + "deformation/grain_size_mean");
+	if ( defg_size_mean.size() == 3 ) {
+		ensPhysData.defgmean_rd = defg_size_mean.at(0) * MICRON2METER; // RD - x
+		ensPhysData.defgmean_td = defg_size_mean.at(1) * MICRON2METER; // TD - y
+		ensPhysData.defgmean_nd = defg_size_mean.at(2) * MICRON2METER; // ND - z
+	}
+	defg_size_mean = vector<double>();
+
+	double mindiscretization = DEFAULT_MIN_GRAINDISCR * ensCAGeometry.cellsize;
+	if ( (ensPhysData.defgmean_rd < mindiscretization || ensPhysData.defgmean_td < mindiscretization || ensPhysData.defgmean_nd < mindiscretization) && myRank == MASTER) { status = false; cout << "ERROR::Invalid argument for the average size of the cuboid deformed grain." << endl; } //no upper bound check necessary
+
+	defmsmethod = CUBOID_DEFMS;
+	//##TODO
+	/*
+	long val = geTInt("DefStructureSynthesis", ensembledef);
+	if ( val == 1 ) defmsmethod = CUBOID_DEFMS;
+	if ( val == 2 ) defmsmethod = POISSONVORONOI_DEFMS;
+	if ( val == 3 ) defmsmethod = CPFEMDAMASK_DEFMS;
+	if ( val == 4 ) defmsmethod = SEMEBSD_2D3D_COLUMNSINGLE;
+	if ( val == 5 ) defmsmethod = SEMEBSD_2D3D_COLUMNSTACK;
+	if ( val == 6 ) defmsmethod = SEMEBSD_2D3D_COLUMNSHIFT;
+
+	if (val == 3 ){
+		damaskInput = true;
+	}
+	*/
+
+	//##TODO::in case of Poisson
+	ensPhysData.defgmean_poisson = ryml_wrapper_read_value<double>(root, grpnm + "deformation/diameter") * MICRON2METER;
+	if ( (ensPhysData.defgmean_poisson < mindiscretization && myRank == MASTER ) ) { status = false; cout << "ERROR::Invalid argument for the average size of deformed grain for method poisson." << endl; }
+
+	delete ensembledef;
+	return status;
+}
+
+bool ensembleHdl::init_parameter_from_yml_nucleation() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref();
+	string grpnm = "entry1/"
+
+	//##TODO::only in the case of CSR?
+	ensNucleationModel.defaultnucdensity = ryml_wrapper_read_value<uint32_t>(root, "entry1/nucleation/csr_density"); //##TODO
+	if ( ensNucleationModel.defaultnucdensity >= INTEGER_RANGE_MAX && myRank == MASTER ) { status = false; cout << "ERROR::Too high NucleationDensityLocalCSR!" << endl; }
+	if ( ensNucleationModel.defaultnucdensity < DEFAULT_NUCDENSITY_CSR && myRank == MASTER ) { status = false; cout << "ERROR::Too low NucleationDensityLocalCSR!" << endl; }
+	long nnucpractical = (ensCAGeometry.nboxvol_rdtdnd / ensNucleationModel.defaultnucdensity); //cells per nuc, assuming CSR, v=const
+	if ( ( nnucpractical < MIN_DISCRETIZATION_GRAIN) && myRank == MASTER ) { cout << "WARNING::Inacceptable low discretization for this high number of nuclei." << endl; }
+
+	//CSR nucleation
+	string nucleation_model = ryml_wrapper_read_value<string>(root, "entry1/nucleation/spatial_distribution");
+	ensNucleationModel.csrnucleation = CSRNUCLEATION_NO;
+	//##TODO:
+	if ( nucleation_model.compare("csr") == 0 ) {
+		ensNucleationModel.csrnucleation = CSRNUCLEATION_YES_ENFORCED;
+		/*
+		if ( val == 1 ) ensNucleationModel.csrnucleation = CSRNUCLEATION_YES_ENFORCED;
+		if ( val == 2 ) ensNucleationModel.csrnucleation = CSRNUCLEATION_YES_PICKRND;
+		if ( val == 3 ) ensNucleationModel.csrnucleation = CSRNUCLEATION_YES_DIEHL;
+		if ( val == 4 ) ensNucleationModel.csrnucleation = CSRNUCLEATION_DIEHL_RANDOMSO3;
+		if ( val == 5 ) ensNucleationModel.csrnucleation = CSRNUCLEATION_DIEHL_RANDOMDEFORI;
+		if ( val == 6 ) ensNucleationModel.csrnucleation = CSRNUCLEATION_DIEHL_SCATTEREXISTENT;
+		*/
+	}
+
+	//Clustering nucleation
+	ensNucleationModel.clustnucleation = CLUSTERNUCLEATION_NO;
+	//##TODO::Matern clustering is currently not supported with YAML input
+	/*
+	if ( geTInt("ClusteredNucleation", nucleationmodeling) == 1 )
+		ensNucleationModel.clustnucleation = CLUSTERNUCLEATION_YES_PICKRND;
+
+	ensNucleationModel.cluster_nclust = geTInt( "ClusteredNucleationNCluster", nucleationmodeling);
+	ensNucleationModel.cluster_lambda = geTReal( "ClusteredNucleationLCluster", nucleationmodeling);
+	ensNucleationModel.cluster_rvesize = geTReal( "ClusteredNucleationScaling", nucleationmodeling) * MICRON2METER;
+	ensNucleationModel.cluster_a = geTInt( "ClusteredNucleationExtendA", nucleationmodeling);
+	ensNucleationModel.cluster_b = geTInt( "ClusteredNucleationExtendB", nucleationmodeling);
+	ensNucleationModel.cluster_c = geTInt( "ClusteredNucleationExtendC", nucleationmodeling);
+	*/
+
+	//Nucleation at pre-existent grain boundaries
+	ensNucleationModel.gbnucleation = GBNUCLEATION_NO;
+	//at the moment no GBnucleation in OpenMP parallel version
+	/*
+	if ( geTInt("GBNucleation", nucleationmodeling) == 1 )
+		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PHYS_LAGBHAGB;
+	if ( geTInt("GBNucleation", nucleationmodeling) == 2 )
+		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PHYS_ONLYHAGB;
+	if ( geTInt("GBNucleation", nucleationmodeling) == 3 ) 
+		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PICKRND;
+	ensNucleationModel.gbnucleation_dens2num = geTReal("GBNucDensity2Number", nucleationmodeling);
+	ensNucleationModel.gbnucleation_drho2dens = geTReal("GBNucRhoDiff2Density", nucleationmodeling);
+	ensNucleationModel.gbnucleation_scatter = DEG2RAD(geTReal("GBNucMaximumScatter", nucleationmodeling));
+	*/
+
+	ensNucleationModel.tincubmodel = TINCUB_SITESATURATION;
+	string incubation_time_model = ryml_wrapper_read_value<string>(root, grpnm + "nucleation/incubation_time");
+	if ( incubation_time_model.compare("site_saturation") != 0 ) {
+		status = false; cout << "ERROR::Only site-saturated nucleation implemented in the MPI/OpenMP model!" << endl;
+	
+		/*
+		if ( geTInt("IncubationTimeModel", nucleationmodeling) == 2 ) {
+			ensNucleationModel.tincubmodel = TINCUB_TIMEDEPENDENT;
+			ensNucleationModel.tincub_rayleigh_sigma = geTReal("IncubationTimeScatter", nucleationmodeling);
+			if ( ensNucleationModel.gbnucleation_dens2num < 0.0 || ensNucleationModel.gbnucleation_drho2dens < 0.0 || ensNucleationModel.gbnucleation_scatter < 0.0 ) { status = false; cout << "ERROR::Invalid grain boundary nucleation properties!" << endl; }
+			if ( ensNucleationModel.csrnucleation == CSRNUCLEATION_NO && ensNucleationModel.gbnucleation == GBNUCLEATION_NO && ensNucleationModel.clustnucleation == CLUSTERNUCLEATION_NO ) { status = false; cout << "ERROR::Choose a valid nucleation model!" << endl; }
+			if ( ensNucleationModel.tincub_rayleigh_sigma < MINIMUM_RAYLEIGH_SIGMA ) {
+				status = false; cout << "ERROR::Invalid low incubation time scatter!" << endl;
+			}
+		}
+		*/
+	}
+	return status;
+}
+
+bool ensembleHdl::init_parameter_from_yml_material() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref();
+	string grpnm = "entry1/material_properties";
+
+	ensPhysData.G0 = ryml_wrapper_read_value<double>(root, grpnm + "reference_shear_modulus/value");
+	ensPhysData.bZeroCelsius = ryml_wrapper_read_value<double>(root, grpnm + "reference_burgers_magnitude/value");
+	/*
+	//##TODO::
+	ensPhysData.dGdt = geTReal("FirstOrderdG0dT", matpara);
+	ensPhysData.thermexp_C = geTReal("AlloyConstantThermalExpCoeff", matpara); //thermal lattice expansion model
+	ensPhysData.thermexp_a = geTReal("FirstOrderThermalExpCoeff", matpara);
+	ensPhysData.thermexp_b = geTReal("SecondOrderThermalExpCoeff", matpara);
+	*/
+	//##TODO::check if not already in Kelvin?
+	ensPhysData.Tmelt = ryml_wrapper_read_value<double>(root, grpnm + "melting_temperature/value") + TOFFSET;
+	if ( ensPhysData.G0 <= 0.0 || ensPhysData.bZeroCelsius <= 0.0 || ensPhysData.Tmelt <= 0.0 ) {
+		status = false; cout << "ERROR::Inrealistic material parameter!" << endl;
+	}
+	return status;
+}
+
+bool ensembleHdl::init_parameter_from_yml_mobilities() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref();
+	string grpnm = "entry1/grain_boundary_mobility_model/";
+
+	mobilitymodel = MOBILITYMODEL_SEBALDGOTTSTEIN;
+	string mobility_model = ryml_wrapper_read_value<string>(root, grpnm + "model");
+	if ( mobility_model.compare("sebald_gottstein") != 0 ) {
+		mobilitymodel = MOBILITYMODEL_ROLLETTHOLM;
+	}
+	//parameter of the Sebald-Gottstein inspired mobility model in which the mobility is solely dependent on the disorientation of the two crystals
+	//adjointing the boundary, when the disorientation < LAGB_TO_HAGB_TRANSITION the boundary is essentially immobile, otherwise mobile as a HAGB
+	//it is considered particularly mobile when the disorientation is close to a 40deg111 in misorientation space
+	if ( mobilitymodel == MOBILITYMODEL_SEBALDGOTTSTEIN ) {
+		ensPhysData.LAGBm0 = ryml_wrapper_read_value<double>(root, grpnm + "sebald_gottstein/lagb_pre_factor");
+		ensPhysData.LAGBHact = ryml_wrapper_read_value<double>(root, grpnm + "sebald_gottstein/lagb_enthalpy") * echarge;
+		ensPhysData.HAGBm0 = ryml_wrapper_read_value<double>(root, grpnm + "sebald_gottstein/high_pre_factor");
+		ensPhysData.HAGBHact = ryml_wrapper_read_value<double>(root, grpnm + "sebald_gottstein/high_enthalpy") * echarge;
+		ensPhysData.GSm0 = ryml_wrapper_read_value<double>(root, grpnm + "sebald_gottstein/special_pre_factor");
+		ensPhysData.GSHact = ryml_wrapper_read_value<double>(root, grpnm + "sebald_gottstein/special_enthalpy") * echarge;
+		if ( ensPhysData.LAGBm0 <= 0.0 || ensPhysData.LAGBHact <= 0.0 || ensPhysData.HAGBm0 <= 0.0 || ensPhysData.HAGBHact <= 0.0 || ensPhysData.GSm0 <= 0.0 || ensPhysData.GSHact <= 0 ) {
+			status = false; cout << "ERROR::Unrealistic mobility model parameterization!" << endl;
+		}
+	}
+	//on the other hand Rollett and Holm inspired by Humphreys for instance often consider the LAGB_TO_HAGB transition not as sharp and despite the possibility of 
+	//close to 40deg111 boundaries modelled additionally more mobile than random high-angle grain boundaries (HAGB). They consider a sigmoidal function of the form
+	//m = 1.0 - cut*exp(-trans * (disori/LAGB_TO_HAGB_TRANSITION)^exponent) also inspired by exp. results on tilt boundaries in Al performed by Winning and Molodov
+	//MK::however often the parameter RHModelLAGBHAGBExponent is set to 4, this is physically unrealistic because then LAGB are sufficiently 
+	//mobile against aforementioned experimental observations
+	if ( mobilitymodel == MOBILITYMODEL_ROLLETTHOLM ) {
+		ensPhysData.RH_HAGBm0 = ryml_wrapper_read_value<double>(root, grpnm + "rollett_holm/m_null");
+		ensPhysData.RH_HAGBHact = ryml_wrapper_read_value<double>(root, grpnm + "rollett_holm/enthalpy") * echarge;
+		ensPhysData.RH_LAGBHAGBcut = ryml_wrapper_read_value<double>(root, grpnm + "rollett_holm/c1" );
+		ensPhysData.RH_LAGBHAGBtrans = ryml_wrapper_read_value<double>(root, grpnm + "rollett_holm/c2");
+		ensPhysData.RH_LAGBHAGBexponent = ryml_wrapper_read_value<double>(root, grpnm + "rollett_holm/c3");
+		if ( ensPhysData.RH_HAGBm0 <= 0.0 || ensPhysData.RH_HAGBHact <= 0.0 || ensPhysData.RH_LAGBHAGBcut <= 0.0 || ensPhysData.RH_LAGBHAGBtrans <= 0.0 || ensPhysData.RH_LAGBHAGBexponent <= 0.0 ) {
+			status = false; cout << "ERROR::Unrealistic mobility model parameterization!" << endl;
+		}
+	}
+	return status;
+}
+
+bool ensembleHdl::init_parameter_from_yml_recovery() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref();
+	string grpnm = "entry1/stored_energy_recovery_model/";
+
+	ensRecoveryModel.RecoveryConsider = RECOVERY_NO;
+	string recovery_model = ryml_wrapper_read_value<string>(root, grpnm + "model");
+	if ( recovery_model.compare("none") != 0 ) {
+		/* ##TODO::
+		int recoverymodel = geTInt( "RecoveryConsider", recoverypara );
+		if ( recoverymodel == 1 ) ensRecoveryModel.RecoveryConsider = RECOVERY_NES_VACCOREDIFF;
+		if ( recoverymodel == 2 ) ensRecoveryModel.RecoveryConsider = RECOVERY_NES_SOLUTEDRAG;
+		if ( recoverymodel == 3 ) ensRecoveryModel.RecoveryConsider = RECOVERY_NES_MICHALAKPAXTON;
+		ensRecoveryModel.VacancyDiffGeo = geTReal( "RecoveryVacancyDiffGeometry", recoverypara );
+		ensRecoveryModel.VacancyDiffD0 = geTReal( "RecoveryVacancyDiffPreexp", recoverypara );
+		ensRecoveryModel.VacancyDiffHact = geTReal( "RecoveryVacancyDiffHact", recoverypara ) * echarge;
+		ensRecoveryModel.SoluteDiffD0 = geTReal( "RecoverySoluteDiffPreexp", recoverypara );
+		ensRecoveryModel.SoluteDiffHact = geTReal( "RecoverySoluteDiffHact", recoverypara ) * echarge;
+		ensRecoveryModel.SoluteLsPropFactor = geTReal( "RecoverySoluteLsPropFactor", recoverypara );
+		ensRecoveryModel.SoluteConcentration = geTReal ( "RecoverySoluteConcentration", recoverypara );
+		ensRecoveryModel.NesAlpha3 = geTReal( "RecoveryParameterAlpha3", recoverypara );
+		ensRecoveryModel.NesKappa2 = geTReal( "RecoveryParameterKappa2", recoverypara );
+		ensRecoveryModel.NesC3 = geTReal( "RecoveryParameterC3", recoverypara );
+		ensRecoveryModel.NesC4 = geTReal( "RecoveryParameterC4", recoverypara );
+		ensRecoveryModel.NesC5 = geTReal( "RecoveryParameterC5", recoverypara );
+		//##MK::implement consistency check
+		*/
+	}
+	return status;
+}
+
+bool init_parameter_from_yml_drag() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref();
+	string grpnm = "entry1/";
+	//##TODO::
+	return status;
+}
+
+bool init_parameter_from_yml_idealtexture() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref();
+	string grpnm = "entry1/";
+	//##TODO::
+	return status;
+}
+
+bool init_parameter_from_yml_processing() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref();
+	string grpnm = "entry1/";
+	//##TODO::
+	return status;
+}
+
+bool init_parameter_from_yml_defgpool() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref();
+	string grpnm = "entry1/";
+	//##TODO::
+	return status;
+}
+
+bool init_parameter_from_yml_rxgpool() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref();
+	string grpnm = "entry1/";
+	//##TODO::
+	return status;
+}
+
+bool init_parameter_from_yml_additional() {
+	bool status = true;
+	ryml::ConstNodeRef root = tree.rootref();
+	string grpnm = "entry1/";
+	//##TODO::
+	return status;
+}
+
+#else
+bool ensembleHdl::init_parameter_from_uds_runtime( void ) {
 	bool status = true;
 
 	dataBlockP runtimecontrol = readDataBlock("RuntimeControl", score_input);
@@ -331,7 +758,7 @@ bool ensembleHdl::init_parameter_runtime( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_output( void ) {
+bool ensembleHdl::init_parameter_from_uds_output( void ) {
 	bool status = true;
 
 	dataBlockP outputopts = readDataBlock( "SimulationOutput", score_input );
@@ -402,13 +829,12 @@ bool ensembleHdl::init_parameter_output( void ) {
 	val = geTInt( "OutputArtificialSEMEBSD", outputopts );
 	if ( val == 1 ) outopt_artsemebsd = OUTPUT_SEMEBSD_YES;
 
-
 	delete outputopts;
 
 	return status;
 }
 
-bool ensembleHdl::init_parameter_ensemble( void ) {
+bool ensembleHdl::init_parameter_from_uds_ensemble( void ) {
 	bool status = true;
 
 	dataBlockP ensembledef = readDataBlock("EnsembleDefinition", score_input);
@@ -486,7 +912,7 @@ bool ensembleHdl::init_parameter_ensemble( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_nucleation( void ) {
+bool ensembleHdl::init_parameter_from_uds_nucleation( void ) {
 	bool status = true;
 
 	dataBlockP nucleationmodeling = readDataBlock( "NucleationModeling", score_input );
@@ -554,7 +980,7 @@ bool ensembleHdl::init_parameter_nucleation( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_material( void ) {
+bool ensembleHdl::init_parameter_from_uds_material( void ) {
 	bool status = true;
 
 	dataBlockP matpara = readDataBlock("MaterialProperties", score_input);
@@ -573,7 +999,7 @@ bool ensembleHdl::init_parameter_material( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_mobilities( void ) {
+bool ensembleHdl::init_parameter_from_uds_mobilities( void ) {
 	bool status = true;
 
 	dataBlockP mobilitymodeling = readDataBlock( "BoundaryMobilityModel", score_input );
@@ -613,7 +1039,7 @@ bool ensembleHdl::init_parameter_mobilities( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_recovery( void ) {
+bool ensembleHdl::init_parameter_from_uds_recovery( void ) {
 	bool status = true;
 
 	dataBlockP recoverypara = readDataBlock("RecoveryParameter", score_input);
@@ -642,7 +1068,7 @@ bool ensembleHdl::init_parameter_recovery( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_drag( void ) {
+bool ensembleHdl::init_parameter_from_uds_drag( void ) {
 	bool status = true;
 
 	dataBlockP dragpara = readDataBlock("DragParameter", score_input );
@@ -687,7 +1113,7 @@ bool ensembleHdl::init_parameter_drag( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_idealtexture( void ) {
+bool ensembleHdl::init_parameter_from_uds_idealtexture( void ) {
 	bool status = true;
 
 	//import ideal texture components
@@ -734,7 +1160,7 @@ bool ensembleHdl::init_parameter_idealtexture( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_processing( void ) {
+bool ensembleHdl::init_parameter_from_uds_processing( void ) {
 	bool status = true;
 
 	dataBlockP timetemp = readDataBlock( "AnnealingSchedule", score_input );
@@ -774,7 +1200,7 @@ bool ensembleHdl::init_parameter_processing( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_defgpool( void ) {
+bool ensembleHdl::init_parameter_from_uds_defgpool( void ) {
 	bool status = true;
 
 	dataBlockP defgpara = readDataBlock("DeformedGrainsPool", score_input);
@@ -821,7 +1247,7 @@ bool ensembleHdl::init_parameter_defgpool( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_rxgpool( void ) {
+bool ensembleHdl::init_parameter_from_uds_rxgpool( void ) {
 	bool status = true;
 
 	dataBlockP rxgpara = readDataBlock("RXGrainsPool", score_input);
@@ -866,7 +1292,7 @@ bool ensembleHdl::init_parameter_rxgpool( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_additional( void ) {
+bool ensembleHdl::init_parameter_from_uds_additional( void ) {
 	bool status = true;
 
 	if ( outopt_rendermethod == RENDERING_MS2D || outopt_rendermethod == RENDERING_MS3D || outopt_localrenderboundaries == RENDERING_BOUNDARIES_YES ) {
@@ -980,6 +1406,8 @@ bool ensembleHdl::init_parameter_additional( void ) {
 
 	return status;
 }
+#endif
+
 
 bool ensembleHdl::init_ebsdmap_read( const char* ebsdfname ) {
 	//reads three headered EBSD file of format x,y,gid,phi1,Phi,phi2, kam, optional RGB
@@ -1097,6 +1525,7 @@ cout << "SEM/EBSD grain id/phi1/Phi/phi2//KAM = " << ap.gid << ";" << ap.bunge1 
 	else { cout << "File " << ebsdfname << " either not existent or cannot be opened!" << endl; return false; }
 }
 
+
 bool ensembleHdl::init_parameter_defgpool_exp( void )
 {
 	if ( expUniqueGrainIDs.size() > DEFAULT_MAX_DEFORMEDGRAINS ) { cout << "WARNING::The pool of EBSD grains is very large." << endl; }
@@ -1128,7 +1557,7 @@ bool ensembleHdl::init_parameter_defgpool_exp( void )
 		if ( it != expUniqueGrainIDs.end() )
 			expData[px].gid = it->second; //if assign the newlabel
 		else {
-			cerr << "Labeling inconsistence in init_parameter_defgpool" << endl;
+			cerr << "Labeling inconsistence in init_parameter_from_uds_defgpool" << endl;
 			return false;
 		}
 		/*for ( size_t i = 0; i < expGrainIDs.size(); i++ ) {
@@ -1297,6 +1726,7 @@ bool ensembleHdl::init_parameter_rxgpool_exp( void )
 	//in Martin Diehl's project nuclei will be generated from the structure so no importing of a priori information on nucleation spectrum required
 	return true;
 }
+
 
 void ensembleHdl::report_successful_setup( void )
 {
@@ -1604,77 +2034,81 @@ bool ensembleHdl::init_parameter( void )
 		cout << "Initializing parameter/physics..." << endl;
 
 	bool good = true;
-	if ( good == true )	{
-		good = init_parameter_runtime();
+	if ( good == true ) {
+#ifdef PARSE_CONFIG_FROM_YML
+		good = init_parameter_from_yml_runtime();
+#else
+		good = init_parameter_from_uds_runtime();
+#endif
 		cout << "Initialized runtime..." << "\n";
 	}
 	std::cout << "Does filename come out?" << filename << "\n" << std::endl;
-	if ( good == true )	 {
-		good = init_parameter_output();
+	if ( good == true ) {
+		good = init_parameter_from_uds_output();
 		cout << "Initialized output..." << "\n";
 	}
 	if ( good == true )	{
-		good = init_parameter_ensemble();
+		good = init_parameter_from_uds_ensemble();
 		cout << "Initialized ensemble..." << "\n";
 	}
 	if ( good == true )	 {
-		good = init_parameter_nucleation();
+		good = init_parameter_from_uds_nucleation();
 		cout << "Initialized nucleation..." << "\n";
 	}
 	if ( good == true )	{
-		good = init_parameter_material();
+		good = init_parameter_from_uds_material();
 		cout << "Initialized material..." << "\n";
 	}
 	if ( good == true )	{
-		good = init_parameter_mobilities();
+		good = init_parameter_from_uds_mobilities();
 		cout << "Initialized mobilites..." << "\n";
 	}
 	if ( good == true )	{
-		good = init_parameter_recovery();
+		good = init_parameter_from_uds_recovery();
 		cout << "Initialized recovery..." << "\n";
 	}
 	if ( good == true )	{
-		good = init_parameter_drag();
+		good = init_parameter_from_uds_drag();
 		cout << "Initialized drag..." << "\n";
 	}
 	if ( good == true )	{
-		good = init_parameter_idealtexture();
+		good = init_parameter_from_uds_idealtexture();
 		cout << "Initialized ideal texture..." << "\n";
 	}
 	if ( good == true )	{
-		good = init_parameter_processing();
+		good = init_parameter_from_uds_processing();
 		cout << "Initialized processing..." << "\n";
 	}
 	if ( good == true ) {
 		if ( experimentInput == false ) {
-			good = init_parameter_defgpool();
+			good = init_parameter_from_uds_defgpool();
 			cout << "Initialized defgpool..." << "\n";
 		}
 		else if (damaskInput == true){
-			good = init_parameter_defgpool_damask();
+			good = init_parameter_from_uds_defgpool_damask();
 			cout << "Initialized defgpooldamask..." << "\n";
 		}
 		else {
-			good = init_parameter_defgpool_exp();
+			good = init_parameter_from_uds_defgpool_exp();
 			cout << "Initialized defgpoolexp..." << "\n";
 		}
 	}
 	if ( good == true ) {
 		if ( experimentInput == false ) {
-			good = init_parameter_rxgpool();
+			good = init_parameter_from_uds_rxgpool();
 			cout << "Initialized rxgpool..." << "\n";
 		}
 		else if (damaskInput == true){
-			good = init_parameter_rxgpool_damask();
+			good = init_parameter_from_uds_rxgpool_damask();
 			cout << "Initialized defgpooldamask..." << "\n";
 		}
 		else {
-			good = init_parameter_rxgpool_exp();
+			good = init_parameter_from_uds_rxgpool_exp();
 			cout << "Initialized rxgpoolexp..." << "\n";
 		}
 	}
 	if ( good == true )	{
-		good = init_parameter_additional();
+		good = init_parameter_from_uds_additional();
 		cout << "Initialized additional..." << "\n";
 	}
 

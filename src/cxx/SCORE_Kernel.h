@@ -66,6 +66,10 @@
 //##MK::in case of local installation of HDF5 library
 //#include "thirdparty/hdf5-1.10.0-patch1/hdf5/include/hdf5.h"
 
+//if defined will use the new yaml input files
+//if undefined will use the legacy IMM UDS format
+#define PARSE_CONFIG_FROM_YML
+
 
 using namespace std;
 
@@ -870,24 +874,42 @@ public:
 
 	void init_mpidatatypes( void );
 	bool init_parameter ( void );
-		bool init_parameter_runtime( void );
-		bool init_parameter_output( void );
-		bool init_parameter_ensemble( void );
-		bool init_parameter_nucleation( void );
-		bool init_parameter_material( void );
-		bool init_parameter_mobilities( void );
-		bool init_parameter_recovery( void );
-		bool init_parameter_drag( void );
-		bool init_parameter_idealtexture( void );
-		bool init_parameter_processing( void );
-		bool init_parameter_defgpool( void );
-		bool init_parameter_rxgpool( void );
-		bool init_parameter_additional( void );
+
+#ifdef PARSE_CONFIG_FROM_YML
+		bool init_parameter_from_yml_runtime();
+		bool init_parameter_from_yml_output();
+		bool init_parameter_from_yml_ensemble();
+		bool init_parameter_from_yml_nucleation();
+		bool init_parameter_from_yml_material();
+		bool init_parameter_from_yml_mobilities();
+		bool init_parameter_from_yml_recovery();
+		bool init_parameter_from_yml_drag();
+		bool init_parameter_from_yml_idealtexture();
+		bool init_parameter_from_yml_processing();
+		bool init_parameter_from_yml_defgpool();
+		bool init_parameter_from_yml_rxgpool();
+		bool init_parameter_from_yml_additional();
+#else
+		bool init_parameter_from_uds_runtime( void );
+		bool init_parameter_from_uds_output( void );
+		bool init_parameter_from_uds_ensemble( void );
+		bool init_parameter_from_uds_nucleation( void );
+		bool init_parameter_from_uds_material( void );
+		bool init_parameter_from_uds_mobilities( void );
+		bool init_parameter_from_uds_recovery( void );
+		bool init_parameter_from_uds_drag( void );
+		bool init_parameter_from_uds_idealtexture( void );
+		bool init_parameter_from_uds_processing( void );
+		bool init_parameter_from_uds_defgpool( void );
+		bool init_parameter_from_uds_rxgpool( void );
+		bool init_parameter_from_uds_additional( void );
+#endif
 	bool init_ebsdmap_read( const char* ebsdfname );
-		bool init_parameter_defgpool_exp( void );
-		bool init_parameter_rxgpool_exp( void );
-        bool init_parameter_defgpool_damask( void );
-        bool init_parameter_rxgpool_damask( void );
+	bool init_parameter_defgpool_exp( void );
+	bool init_parameter_rxgpool_exp( void );
+	bool init_parameter_defgpool_damask( void );
+	bool init_parameter_rxgpool_damask( void );
+
 	void report_successful_setup( void );
 	void report_datastructures( void );
 	void compare_two_ang_files( const char* inputang, const char* snpang );
@@ -997,7 +1019,11 @@ public:
 	int ensembleprngseed;
 	randomClass ensembleprng;
 	mathMethods ensmath;
+#ifdef PARSE_CONFIG_FROM_YML
+	ryml::Tree tree;
+#else
 	FILE * score_input;
+#endif
 	string uds_config_file_name;
 	string nexus_results_file_name;
 

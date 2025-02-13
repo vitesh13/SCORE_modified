@@ -168,7 +168,16 @@ int main(int argc, char** argv)
 	cout << "uds_file_sha256 " << uds_file_sha256 << "\n";
 	cout << "iso8601 timestamp now " << timestamp_now_iso8601() << "\n";
 
-	if( !myensemble->open(READ, argv[INPUTFILE], &(myensemble->score_input)) ) { die("Reading input file!", false); }
+#ifdef PARSE_CONFIG_FROM_YML
+	string inputfile_name = argv[INPUTFILE];
+	string contents = file_get_contents<string>(inputfile_name.c_str());
+	myensemble->tree = ryml::parse_in_arena(ryml::to_csubstr(contents)); // immutable (csubstr) overload
+	//die("Reading input file!", false);
+#else
+	if( !myensemble->open(READ, argv[INPUTFILE], &(myensemble->score_input)) ) {
+		die("Reading input file!", false);
+	}
+#endif
 	cout << "SCORE loaded input data " << argv[INPUTFILE] << " ..." << endl;
 
 	if ( argc > (1+2) ) {
