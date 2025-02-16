@@ -66,9 +66,12 @@
 //##MK::in case of local installation of HDF5 library
 //#include "thirdparty/hdf5-1.10.0-patch1/hdf5/include/hdf5.h"
 
-//if defined will use the new yaml input files
-//if undefined will use the legacy IMM UDS format
-#define PARSE_CONFIG_FROM_YML
+//NeXus/HDF5 config files as the new default
+#define PARSE_CONFIG_FROM_HDF
+//do not define this, implementation not complete
+//#define PARSE_CONFIG_FROM_YML
+//leave only this defined for legacy IMM UDS file formats
+//#define PARSE_CONFIG_FROM_UDS
 
 
 using namespace std;
@@ -875,7 +878,22 @@ public:
 	void init_mpidatatypes( void );
 	bool init_parameter ( void );
 
-#ifdef PARSE_CONFIG_FROM_YML
+#ifdef PARSE_CONFIG_FROM_HDF
+	bool init_parameter_from_hdf_runtime();
+	bool init_parameter_from_hdf_output();
+	bool init_parameter_from_hdf_ensemble();
+	bool init_parameter_from_hdf_nucleation();
+	bool init_parameter_from_hdf_material();
+	bool init_parameter_from_hdf_mobilities();
+	bool init_parameter_from_hdf_recovery();
+	bool init_parameter_from_hdf_drag();
+	bool init_parameter_from_hdf_idealtexture();
+	bool init_parameter_from_hdf_processing();
+	bool init_parameter_from_hdf_defgpool();
+	bool init_parameter_from_hdf_rxgpool();
+	bool init_parameter_from_hdf_additional();
+#else
+	#ifdef PARSE_CONFIG_FROM_YML
 		bool init_parameter_from_yml_runtime();
 		bool init_parameter_from_yml_output();
 		bool init_parameter_from_yml_ensemble();
@@ -889,7 +907,7 @@ public:
 		bool init_parameter_from_yml_defgpool();
 		bool init_parameter_from_yml_rxgpool();
 		bool init_parameter_from_yml_additional();
-#else
+	#else
 		bool init_parameter_from_uds_runtime( void );
 		bool init_parameter_from_uds_output( void );
 		bool init_parameter_from_uds_ensemble( void );
@@ -903,6 +921,7 @@ public:
 		bool init_parameter_from_uds_defgpool( void );
 		bool init_parameter_from_uds_rxgpool( void );
 		bool init_parameter_from_uds_additional( void );
+	#endif
 #endif
 	bool init_ebsdmap_read( const char* ebsdfname );
 	bool init_parameter_defgpool_exp( void );
@@ -1007,6 +1026,7 @@ public:
 	unsigned char outopt_generateDAMASKgeom;
 	unsigned char outopt_artsemebsd;
 	char * filename;
+	string ebsd_file_name;
 	string damask_file_name;
 
 	bool onthefly_defragmentation;
