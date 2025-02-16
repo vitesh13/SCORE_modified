@@ -67,7 +67,7 @@ entry1:
       - [0.0, 0.0, 0.0]
       - [0.0, 0.6108652381980153, 0.7853981633974483]
       '@units': radian
-    radius:
+    theta:
       value: [0.17453292519943295, 0.17453292519943295]
       '@units': radian
   time_temperature:

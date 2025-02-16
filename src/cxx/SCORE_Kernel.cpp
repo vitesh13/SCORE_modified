@@ -314,6 +314,15 @@ bool ensembleHdl::init_parameter_from_hdf_runtime() {
 	uint32_t onthefly_defrag = 0;
 	onthefly_defrag = geTInt( "OnTheFlyDefragmentation", runtimecontrol );
 	if ( onthefly_defrag == 1 ) onthefly_defragmentation = true;
+	vector<double> f64;
+	if ( h5r.nexus_read( grpnm + "defragment_x", f64 ) != MYHDF5_SUCCESS ) { status = false; }
+	for ( size_t i = 0; i < f64.size(); i++ ) {
+		double Xdi = f64[i];
+		if ( Xdi < 0. || Xdi > 1. ) { status = false; cerr << "Invalid recrystallized volume fraction X at which to defragment list!" << endl; break; }
+		UserDefLogPoint_X_CellListDefragment.push_back( Xdi );
+	}
+	f64 = vector<double>();
+	std::sort( UserDefLogPoint_X_CellListDefragment.begin(), UserDefLogPoint_X_CellListDefragment.end(), SortDoubleAscending );
 	*/
 
 	//possibility to switch off postProcessing in order to utilize only the CA solver
@@ -605,7 +614,7 @@ bool ensembleHdl::init_parameter_from_hdf_mobilities() {
 
 bool ensembleHdl::init_parameter_from_hdf_recovery() {
 	bool status = true;
-	ryml::ConstNodeRef root = tree.rootref();
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( nexus_config_file_name );
 	string grpnm = "entry1/stored_energy_recovery/";
 
 	string model = "";
@@ -640,49 +649,242 @@ bool ensembleHdl::init_parameter_from_hdf_recovery() {
 
 bool init_parameter_from_hdf_drag() {
 	bool status = true;
-	ryml::ConstNodeRef root = tree.rootref();
-	string grpnm = "entry1/";
-	//##TODO::
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( nexus_config_file_name );
+	string grpnm = "entry1/dispersoid_drag/";
+
+	string model = "";
+	if ( h5r.nexus_read( grpnm + "model", model ) != MYHDF5_SUCCESS ) { status = false; }
+	if ( model.compare("none") == 0 ) {
+		ensDragData.ZenerConsider = DISPERSOIDDRAG_NO;
+	}
+	else {
+		cerr << "entry1/dispersoid_drag/model" << endl;
+	}
+	/*
+	int zenermodel = geTInt( "ZenerConsider", dragpara );
+	if ( zenermodel == 1 ) ensDragData.ZenerConsider = DISPERSOIDDRAG_CONSTANT;
+	if ( zenermodel == 2 ) ensDragData.ZenerConsider = DISPERSOIDDRAG_TIMEDEP;
+	ensDragData.ZenerAlpha = geTReal( "ZenerAlpha", dragpara );
+	ensDragData.ZenerGamma = geTReal( "ZenerGamma", dragpara );
+	see specific uds function
+	*/
 	return status;
 }
 
 bool init_parameter_from_hdf_idealtexture() {
 	bool status = true;
-	ryml::ConstNodeRef root = tree.rootref();
-	string grpnm = "entry1/";
-	//##TODO::
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( nexus_config_file_name );
+	string grpnm = "entry1/component_analysis/";
+
+	if ( h5r.nexus_path_exists( grpnm + "bunge_euler") == true && h5r.nexus_path_exists( grpnm + "theta") == true ) {
+		vector<double> f64_bunge;
+		vector<double> f64_theta;
+		if ( h5r.nexus_read( grpnm + "bunge_euler", f64_bunge ) != MYHDF5_SUCCESS ) { status = false; }
+		if ( h5r.nexus_read( grpnm + "bunge_theta", f64_theta ) != MYHDF5_SUCCESS ) { status = false; }
+		if ( f64_bunge.size() >= 3 && f64_theta.size() > 0 ) {
+			if ( f64_bunge.size() % 3 == 0 || f64_bunge.size() == f64_theta.size() * 3 ) {
+				for ( size_t i = 0; i < f64_theta.size(); i++ ) {
+					struct ideal icomp;
+
+					double bunge_ori[3];
+					for ( size_t j = 0; j < 3; j++ ) {
+						bunge_ori[j] = f64_bunge.at(3*i+j);
+						if ( bunge_ori[j] < BUNGE_MIN || bunge_ori[j] > BUNGE_MAX ) {
+							status = false; cerr << "Invalid Euler angles in ideal orientation defintion!" << endl; break;
+						}
+					}
+					double scatt = f64_theta.at(i);
+					if ( scatt <= 0. ) {
+						scatt = 0.;
+					}
+					double quaternion_ori[4];
+					ensmath.euler2quat( bunge_ori, quaternion_ori ); //interally everything with quaternions
+
+					icomp.bunge1 = bunge_ori[0];
+					icomp.bunge2 = bunge_ori[1];
+					icomp.bunge3 = bunge_ori[2];
+					icomp.q0 = quaternion_ori[0];
+					icomp.q1 = quaternion_ori[1];
+					icomp.q2 = quaternion_ori[2];
+					icomp.q3 = quaternion_ori[3];
+					icomp.scatter = scatt;
+					standardlagen.push_back( icomp );
+#ifdef REPORTSTYLE_DEVELOPER
+					cout << "Idealcomponent imported::bunge123;q0123;scatt;" << standardlagen[i].bunge1 << ";" << standardlagen[i].bunge2 << ";" << standardlagen[i].bunge3 << ";" << standardlagen[i].q0 << ";" << standardlagen[i].q1 << ";" << standardlagen[i].q2 << ";"<< standardlagen[i].q3 << ";" << standardlagen[i].scatter << endl;
+#endif
+				}
+				return status;
+			}
+		}
+		status = false;
+		cerr << "entry1/component_analysis/" << endl;
+	}
 	return status;
 }
 
 bool init_parameter_from_hdf_processing() {
 	bool status = true;
-	ryml::ConstNodeRef root = tree.rootref();
-	string grpnm = "entry1/";
-	//##TODO::
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( nexus_config_file_name );
+	string grpnm = "entry1/time_temperature/";
+
+	vector<double> f64_time;
+	vector<double> f64_temp;
+	if ( h5r.nexus_read( grpnm + "time", f64_time ) != MYHDF5_SUCCESS ) { status = false; }
+	if ( h5r.nexus_read( grpnm + "temperature", f64_temp ) != MYHDF5_SUCCESS ) { status = false; }
+	if ( f64_time.size() == f64_temp.size() && f64_time.size() >= 2 ) {
+		double ti_old = -1.0;
+		double ti_now = 0.0;
+		double Ti = (25.0 + TOFFSET);
+
+		for ( size_t i = 0; i < f64_time.size(); i++ ) {
+			ti_now = f64_time[i];
+			Ti = f64_temp[i];
+			Ti += TOFFSET;
+			if ( ti_now < 0.0 || Ti < 0.0 || ti_old >= ti_now ) {
+				status = false; cerr << "Invalid annealing schedule data (<0.0 or not consecutive in time)!" << endl; break;
+			}
+			ti_old = ti_now;
+
+			ttime.push_back( ti_now );
+			ttemperature.push_back( Ti );
+
+#ifdef REPORTSTYLE_DEVELOPER
+				cout << "Node;" << this->myRank << ";ti;Ti;" << ti_now << ";" << Ti << "in the vector instead ttime[ts];ttemperature[ts];" << "\ts=" << ts << "\t" << ttime[ts] << ";" << ttemperature[ts] << endl;
+#endif
+
+		}
+		if ( ttime.size() < 2 ) { status = false; cerr << "Annealing schedule is empty!" << endl; }
+		return status;
+	}
+	else {
+		status = false; cerr << "entry1/time_temperature" << endl;
+	}
 	return status;
 }
 
 bool init_parameter_from_hdf_defgpool() {
 	bool status = true;
-	ryml::ConstNodeRef root = tree.rootref();
-	string grpnm = "entry1/";
-	//##TODO::
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( nexus_config_file_name );
+	string grpnm = "entry1/deformation/ensemble/";
+
+	if ( defmsmethod != CPFEMDAMASK_DEFMS ) {
+		if ( h5r.nexus_path_exists( grpnm ) == true ) {
+			vector<double> f64_bunge;
+			vector<double> f64_rho;
+			if ( h5r.nexus_read( grpnm + "bunge_euler", f64_bunge ) != MYHDF5_SUCCESS ) { status = false; cerr << grpnm << "bunge_euler" << endl; }
+			if ( h5r.nexus_read( grpnm + "stored_energy", f64_rho ) != MYHDF5_SUCCESS ) { status = false; cerr << grpnm << "stored_energy" << endl; }
+			if ( f64_rho.size() * 3 == f64_bunge.size() ) {
+				size_t ndefgpool = f64_rho.size();
+				if ( ndefgpool > DEFAULT_MAX_DEFORMEDGRAINS ) { 
+					cerr << "WARNING::The pool of deformed grains is too large, only the first " << DEFAULT_MAX_DEFORMEDGRAINS << " are read." << endl;
+					ndefgpool = DEFAULT_MAX_DEFORMEDGRAINS;
+				}
+				worldoripool.reserve(ndefgpool);
+				worlddefgpool.reserve(ndefgpool);
+
+				uint32_t id = 0;
+				for( size_t dg = 0; dg < ndefgpool; dg++) {
+					struct defg agrain;
+					double bunge_ori[3] = {0., 0., 0.};
+					for ( size_t j = 0; j < 3; j++ ) {
+						bunge_ori[j] = f64_bunge[(dg*3)+j];  //radian already
+						if ( bunge_ori[j] < BUNGE_MIN || bunge_ori[j] > BUNGE_MAX ) {
+							status = false; cerr << "Invalid Euler angles in deformed grain orientation defintion!" << endl;
+							break;
+						}
+					}
+					id = ens_check_disjunctness_io( bunge_ori );
+
+					agrain.ori = id;
+					agrain.rho0 = f64_rho[dg];
+					agrain.rho = agrain.rho0;
+					if ( agrain.rho <= RHO_RECRYSTALLIZED_MATERIAL ) {
+						status = false; cerr << "Unphysical low dislocation density for deformed material!" << endl;
+						break;
+					}
+					
+					worlddefgpool.push_back(agrain);
+					//cout << "dg;ori;e1;e2;e3;q0;q1;q2;q3;rho0;rho " << dg << ";" << worlddefgpool[dg].ori << ";" << worldoripool[id].bunge1 << ";" << worldoripool[id].bunge2 << ";" << worldoripool[id].bunge3 << ";" << worldoripool[id].q0 << ";" << worldoripool[id].q1 << ";" << worldoripool[id].q2 << ";" << worldoripool[id].q3 << ";" << worlddefgpool[dg].rho0 << ";" << worlddefgpool[dg].rho << endl;
+				} // for all grains in the pool
+			}
+		}
+		else {
+			status = false;
+			cerr << "entry1/deformation/ensemble/" << endl;
+		}
+	}
 	return status;
 }
 
 bool init_parameter_from_hdf_rxgpool() {
 	bool status = true;
-	ryml::ConstNodeRef root = tree.rootref();
-	string grpnm = "entry1/";
-	//##TODO::
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( nexus_config_file_name );
+	string grpnm = "entry1/nucleation/ensemble/";
+
+	if ( defmsmethod != CPFEMDAMASK_DEFMS ) {
+		if ( h5r.nexus_path_exists( grpnm ) == true ) {
+			vector<double> f64_bunge;
+			vector<double> f64_incub;
+			if ( h5r.nexus_read( grpnm + "bunge_euler", f64_bunge ) != MYHDF5_SUCCESS ) { status = false; cerr << grpnm << "bunge_euler" << endl; }
+			if ( h5r.nexus_read( grpnm + "incubation_time", f64_incub ) != MYHDF5_SUCCESS ) { status = false; cerr << grpnm << "incubation_time" << endl; }
+			if ( f64_incub.size() * 3 == f64_bunge.size() ) {
+				size_t nrxgpool = f64_incub.size();
+				if ( nrxgpool > DEFAULT_MAX_RXGRAINS ) {
+					cout << "WARNING::The pool of recrystallized grains is too large, only the first " << DEFAULT_MAX_RXGRAINS << " are read." << endl;
+					nrxgpool = DEFAULT_MAX_RXGRAINS;
+				}
+				//there are already many orientations in the oripool most likely some are not significantly disjunct from the already existing ones
+				worldrxgpool.reserve(nrxgpool);
+
+				uint32_t id = 0;
+				for ( size_t rg = 0; rg < nrxgpool; rg++) {
+					struct rxg agrain;
+					double bunge_ori[3] = {0., 0., 0.};
+					for ( size_t j = 0; j < 3; j++ ) {
+						bunge_ori[j] = f64_bunge[(rg*3)+j];
+						if ( bunge_ori[j] < BUNGE_MIN || bunge_ori[j] > BUNGE_MAX ) {
+							status = false; cerr << "Invalid Euler angles in recrystallized orientation defintion!" << endl;
+							break;
+						}
+					}
+					id = ens_check_disjunctness_io( bunge_ori );
+
+					agrain.ori = id;
+					agrain.tincub = f64_incub[rg];
+					if ( agrain.tincub < 0. ) {
+						cerr << "WARNING::Resetting negative incubation time to 0." << endl;
+					}
+					worldrxgpool.push_back(agrain);
+					//cout << "rg;ori;e1;e2;e3;q0;q1;q2;q3;tincub;" << rg << ";" << worldrxgpool[rg].ori << ";" << worldoripool[id].bunge1 << ";" << worldoripool[id].bunge2 << ";" << worldoripool[id].bunge3 << ";" << worldoripool[id].q0 << ";" << worldoripool[id].q1 << ";" << worldoripool[id].q2 << ";" << worldoripool[id].q3 << ";" << worldrxgpool[rg].tincub << endl;
+				} // for all grains in the pool
+			}
+		}
+		else {
+			status = false;
+			cerr << "entry1/nucleation/ensemble/" << endl;
+		}
+	}
 	return status;
 }
 
 bool init_parameter_from_hdf_additional() {
 	bool status = true;
-	ryml::ConstNodeRef root = tree.rootref();
-	string grpnm = "entry1/";
-	//##TODO::
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( nexus_config_file_name );
+	string grpnm = "entry1/numerics/";
+	
+	vector<double> f64;
+	if ( h5r.nexus_read( grpnm + "x_set", f64 ) != MYHDF5_SUCCESS ) { status = false; }
+	if ( f64.size() > 0 ) {
+		for ( size_t i = 0; i < f64.size(); i++ ) {
+			double Xi = f64[i];
+			if ( Xi < 0.0 || Xi > 1.0 ) { status = false; cerr << "Invalid recrystallized volume fraction X at which to log locally all grains!" << endl; break; }
+			UserDefLogPoint_X_Output.push_back( Xi ); 	//no reserve because single page already allocated
+		}
+		std::sort ( UserDefLogPoint_X_Output.begin(), UserDefLogPoint_X_Output.end(), SortDoubleAscending );
+	}
+	else {
+		cerr << "entry1/numerics/x_set" << endl;
+	}	
 	return status;
 }
 #else
