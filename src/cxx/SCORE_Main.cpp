@@ -168,15 +168,19 @@ int main(int argc, char** argv)
 	cout << "uds_file_sha256 " << uds_file_sha256 << "\n";
 	cout << "iso8601 timestamp now " << timestamp_now_iso8601() << "\n";
 
-#ifndef PARSE_CONFIG_FROM_UDS
-	string inputfile_name = argv[INPUTFILE];
-	string contents = file_get_contents<string>(inputfile_name.c_str());
-	myensemble->tree = ryml::parse_in_arena(ryml::to_csubstr(contents)); // immutable (csubstr) overload
-	//die("Reading input file!", false);
+#ifdef PARSE_CONFIG_FROM_HDF
+	myensemble->nexus_config_file_name = argv[INPUTFILE];
 #else
+#ifdef PARSE_CONFIG_FROM_YML
+	myensemble->yaml_config_file_name = argv[INPUTFILE];
+	string contents = file_get_contents<string>(myensemble->yaml_config_file_name.c_str());
+	myensemble->tree = ryml::parse_in_arena(ryml::to_csubstr(contents)); // immutable (csubstr) overload
+#else
+	//die("Reading input file!", false);
 	if( !myensemble->open(READ, argv[INPUTFILE], &(myensemble->score_input)) ) {
 		die("Reading input file!", false);
 	}
+#endif
 #endif
 	cout << "SCORE loaded input data " << argv[INPUTFILE] << " ..." << endl;
 

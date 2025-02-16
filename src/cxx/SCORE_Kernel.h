@@ -1039,10 +1039,15 @@ public:
 	int ensembleprngseed;
 	randomClass ensembleprng;
 	mathMethods ensmath;
+#ifdef PARSE_CONFIG_FROM_HDF
+	string nexus_config_file_name;
+#else
 #ifdef PARSE_CONFIG_FROM_YML
+	string yaml_config_file_name;
 	ryml::Tree tree;
 #else
 	FILE * score_input;
+#endif
 #endif
 	string uds_config_file_name;
 	string nexus_results_file_name;
@@ -1298,20 +1303,20 @@ public:
 	void ompcrit_write_voxeldata_h5( unsigned char colormodel, string grpnm, bool xdmf, string xmfsuffix, double now, double xfraction, unsigned int stp );
 	void h5_return_dislocationdensity( float* buffer, uint32_t buffersize );
 	void hdf5_dummy( string fnsuffix );
-	void write_damask_geom_h5( string suffix );		//outputs microstructure as an ASCII file which can be loaded into DAMASK
+	void write_damask_geom_h5( string suffix ); //outputs microstructure as an ASCII file which can be loaded into DAMASK
 	void write_clustersizedistr_h5_create( void );
-	void write_clustersizedistr_h5( unsigned int* dist, unsigned int ndist );				//outputs data column with volume of current cluster of recrystallized matter to an HDF5 file
+	void write_clustersizedistr_h5( unsigned int* dist, unsigned int ndist ); //outputs data column with volume of current cluster of recrystallized matter to an HDF5 file
 
 	//cleaning functions
 	void cleanMyGrainEvolution( void );
 	void cleanBookkeeping( void );
 
 	vector<double> defragRXFront_atthisX;
-	vector<double> output_atthisX;						//copied from ensembleHdl when should the automaton log local information?
+	vector<double> output_atthisX; //copied from ensembleHdl when should the automaton log local information?
 	vector<double> rendering_atthisX;
 	vector<double> rendering_atthisZPos;
 	vector<double> mygrainevolutionlocaltime;
-	vector<loginfo_rxfrontstats_ca> myrxfrontstatus;	//keeps track of the state of the myRXFront array counters fragmentation and occupancy
+	vector<loginfo_rxfrontstats_ca> myrxfrontstatus; //keeps track of the state of the myRXFront array counters fragmentation and occupancy
 	vector<loginfo_grainevo_ca> mygrainevolution;
 	vector<loginfo_rxareaprofile_ca> myrxprofile;
 	vector<loginfo_perc> myhk;
@@ -1319,7 +1324,7 @@ public:
 
 	vector<ori> myoripool;
 	vector<cadefg> mydefgpool;
-	vector<carxg> myrxgpool;					//directly references orientation and incubation time
+	vector<carxg> myrxgpool; //directly references orientation and incubation time
 	vector<point> mypointprocess;
 	vector<dgopt> mydgoptimize;
 
