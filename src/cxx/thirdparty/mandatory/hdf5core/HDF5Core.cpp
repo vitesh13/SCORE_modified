@@ -785,7 +785,7 @@ bool HdfFiveSeqHdl::nexus_path_exists( const string h5_absolute_path )
 			//entry/dset, this case will throw because yes /entry/dset may exists as reported by H5Lexists but H5Gopen cannot be applied to it dset because it is
 			if ( current_path.compare( absolute_path ) != 0 ) {
 #ifdef MYHDF5_VERBOSE_LEVEL_TWO
-				cout << "Not yet arrived at absolute path" << "\n";
+				cout << "current_path __" << current_path << "__ not yet arrived at absolute path __" << absolute_path << "__" << "\n";
 #endif
 				continue;
 			} //not yet arrived at the target absolute path

@@ -881,7 +881,7 @@ public:
 #ifdef PARSE_CONFIG_FROM_HDF
 	bool init_parameter_from_hdf_runtime();
 	bool init_parameter_from_hdf_output();
-	bool init_parameter_from_hdf_ensemble();
+	bool init_parameter_from_hdf_deformation();
 	bool init_parameter_from_hdf_nucleation();
 	bool init_parameter_from_hdf_material();
 	bool init_parameter_from_hdf_mobilities();

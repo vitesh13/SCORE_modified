@@ -480,7 +480,7 @@ void caHdl::log_grainevo( void )
 	mygrainevolution[i].localdatabucket = cellcount_bucket;
 
 #ifdef REPORTSTYLE_DEVELOPER
-	cout << this->jobid << " logged grain evolution at step = " << this->step << " for the cnt = " << loginfo_grainevo_cnt << "-th time at desired X = " << UserDefLogPoint_X_Output[loginfo_grainevo_cnt] << endl;
+	cout << this->jobid << " logged grain evolution at step = " << this->step << " for the cnt = " << loginfo_grainevo_cnt << endl;
 #endif
 	loginfo_grainevo_cnt++;
 }

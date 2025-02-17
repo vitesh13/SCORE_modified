@@ -15,7 +15,7 @@ entry1:
     atom_types: Al
   material:
     '@NX_class': NXobject
-    shear_modulus: {value: 95000000000.0, '@units': pascal}
+    shear_modulus: {value: 9500000000.0, '@units': pascal}
     burgers_vector: {value: 0.286, '@units': nanometer}
     melting_temperature: {value: 800.0, '@units': degree_Celsius}
   deformation:
@@ -37,6 +37,7 @@ entry1:
   nucleation:
     '@NX_class': NXobject
     spatial_distribution: csr
+    number_of_nuclei: {value: 1}
     incubation_time: site_saturation
     orientation: sample_from_nucleus_euler
     ensemble:
@@ -52,7 +53,7 @@ entry1:
     model: rollett_holm
     rollett_holm:
       '@NX_class': NXobject
-      m_null: {value: 30.0, '@units': meter ** 4 / joule / second}
+      m_null: {value: 300.0, '@units': meter ** 4 / joule / second}
       enthalpy: {value: 2.0314, '@units': electron_volt}
       c1: {value: 0.9}
       c2: {value: 5.0}
