@@ -89,6 +89,7 @@ void versioninfo( int myrank, int nranks ) {
 #endif
 }
 
+/*
 bool checkworkingdirectory( string dirname ) {
 	//create an organizational folder structure specific wf simulation if not already existing
 	int status = 0;
@@ -140,11 +141,10 @@ bool checkworkingdirectory( string dirname ) {
 		status = mkdir( prof.c_str(), 0777 );
 		if ( stat(prof.c_str(), &st) == -1) { return false; }
 	}
-
 	//##MK::add further folders to organize data storage
 	return true;
 }
-
+*/
 
 int main(int argc, char** argv)
 {
@@ -156,18 +156,18 @@ int main(int argc, char** argv)
 	myensemble->nexus_results_file_name = "SCORE.Results.SimID." + to_string(myensemble->simid) + ".nxs";
 	myensemble->init_nexus_results_file();
 
+	/*
 	string dirnm = "SCORE_" + std::to_string(myensemble->simid);
 	myensemble->simwrkdir = dirnm;
 	if ( checkworkingdirectory( dirnm ) == false ) { die("Unable to generate working directories!", false ); }
 	cout << "SCORE initialized working directory " << dirnm.c_str() << " ..." << endl;
+	*/
 
-	//##MK::2023-V
-	string uds_file_fnm = argv[INPUTFILE];
-	string uds_file_sha256 = SHA256( uds_file_fnm.c_str() );
-	cout << "uds_file_fnm " << uds_file_fnm << "\n";
-	cout << "uds_file_sha256 " << uds_file_sha256 << "\n";
-	cout << "iso8601 timestamp now " << timestamp_now_iso8601() << "\n";
-
+	string config_file_name = argv[INPUTFILE];
+	string config_file_sha256 = SHA256( config_file_name.c_str() );
+	cout << "config_file_name " << config_file_name << "\n";
+	cout << "config_file_sha256 " << config_file_sha256 << "\n";
+	cout << "ISO8601 timestamp now " << timestamp_now_iso8601() << "\n";
 #ifdef PARSE_CONFIG_FROM_HDF
 	myensemble->nexus_config_file_name = argv[INPUTFILE];
 #else
