@@ -1165,10 +1165,9 @@ public:
 	void ompshar_deformedgrains_infect_JuvenileNucleation( uint32_t seedid, uint32_t xglo, uint32_t yglo, uint32_t zglo, uint32_t infectWhereRegion, bool inside, double frac0 );
 	void ompshar_placeAllSeeds( void );
 	void grow_deformedgrains_voxelize_omp( void );
-	void grow_deformedgrains_voxelize_columns( void );
 	//regular cuboids
 	void determine_polycrystalline_geometry( void );
-	void pick_deformedgrains( void );		//selects from ensembleHdl GIA defgpool deformed grains
+	void pick_deformedgrains( void ); //selects from ensembleHdl GIA defgpool deformed grains
 	void ompshar_voxelize_defms( void );
 
 	//3D growth machine

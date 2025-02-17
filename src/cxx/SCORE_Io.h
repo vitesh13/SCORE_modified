@@ -89,9 +89,10 @@ typedef long long __int64;
 
 
 //compile in the desired output
-//#define REPORTSTYLE_DEVELOPER	//detailed function intermediate results
-//#define REPORTSTYLE_USER		//only least physical relevant output
-
+//#define REPORTSTYLE_DEVELOPER
+//detailed function intermediate results
+//#define REPORTSTYLE_USER
+//only least physical relevant output
 //#define REPORTSTYLE_CELLCYCLES
 
 

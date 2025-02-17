@@ -51,7 +51,7 @@ if(EMPLOY_INTELCOMPILER)  # intel path
 		-Wsequence-point -Wtrigraphs -Wunused-variable")
 elseif(EMPLOY_GNUCOMPILER)  # gcc path
 	message([STATUS] "Employing the GNU compiler!")
-	set(MYVERBOSE "-Wall") # all warnings
+	# set(MYVERBOSE "-Wall") # all warnings
 	add_definitions("${MYOPTLEVEL}")
 	add_definitions("${MYVERBOSE}")
 	set(MYOMP "-fopenmp -lpthread")

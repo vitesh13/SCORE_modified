@@ -381,7 +381,7 @@ bool ensembleHdl::init_parameter_from_hdf_output() {
 	outopt_localrenderboundaries = RENDERING_BOUNDARIES_NO;
 	outopt_logboundaries = OUTPUT_LOGBND_NO;
 	outopt_rxfront = OUTPUT_RXFRONTSTATS_NO;
-	outopt_threadprofiling = OUTPUT_THREADPROFILING_YES;
+	outopt_threadprofiling = OUTPUT_THREADPROFILING_NO;
 	outopt_singlegrainevo = OUTPUT_SINGLEGRAIN_NO;
 	outopt_generateDAMASKgeom = OUTPUT_DAMASK_GEOMETRYFILE_NO;
 	outopt_artsemebsd = OUTPUT_SEMEBSD_NO;
@@ -3079,13 +3079,14 @@ void ensembleHdl::SIMULATE_myCAs( void )
 
 void ensembleHdl::PERFORM_SOLITARYUNIT_MODELING_ANALYSIS( void ) 
 {
-	if ( myRank == MASTER ) 
-		cout << "Performing solitary unit analysis..." << endl;
-
-	postprocess_write_mycas_mpislow(); //sequential
-	//postprocess_write_mycas_mpifast(); //gatherv
-
 	if ( postProcessing == true ) {
+		if ( myRank == MASTER ) {
+			cout << "Performing solitary unit analysis..." << endl;
+		}
+
+		postprocess_write_mycas_mpislow(); //sequential
+		//postprocess_write_mycas_mpifast(); //gatherv
+
 		postprocess_init();
 		postprocess_rediscr_kinetics();
 		postprocess_rediscr_macrotexture();
@@ -8253,7 +8254,7 @@ void caHdl::solve_RXGROWTH( void )
 	update_mydgoptimize_rho();
 	update_mydgoptimize_cnt();
 	update_myrhomax();
-	log_initrho_scalebar();
+	//log_initrho_scalebar();
 
 	update_temperature();			//not OpenMP parallelized because writes to caHdl and of low op intensity
 	update_atomisticproperties();
@@ -8478,7 +8479,9 @@ void caHdl::solve_RXGROWTH( void )
 			}
 			#pragma omp barrier //##MOVE this barrier behind the loop all threads identify the state on shared variables all values of which are the same for each thread
 
-			regions[omp_get_thread_num()]->profiling_growthmachine[regions[omp_get_thread_num()]->profiling_growthmachine.size()-1].tSeqOverhead = omp_get_wtime() - myomptimer;
+			if ( outopt_localthreadprof == OUTPUT_THREADPROFILING_YES ) {
+				regions[omp_get_thread_num()]->profiling_growthmachine[regions[omp_get_thread_num()]->profiling_growthmachine.size()-1].tSeqOverhead = omp_get_wtime() - myomptimer;
+			}
 		}
 		//OMP_COMPLETED
 
@@ -8532,8 +8535,9 @@ void caHdl::solve_FINAL_IO( void )
 	if ( outopt_localrxfront == OUTPUT_RXFRONTSTATS_YES )
 		write_rxfrontstats();
 
-	if ( outopt_localthreadprof == OUTPUT_THREADPROFILING_YES )
+	if ( outopt_localthreadprof == OUTPUT_THREADPROFILING_YES ) {
 		write_ThreadProfilingSummaryGrowthMachine();
+	}
 
 	if ( outopt_localsinglegrainevo != OUTPUT_SINGLEGRAIN_NO ) {
 		if ( outopt_localsinglegrainevo == OUTPUT_SINGLEGRAIN_ASCII ) 
@@ -8546,8 +8550,7 @@ void caHdl::solve_FINAL_IO( void )
 		write_PercolationProfilingSummary();
 	}
 
-
-	write_rxareaprofile_ascii();
+	//write_rxareaprofile_ascii();
 
 	//##MK::currently not supported with MPI/OpenMP
 	/*if ( renderingForThisCA == true ) {

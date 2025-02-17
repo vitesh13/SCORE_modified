@@ -1,5 +1,5 @@
 /* 
-*	Copyright Markus Kühbach, 2014-2017
+*	Copyright Markus Kï¿½hbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
@@ -14,16 +14,16 @@
 *	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kï¿½hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
 *	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
+*	M. Kï¿½hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
 
 *	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
 *	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
+*	by RWTH Aachen University and the FZ Jï¿½lich within the scope of the JARAHPC project JARA0076.
 
 
 *	This file is part of SCORE.
@@ -254,8 +254,9 @@ void caHdl::grow_deformedgrains_voxelize_omp( void )
 				//they are guided by neighboring regions' haloref list which stores which positions were newly infected by the neighboring thread in each halo
 				regions[omp_get_thread_num()]->ompshar_synchronize_haloregions_def();
 
-				if ( outopt_localthreadprof == OUTPUT_THREADPROFILING_YES )
+				if ( outopt_localthreadprof == OUTPUT_THREADPROFILING_YES ) {
 					regions[omp_get_thread_num()]->omp_log_synthfrontstats();
+				}
 
 				#pragma omp barrier //##MK::probably necessary...
 			} //growth step completed...
@@ -338,17 +339,11 @@ void caHdl::grow_deformedgrains_voxelize_omp( void )
 
 	cout << myensHdl->myRank << " myRank,jobid = " << this->jobid << " local CA deformation structure was synthetized with " << ndefgseeds  << endl;
 
-	if ( outopt_localthreadprof == OUTPUT_THREADPROFILING_YES )
+	if ( outopt_localthreadprof == OUTPUT_THREADPROFILING_YES ) {
 		write_ThreadProfilingSummarySynthMachine();
+	}
 
 	//##MK::output deformation structure//write_voxeldata_coloring_grainids();
-}
-
-void caHdl::grow_deformedgrains_voxelize_columns( void )
-{
-	//stretches an SEM/EBSD map along the 3d dimension such that the grain along z
-	//this->myensHdl->expData
-	//####
 }
 
 
