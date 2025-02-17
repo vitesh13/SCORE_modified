@@ -3119,21 +3119,21 @@ void ensembleHdl::destroy_myCAs( void )
 
 void ensembleHdl::init_nexus_results_file()
 {
-	//##MK::2023
+	// nexus_create must be called only once for the entire simulation!
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( nexus_results_file_name );
 	if( h5w.nexus_create() != MYHDF5_SUCCESS ) {
 		cerr << "Unable to create " << nexus_results_file_name << "\n";
 		return;
-	}  // nexus_create must be called only once for the entire simulation!
-
+	}
 	ioAttributes anno = ioAttributes();
 	string grpnm = "";
 	string dsnm = "";
 
-	grpnm = "/entry";
+	grpnm = "/entry1";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXentry") );
-	anno.add( "version", string("nexus-fairmat-proposal successor of 9636feecb79bb32b828b1a9804269573256d7696") );
+	//"https://github.com/FAIRmat-NFDI/nexus_definitions/commit/
+	anno.add( "version", string("36ba122a7646638951602275cde8f151ef1ff471") );
 	//https://fairmat-experimental.github.io/nexus-fairmat-proposal/9636feecb79bb32b828b1a9804269573256d7696/classes/contributed_definitions/NXms_score_results.html#nxms-score-results") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << grpnm << " failed !" << "\n";
@@ -3141,7 +3141,7 @@ void ensembleHdl::init_nexus_results_file()
 	}
 
 	dsnm = grpnm + "/definition";
-	string appdef_name = "NXms_score_results";
+	string appdef_name = "NXmicrostructure_score_results";
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, appdef_name, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -3156,17 +3156,13 @@ void ensembleHdl::init_nexus_results_file()
 		return;
 	}
 
-	dsnm = grpnm + "/analysis_identifier";
-	string analysis_identifier = to_string(simid);
-	//apt_uint identifier = ConfigShared::SimID;
+	dsnm = grpnm + "/identifier_simulation";
+	string identifier_simulation = to_string(simid);
 	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, analysis_identifier, anno ) != MYHDF5_SUCCESS ) {
+	if ( h5w.nexus_write( dsnm, identifier_simulation, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
-
-	//dsnm = grpnm + "/analysis_description";
-	//##MK::2023
 
 	dsnm = grpnm + "/config_filename";
 	anno = ioAttributes();
@@ -3177,18 +3173,7 @@ void ensembleHdl::init_nexus_results_file()
 		return;
 	}
 
-	//dsnm = grpnm + "/results_path";
-	//##MK::2023
-
-	dsnm = grpnm + "/experiment_or_simulation";
-	string what = "simulation";
-	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, what, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
-
-	grpnm = "/entry/program1";
+	grpnm = "/entry1/program1";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXprogram") );
 	anno.add( "compile_date", string(__DATE__) );
@@ -3207,7 +3192,8 @@ void ensembleHdl::init_nexus_results_file()
 		return;
 	}
 
-	grpnm = "/entry/coordinate_system_set";
+	/*
+	grpnm = "/entry1/coordinate_system_set";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXcoordinate_system_set") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
@@ -3215,7 +3201,7 @@ void ensembleHdl::init_nexus_results_file()
 		return;
 	}
 
-	grpnm = "/entry/coordinate_system_set/score";
+	grpnm = "/entry1/coordinate_system_set/score";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXtransformations") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
@@ -3243,7 +3229,7 @@ void ensembleHdl::init_nexus_results_file()
 		}
 	}
 
-	grpnm = "/entry/conventions";
+	grpnm = "/entry1/conventions";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXem_ebsd_conventions") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
@@ -3251,7 +3237,7 @@ void ensembleHdl::init_nexus_results_file()
 		return;
 	}
 
-	grpnm = "/entry/conventions/rotation_conventions";
+	grpnm = "/entry1/conventions/rotation_conventions";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXprocess") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
@@ -3318,155 +3304,132 @@ void ensembleHdl::init_nexus_results_file()
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
+	*/
 
-	grpnm = "/entry/conventions/processing_reference_frame";
+	grpnm = "/entry1/sample_reference_frame";
 	anno = ioAttributes();
-	anno.add( "NX_class", string("NXprocess") );
+	anno.add( "NX_class", string("NXcoordinate_system") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << grpnm << " failed !" << "\n";
 		return;
 	}
 
-	dsnm = grpnm + "/reference_frame_type";
-	value = "right_handed_cartesian";
+	string value = "";
+
+	dsnm = grpnm + "/type";
+	value = "cartesian";
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
 
-	dsnm = grpnm + "/xaxis_direction";
+	dsnm = grpnm + "/handedness";
+	value = "right_handed";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/origin";
+	value = "front_bottom_left";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/x_direction";
 	value = "east";
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
 
-	dsnm = grpnm + "/xaxis_alias";
+	dsnm = grpnm + "/x_alias";
 	value = "rolling direction (RD)";
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
 
-	dsnm = grpnm + "/yaxis_direction";
+	dsnm = grpnm + "/y_direction";
 	value = "in";
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
 
-	dsnm = grpnm + "/yaxis_alias";
+	dsnm = grpnm + "/y_alias";
 	value = "transverse direction (TD)";
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
 
-	dsnm = grpnm + "/zaxis_direction";
+	dsnm = grpnm + "/z_direction";
 	value = "north";
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
 
-	dsnm = grpnm + "/zaxis_alias";
+	dsnm = grpnm + "/z_alias";
 	value = "normal direction (ND)";
 	anno = ioAttributes();
-	//anno.add( "", string("") );
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
 
-	dsnm = grpnm + "/origin";
-	value = "front_bottom_right";
+	grpnm = "/entry1/discretization";
 	anno = ioAttributes();
-	//anno.add( "", string("") );
-	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
+	anno.add( "NX_class", string("NXmicrostructure") );
+	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
 		return;
 	}
 
-	grpnm = "/entry/conventions/sample_reference_frame";
+	/*
+	grpnm = "/entry1/discretization/grid";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXcg_grid") );
+	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry1/discretization/boundary";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXcg_polyhedron_set") );
+	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+	*/
+
+	grpnm = "/entry1/spatiotemporal1";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXobject") );
+	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry1/spatiotemporal1/summary_statistics";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXprocess") );
-	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
-
-	dsnm = grpnm + "/reference_frame_type";
-	value = "right_handed_cartesian";
-	anno = ioAttributes();
-	//anno.add( "", string("") );
-	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
-
-	dsnm = grpnm + "/xaxis_direction";
-	value = "east";
-	anno = ioAttributes();
-	//anno.add( "", string("") );
-	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
-
-	dsnm = grpnm + "/yaxis_direction";
-	value = "in";
-	anno = ioAttributes();
-	//anno.add( "", string("") );
-	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
-
-	dsnm = grpnm + "/zaxis_direction";
-	value = "north";
-	anno = ioAttributes();
-	//anno.add( "", string("") );
-	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
-
-	dsnm = grpnm + "/origin";
-	value = "front_bottom_right";
-	anno = ioAttributes();
-	//anno.add( "", string("") );
-	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
-
-	grpnm = "/entry/rve";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXcg_roi_set") );
 	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << grpnm << " failed !" << "\n";
 		return;
 	}
 
-	grpnm = "/entry/rve/snapshot_set";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXms_snapshot_set") );
-	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
 }
 
 
@@ -3477,7 +3440,7 @@ void ensembleHdl::finish_nexus_results_file()
 	string grpnm = "";
 	string dsnm = "";
 
-	grpnm = "/entry/performance";
+	grpnm = "/entry1/profiling";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXcs_profiling") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
@@ -3485,6 +3448,7 @@ void ensembleHdl::finish_nexus_results_file()
 		return;
 	}
 
+	/*
 	dsnm = grpnm + "/current_working_directory";
 	string cwd = "n/a";
 	anno = ioAttributes();
@@ -3500,6 +3464,7 @@ void ensembleHdl::finish_nexus_results_file()
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
+	*/
 
 	dsnm = grpnm + "/number_of_processes";
 	unsigned int uint = (unsigned int) nRanks;
@@ -3525,7 +3490,7 @@ void ensembleHdl::finish_nexus_results_file()
 		return;
 	}
 
-	grpnm = "/entry";
+	grpnm = "/entry1";
 	dsnm = grpnm + "/end_time";
 	string end_time = timestamp_now_iso8601();
 	anno = ioAttributes();
@@ -3534,6 +3499,7 @@ void ensembleHdl::finish_nexus_results_file()
 		return;
 	}
 
+	/*
 	dsnm = grpnm + "/status";
 	string status = "success";
 	anno = ioAttributes();
@@ -3541,6 +3507,7 @@ void ensembleHdl::finish_nexus_results_file()
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
+	*/
 
 	/*
 	//##MK::2023

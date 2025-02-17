@@ -705,38 +705,45 @@ void caHdl::nexus_write_automaton_geometry()
 	ioAttributes anno = ioAttributes();
 	string grpnm = "";
 	string dsnm = "";
-	grpnm = "/entry/rve/grid";
-	if ( h5w.nexus_path_exists(grpnm) == true ) {
-		return;
-	}
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXcg_grid") );
-	if ( h5w.nexus_write_group(grpnm, anno) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
+
+	if ( h5w.nexus_path_exists("/entry1/discretization/grid") == true && h5w.nexus_path_exists("/entry1/discretization/boundary") == true ) {
 		return;
 	}
 
-	dsnm = grpnm + "/symmetry";
-	string value = "cubic";
+	grpnm = "/entry1/discretization/grid";
+	dsnm = grpnm + "/dimensionality";
+	uint32_t dimensionality = 3;
 	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+	if ( h5w.nexus_write( dsnm, dimensionality, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << "\n";
 		return;
 	}
 
-	vector<double> f64 = vector<double>( 3, myCAGeometry.cellsize );
-	dsnm = grpnm + "/cell_dimensions";
+	dsnm = grpnm + "/cardinality";
+	uint32_t cardinality = this->myCAGeometry.nboxvol_rdtdnd;
 	anno = ioAttributes();
-	anno.add( "unit", string("m") );
-	if ( h5w.nexus_write(
-		dsnm,
-		io_info({f64.size() / 3, 3}, {f64.size() / 3, 3}),
-		f64,
-		anno ) != MYHDF5_SUCCESS ) {
+	if ( h5w.nexus_write( dsnm, cardinality, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/symmetry";
+	string symm = "cubic";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, symm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << "\n";
+		return;
+	}
+
+	//vector<double> f64 = vector<double>( 3, myCAGeometry.cellsize );
+	dsnm = grpnm + "/cell_dimensions";
+	double cellsize = myCAGeometry.cellsize;
+	anno = ioAttributes();
+	anno.add( "units", string("m") );
+	if ( h5w.nexus_write( dsnm, cellsize, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
-	f64 = vector<double>();
 
 	vector<unsigned int> u32;
 	dsnm = grpnm + "/extent";
@@ -754,7 +761,7 @@ void caHdl::nexus_write_automaton_geometry()
 	}
 	u32 = vector<unsigned int>();
 
-	f64 = vector<double>( 3, 0. );
+	vector<double> f64 = vector<double>( 3, 0. );
 	dsnm = grpnm + "/origin";
 	anno = ioAttributes();
 	anno.add( "unit", string("m") );
@@ -768,26 +775,6 @@ void caHdl::nexus_write_automaton_geometry()
 	}
 	f64 = vector<double>();
 
-	dsnm = grpnm + "/dimensionality";
-	unsigned int dimensionality = 3;
-	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, dimensionality, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
-
-	dsnm = grpnm + "/cardinality";
-	unsigned int cardinality = 1;
-	cardinality *= myCAGeometry.nboxedge_rd;
-	cardinality *= myCAGeometry.nboxedge_td;
-	cardinality *= myCAGeometry.nboxedge_nd;
-	anno = ioAttributes();
-	//anno.add( "", string("") );
-	if ( h5w.nexus_write( dsnm, cardinality, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
-
 	dsnm = grpnm + "/identifier_offset";
 	int offset = 0;
 	anno = ioAttributes();
@@ -796,14 +783,7 @@ void caHdl::nexus_write_automaton_geometry()
 		return;
 	}
 
-	grpnm = "/entry/rve/grid/boundary";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXcg_polyhedron_set") );
-	if ( h5w.nexus_write_group(grpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
-
+	grpnm = "/entry1/discretization/boundary";
 	dsnm = grpnm + "/number_of_boundaries";
 	unsigned int n_bnd = 6;
 	anno = ioAttributes();
@@ -851,21 +831,20 @@ void caHdl::nexus_write_snapshot_kinetics()
 {
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
 	ioAttributes anno = ioAttributes();
-	string grpnm = "";
+	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1);
 	string dsnm = "";
-
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step);
-	dsnm = grpnm + "/iteration";
-	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, this->step, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !";
-		return;
-	}
 
 	dsnm = grpnm + "/time";
 	anno = ioAttributes();
 	anno.add( "unit", string("s") );
 	if ( h5w.nexus_write( dsnm, this->t, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !";
+		return;
+	}
+
+	dsnm = grpnm + "/iteration";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, this->step, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !";
 		return;
 	}
@@ -878,20 +857,22 @@ void caHdl::nexus_write_snapshot_kinetics()
 		return;
 	}
 
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_kinetics";
-	dsnm = grpnm + "/target";
+	/*
+	dsnm = grpnm + "/x";
 	//is target because does not take into account the partially RXed active cells only fully transformed ones
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, this->X, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !";
 		return;
 	}
-}
 
-
-void caHdl::nexus_write_snapshot_texture()
-{
-
+	dsnm = grpnm + "/x_set";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, this->X, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !";
+		return;
+	}
+	*/
 }
 
 
@@ -965,10 +946,8 @@ void caHdl::nexus_write_snapshot_grain_based()
 
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
 	ioAttributes anno = ioAttributes();
-	string grpnm = "";
+	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/crystals";
 	string dsnm = "";
-
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grain_ensemble";
 
 	vector<unsigned char> u08 = vector<unsigned char>( ndisjoint_grains, 0x01 );
 	dsnm = grpnm + "/is_deformed";
@@ -976,7 +955,6 @@ void caHdl::nexus_write_snapshot_grain_based()
 		u08[rg] = 0x00;
 	}
 	anno = ioAttributes();
-	//anno.add( "unit", string("") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
@@ -993,7 +971,6 @@ void caHdl::nexus_write_snapshot_grain_based()
 		u08[dg] = 0x00;
 	}
 	anno = ioAttributes();
-	//anno.add( "unit", string("") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
@@ -1016,8 +993,8 @@ void caHdl::nexus_write_snapshot_grain_based()
 		return;
 	}
 
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_kinetics";
-	dsnm = grpnm + "/value";
+	grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1);
+	dsnm = grpnm + "/x";
 	//is target because does not take into account the partially RXed active cells
 	//only fully transformed ones
 	double Xexact = 0.;
@@ -1026,15 +1003,22 @@ void caHdl::nexus_write_snapshot_grain_based()
 	}
 	double XX = (Xexact / ((double) myCAGeometry.nboxvol_rdtdnd));
 	anno = ioAttributes();
-	anno.add( "unit", string("1") );
 	if ( h5w.nexus_write( dsnm, XX, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
 	f64 = vector<double>();
 
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grain_ensemble";
-	dsnm = grpnm + "/euler";
+	dsnm = grpnm + "/x_set";
+	double XXset = output_atthisX[loginfo_grainevo_cnt];
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, XXset, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/crystals";
+	dsnm = grpnm + "/bunge_euler";
 	f64.reserve(ndisjoint_grains * 3);
 	for ( uint32_t dg = 0; dg < ndefg; dg++ ) {
 		uint32_t ori_idx = mydefgpool[dg].caori;
@@ -1094,9 +1078,8 @@ void caHdl::nexus_write_snapshot_front_based()
 
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
 	ioAttributes anno = ioAttributes();
-	string grpnm = "";
+	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/recrystallization_front";
 	string dsnm = "";
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_front";
 
 	vector<short> i16;
 	dsnm = grpnm + "/coordinate";
@@ -1127,7 +1110,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	} //next region
 
 	anno = ioAttributes();
-	anno.add( "unit", string("px") );
+	//anno.add( "unit", string("px") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({i16.size() / 3, 3}, {i16.size() / 3, 3}),
@@ -1139,7 +1122,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	i16 = vector<short>();
 
 	vector<unsigned short> u16;
-	dsnm = grpnm + "/thread_identifier";
+	dsnm = grpnm + "/identifier_thread";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1156,9 +1139,7 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({u16.size() / 1, 1}, {u16.size() / 1, 1}),
@@ -1170,7 +1151,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	u16 = vector<unsigned short>();
 
 	vector<unsigned int> u32;
-	dsnm = grpnm + "/deformed_grain_identifier";
+	dsnm = grpnm + "/identifier_deformed_grain";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1187,9 +1168,7 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({u32.size() / 1, 1}, {u32.size() / 1, 1}),
@@ -1200,7 +1179,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	}
 	u32 = vector<unsigned int>();
 
-	dsnm = grpnm + "/recrystallized_grain_identifier";
+	dsnm = grpnm + "/identifier_recrystallized_grain";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1217,9 +1196,7 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({u32.size() / 1, 1}, {u32.size() / 1, 1}),
@@ -1248,9 +1225,7 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
@@ -1278,7 +1253,6 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
@@ -1291,7 +1265,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	u08 = vector<unsigned char>();
 
 	vector<double> f64;
-	dsnm = grpnm + "/recrystallized_volume_fraction";
+	dsnm = grpnm + "/x";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1308,7 +1282,6 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
@@ -1409,13 +1382,11 @@ void caHdl::nexus_write_snapshot_cell_based()
 
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
 	ioAttributes anno = ioAttributes();
-	string grpnm = "";
+	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/grid";
 	string dsnm = "";
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grid";
 
-	dsnm = grpnm + "/grain_identifier";
+	dsnm = grpnm + "/identifier_crystal";
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
@@ -1457,10 +1428,8 @@ void caHdl::nexus_write_snapshot_cell_based()
 			} //scan +y line
 		} //scan +z lines
 	} //for each thread
-
-	dsnm = grpnm + "/thread_identifier";
+	dsnm = grpnm + "/identifier_thread";
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
@@ -1479,57 +1448,44 @@ void caHdl::nexus_write_snapshot()
 	//CALLED FROM WITHIN PARALLEL REGION BUT BY THE MASTER THREAD ONLY
 
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
+	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(loginfo_grainevo_cnt + 1);
+	string subgrpnm = "";
 
-	string grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step);
 	ioAttributes anno = ioAttributes();
-	anno.add( "NX_class", string("NXms_snapshot") );
+	anno.add( "NX_class", string("NXmicrostructure") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << grpnm << " failed !" << "\n";
 		return;
 	}
 
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grid";
+	subgrpnm = grpnm + "/grid";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXcg_grid") );
-	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
+	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
 		return;
 	}
 
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_kinetics";
+	subgrpnm = grpnm + "/crystals";
 	anno = ioAttributes();
-	anno.add( "NX_class", string("NXprocess") );
-	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
+	anno.add( "NX_class", string("NXobject") );
+	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
 		return;
 	}
 
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_front";
+	subgrpnm = grpnm + "/recrystallization_front";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXprocess") );
-	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
-
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grain_ensemble";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXprocess") );
-	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
+	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
 		return;
 	}
 
 	nexus_write_automaton_geometry();
-
 	nexus_write_snapshot_kinetics();
-
-	nexus_write_snapshot_texture();
-
 	nexus_write_snapshot_grain_based();
-
 	nexus_write_snapshot_front_based();
-
 	nexus_write_snapshot_cell_based();
 }
 

@@ -1211,7 +1211,6 @@ public:
 
 	void nexus_write_automaton_geometry();
 	void nexus_write_snapshot_kinetics();
-	void nexus_write_snapshot_texture();
 	void nexus_write_snapshot_grain_based();
 	void nexus_write_snapshot_front_based();
 	void nexus_write_snapshot_cell_based();
