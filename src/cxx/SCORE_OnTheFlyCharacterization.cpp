@@ -86,6 +86,7 @@ void caHdl::log_initialization( void )
 		write_clustersizedistr_h5_create();
 	}
 
+	nexus_write_automaton_geometry();
 
 	//implement intelligent precaching of logcontainers rxfrontstats and grainevo
 }
@@ -706,10 +707,7 @@ void caHdl::nexus_write_automaton_geometry()
 	string grpnm = "";
 	string dsnm = "";
 
-	if ( h5w.nexus_path_exists("/entry1/discretization/grid") == true && h5w.nexus_path_exists("/entry1/discretization/boundary") == true ) {
-		return;
-	}
-
+	//assuming that "/entry1/discretization/grid" and "/entry1/discretization/boundary" exist
 	grpnm = "/entry1/discretization/grid";
 	dsnm = grpnm + "/dimensionality";
 	uint32_t dimensionality = 3;
@@ -739,7 +737,7 @@ void caHdl::nexus_write_automaton_geometry()
 	dsnm = grpnm + "/cell_dimensions";
 	double cellsize = myCAGeometry.cellsize;
 	anno = ioAttributes();
-	anno.add( "units", string("m") );
+	anno.add( "unit", string("m") );
 	if ( h5w.nexus_write( dsnm, cellsize, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
@@ -856,23 +854,6 @@ void caHdl::nexus_write_snapshot_kinetics()
 		cerr << "Writing " << dsnm << " failed !";
 		return;
 	}
-
-	/*
-	dsnm = grpnm + "/x";
-	//is target because does not take into account the partially RXed active cells only fully transformed ones
-	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, this->X, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !";
-		return;
-	}
-
-	dsnm = grpnm + "/x_set";
-	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, this->X, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !";
-		return;
-	}
-	*/
 }
 
 
@@ -1010,7 +991,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 	f64 = vector<double>();
 
 	dsnm = grpnm + "/x_set";
-	double XXset = output_atthisX[loginfo_grainevo_cnt];
+	double XXset = output_atthisX[loginfo_grainevo_cnt] / ((double) myCAGeometry.nboxvol_rdtdnd);
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, XXset, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1446,6 +1427,40 @@ void caHdl::nexus_write_snapshot_cell_based()
 void caHdl::nexus_write_snapshot()
 {
 	//CALLED FROM WITHIN PARALLEL REGION BUT BY THE MASTER THREAD ONLY
+	cellP front = NULL;
+	uint32_t ncandidates = 0;
+	uint32_t nreg = this->regions.size();
+	bool still_active_cells = false;
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		if ( still_active_cells == false ) {
+			ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+			front = this->regions[r]->myRXFrontInside;
+			for ( uint32_t c = 0; c < ncandidates; c++ ) {
+				if ( front[c].activity == ACTIVE ) {
+					still_active_cells = true;
+					break;
+				}
+			}
+		}
+		if ( still_active_cells == false ) {
+			ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+			front = this->regions[r]->myRXFrontBorder;
+			for ( uint32_t c = 0; c < ncandidates; c++ ) {
+				if ( front[c].activity == ACTIVE ) {
+					still_active_cells = true;
+					break;
+				}
+			}
+		}
+		if ( still_active_cells == false ) {
+			continue;
+		}
+		break;
+	} //next region
+
+	if ( still_active_cells == false ) {
+		return;
+	}
 
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
 	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(loginfo_grainevo_cnt + 1);
@@ -1476,13 +1491,12 @@ void caHdl::nexus_write_snapshot()
 
 	subgrpnm = grpnm + "/recrystallization_front";
 	anno = ioAttributes();
-	anno.add( "NX_class", string("NXprocess") );
+	anno.add( "NX_class", string("NXobject") );
 	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
 		return;
 	}
 
-	nexus_write_automaton_geometry();
 	nexus_write_snapshot_kinetics();
 	nexus_write_snapshot_grain_based();
 	nexus_write_snapshot_front_based();

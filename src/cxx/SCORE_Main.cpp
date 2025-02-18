@@ -152,7 +152,15 @@ int main(int argc, char** argv)
 	//set environment and working folders probe if input files are there and load them
 	ensembleHdlP myensemble = new ensembleHdl;
 	myensemble->simid = strtoul(argv[ID], NULL, 0 );
+#ifdef PARSE_CONFIG_FROM_HDF
+	myensemble->nexus_config_file_name = argv[INPUTFILE];
+#else
+#ifdef PARSE_CONFIG_FROM_YML
+	myensemble->yaml_config_file_name = argv[INPUTFILE];
+#else
 	myensemble->uds_config_file_name = argv[INPUTFILE];
+#endif
+#endif
 	myensemble->nexus_results_file_name = "SCORE.Results.SimID." + to_string(myensemble->simid) + ".nxs";
 	myensemble->init_nexus_results_file();
 
@@ -161,18 +169,16 @@ int main(int argc, char** argv)
 	myensemble->simwrkdir = dirnm;
 	if ( checkworkingdirectory( dirnm ) == false ) { die("Unable to generate working directories!", false ); }
 	cout << "SCORE initialized working directory " << dirnm.c_str() << " ..." << endl;
-	*/
 
 	string config_file_name = argv[INPUTFILE];
 	string config_file_sha256 = SHA256( config_file_name.c_str() );
 	cout << "config_file_name " << config_file_name << "\n";
 	cout << "config_file_sha256 " << config_file_sha256 << "\n";
 	cout << "ISO8601 timestamp now " << timestamp_now_iso8601() << "\n";
+	*/
 #ifdef PARSE_CONFIG_FROM_HDF
-	myensemble->nexus_config_file_name = argv[INPUTFILE];
 #else
 #ifdef PARSE_CONFIG_FROM_YML
-	myensemble->yaml_config_file_name = argv[INPUTFILE];
 	string contents = file_get_contents<string>(myensemble->yaml_config_file_name.c_str());
 	myensemble->tree = ryml::parse_in_arena(ryml::to_csubstr(contents)); // immutable (csubstr) overload
 #else
