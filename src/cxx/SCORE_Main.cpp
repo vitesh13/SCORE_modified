@@ -190,18 +190,18 @@ int main(int argc, char** argv)
 #endif
 	cout << "SCORE loaded input data " << argv[INPUTFILE] << " ..." << endl;
 
+	/*
 	if ( argc > (1+2) ) {
 		myensemble->damask_file_name = string(argv[EBSDMAPPING]);
 		cout << "Loading initial microstructure from " << myensemble->damask_file_name << "\n";
-		/*
 		if ( myensemble->init_ebsdmap_read( argv[EBSDMAPPING] ) == false ) {
 			die("EBSDMapping input desired but failed!", true ); delete myensemble; return 0;
 		} //if readmap didnt fail data are now loaded!
 		else {
 			cout << "SCORE loaded SEM/EBSD map " << argv[EBSDMAPPING] << " ..." << endl;
 		}
-		*/
 	}
+	*/
 
 	//MK::Init MPI capable of hybrid MPI/OpenMP even though SCORE currently at no point calls MPI within a parallel region
 	int supportlevel_desired = MPI_THREAD_FUNNELED;

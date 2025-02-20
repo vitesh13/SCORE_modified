@@ -515,6 +515,12 @@ bool ensembleHdl::init_parameter_from_hdf_deformation() {
 	if ( model.compare("damask") == 0 ) {
 		defmsmethod = CPFEMDAMASK_DEFMS;
 		damaskInput = true;
+		if ( h5r.nexus_path_exists( grpnm + "simulation" ) ) {
+			if ( h5r.nexus_read( grpnm + "path", damask_file_name ) != MYHDF5_SUCCESS ) {
+				status = false; cerr << grpnm << "path" << endl;
+			}
+			cout << "The input file name is: " << damask_file_name << endl;
+		}
 	}
 	return status;
 }
@@ -524,12 +530,16 @@ bool ensembleHdl::init_parameter_from_hdf_nucleation() {
 	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( nexus_config_file_name );
 	string grpnm = "/entry1/nucleation/";
 
-	string model = "";
-	if ( h5r.nexus_read( grpnm + "spatial_distribution", model ) != MYHDF5_SUCCESS ) {
+	string spatial_model = "";
+	if ( h5r.nexus_read( grpnm + "spatial_distribution", spatial_model ) != MYHDF5_SUCCESS ) {
 		status = false; cerr << grpnm << "spatial_distribution" << endl;
 	}
+	string ori_model = "";
+	if ( h5r.nexus_read( grpnm + "orientation", ori_model ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "ori_model" << endl;
+	}
 	ensNucleationModel.csrnucleation = CSRNUCLEATION_NO;
-	if ( model.compare("csr") == 0 ) {
+	if ( spatial_model.compare("csr") == 0 ) {
 		ensNucleationModel.csrnucleation = CSRNUCLEATION_YES_ENFORCED;
 		if ( h5r.nexus_read( grpnm + "number_of_nuclei", ensNucleationModel.defaultnucdensity ) != MYHDF5_SUCCESS ) {
 			status = false; cerr << grpnm << "number_of_nuclei" << endl;
@@ -545,6 +555,10 @@ bool ensembleHdl::init_parameter_from_hdf_nucleation() {
 			cerr << "WARNING::Inacceptable low discretization for this high number of nuclei." << endl;
 		}
 	}
+	if ( spatial_model.compare("damask") == 0 && ori_model.compare("damask") == 0 ) {
+		ensNucleationModel.csrnucleation = DMNUCLEATION;
+	}
+
 	/*
 	if ( val == 1 ) ensNucleationModel.csrnucleation = CSRNUCLEATION_YES_ENFORCED;
 	if ( val == 2 ) ensNucleationModel.csrnucleation = CSRNUCLEATION_YES_PICKRND;
@@ -621,7 +635,6 @@ bool ensembleHdl::init_parameter_from_hdf_material() {
 	if ( h5r.nexus_read( grpnm + "melting_temperature", ensPhysData.Tmelt ) != MYHDF5_SUCCESS ) {
 		status = false; cerr << grpnm << "melting_temperature" << endl;
 	}
-	ensPhysData.Tmelt += TOFFSET;
 	if ( ensPhysData.G0 <= MYZERO || ensPhysData.bZeroCelsius <= MYZERO || ensPhysData.Tmelt <= MYZERO ) {
 		status = false; cerr << "Unrealistic material parameter!" << endl;
 	}
@@ -844,7 +857,6 @@ bool ensembleHdl::init_parameter_from_hdf_processing() {
 		for ( size_t i = 0; i < f64_time.size(); i++ ) {
 			ti_now = f64_time[i];
 			Ti = f64_temp[i];
-			Ti += TOFFSET;
 			if ( ti_now < 0.0 || Ti < 0.0 || ti_old >= ti_now ) {
 				status = false; cerr << "Invalid annealing schedule data (<0.0 or not consecutive in time)!" << endl; break;
 			}
@@ -3553,7 +3565,7 @@ void ensembleHdl::finish_nexus_results_file()
 	double wall_clock = end_time - start_time;
 	dsnm = grpnm + "/total_elapsed_time";
 	anno = ioAttributes();
-	anno.add( "unit", string("s") );
+	anno.add( "units", string("s") );
 	if ( h5w.nexus_write( dsnm, wall_clock, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
@@ -8077,12 +8089,16 @@ void caHdl::solve_NUCLEATIONMODELING( void )
 		return;
 	}
 
-	//if ( myNucleationModel.csrnucleation == CSRNUCLEATION_YES_DIEHL
-	if ( 	myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMSO3 ||
-			myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMDEFORI	||
-			myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_SCATTEREXISTENT  ) {
-		//solve_nucmodeling_csrdiehl();
+	if ( myNucleationModel.csrnucleation == DMNUCLEATION ) {
 		solve_nucmodelling_dislo_ori_based();
+		return;
+	}
+
+	//if ( myNucleationModel.csrnucleation == CSRNUCLEATION_YES_DIEHL
+	if ( myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMSO3 ||
+		 myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_RANDOMDEFORI ||
+		 myNucleationModel.csrnucleation == CSRNUCLEATION_DIEHL_SCATTEREXISTENT ) {
+		solve_nucmodeling_csrdiehl();
 		return;
 	}
 

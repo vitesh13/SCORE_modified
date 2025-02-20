@@ -179,6 +179,7 @@
 #define TINCUB_TIMEDEPENDENT				0x11
 #define NUCSITES_STILL_SOME_FREE			0x12
 #define NUCSITES_ALL_EXHAUSTED				0x13
+#define DMNUCLEATION						0x14		//DAMASK
 
 //further nucleation models
 #define CSRNUCLEATION_YES_DIEHL				0x22

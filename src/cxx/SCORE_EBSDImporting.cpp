@@ -303,12 +303,7 @@ void caHdl::DAMASKtoCA( void )
 	tmp2defgseeds = new vector<defgseed>;
 
         // get the grain based data
-        std::cout << "The filename is carried over here -----" << filename << "\n" << std::endl;
-        //string fname = "/home/SCORE_orig/example_files/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
-        string fname = damask_file_name; //"/home/mkuehbach/SCORE-VITESH/SCORE_modified/example_files/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
-
-
-        file = HDF5_openFile( fname );
+        file = HDF5_openFile( damask_file_name );
         group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/_SIMPL_GEOMETRY" );
 
         dim_vec = HDF5_read_dataset_int_rank_1( group_ID, "DIMENSIONS");
@@ -442,10 +437,7 @@ void caHdl::DAMASKtoCA( void )
 	//		height = 0.0;
 	//		column_block_id++;
 	//	}
-	//} //all zlayers were build
-
-
-}
+	} //all zlayers were build
 }
 
 #endif

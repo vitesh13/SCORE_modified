@@ -737,7 +737,7 @@ void caHdl::nexus_write_automaton_geometry()
 	dsnm = grpnm + "/cell_dimensions";
 	double cellsize = myCAGeometry.cellsize;
 	anno = ioAttributes();
-	anno.add( "unit", string("m") );
+	anno.add( "units", string("m") );
 	if ( h5w.nexus_write( dsnm, cellsize, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
@@ -762,7 +762,7 @@ void caHdl::nexus_write_automaton_geometry()
 	vector<double> f64 = vector<double>( 3, 0. );
 	dsnm = grpnm + "/origin";
 	anno = ioAttributes();
-	anno.add( "unit", string("m") );
+	anno.add( "units", string("m") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({f64.size() / 3, 3}, {f64.size() / 3, 3}),
@@ -834,7 +834,7 @@ void caHdl::nexus_write_snapshot_kinetics()
 
 	dsnm = grpnm + "/time";
 	anno = ioAttributes();
-	anno.add( "unit", string("s") );
+	anno.add( "units", string("s") );
 	if ( h5w.nexus_write( dsnm, this->t, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !";
 		return;
@@ -849,7 +849,7 @@ void caHdl::nexus_write_snapshot_kinetics()
 
 	dsnm = grpnm + "/temperature";
 	anno = ioAttributes();
-	anno.add( "unit", string("K") );
+	anno.add( "units", string("K") );
 	if ( h5w.nexus_write( dsnm, this->CurrentTemperature, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !";
 		return;
@@ -868,17 +868,17 @@ void caHdl::nexus_write_snapshot_grain_based()
 	//we have to remind ourselves here that each cell is infected only once and this infection then filled through this simplifies the bookkeeping
 	//also keep in mind that the global list of cells does not keep information which of these cells are currently infected
 	//mainly to avoid unnecessary bookkeeping of these information for the sake of saving memory and improved performance
-	double cellvolume = CUBE(this->myCAGeometry.cellsize);
+	double cellvolume = CUBE((myCAGeometry.cellsize * METER2MICRON));
 	uint32_t ndisjoint_grains = mydefgpool.size() + myrxgpool.size();
 
 	//consider first discrete counts, in this case each cell is either fully deformed or fully recrystallized
 	vector<double> f64 = vector<double>( ndisjoint_grains, 0. );
 	uint32_t ndefg = mydefgpool.size();
 	for ( uint32_t dg = 0; dg < ndefg; dg++ ) {
-		f64[dg] = (double) mydefgpool[dg].cellcount;
+		f64[dg] = (double) mydefgpool[dg].cellcount * cellvolume;
 	}
 	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
-		f64[rg] = (double) myrxgpool[rg-ndefg].cellcount;
+		f64[rg] = (double) myrxgpool[rg-ndefg].cellcount * cellvolume;
 	}
 
 	//then correct for partial recrystallized fraction via individual contributions from cells of the RX front
@@ -936,6 +936,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 		u08[rg] = 0x00;
 	}
 	anno = ioAttributes();
+	/* ##TODO::switched off until uint8 bug fixed in NOMAD
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
@@ -944,6 +945,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
+	*/
 	u08 = vector<unsigned char>();
 
 	u08 = vector<unsigned char>( ndisjoint_grains, 0x01 );
@@ -952,6 +954,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 		u08[dg] = 0x00;
 	}
 	anno = ioAttributes();
+	/* ##TODO::switched off until uint8 bug fixed in NOMAD
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
@@ -960,11 +963,12 @@ void caHdl::nexus_write_snapshot_grain_based()
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
+	*/
 	u08 = vector<unsigned char>();
 
 	dsnm = grpnm + "/volume";
 	anno = ioAttributes();
-	anno.add( "unit", string("voxel volume equivalent") );  //1 px = CUBE(cellsize) which is in m^3
+	anno.add( "units", string("micrometer ** 3") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({f64.size() / 1, 1}, {f64.size() / 1, 1}),
@@ -1015,7 +1019,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 	}
 
 	anno = ioAttributes();
-	anno.add( "unit", string("rad") );
+	anno.add( "unit", string("radian") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({f64.size() / 3, 3}, {f64.size() / 3, 3}),
@@ -1035,7 +1039,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 		f64.push_back( RHOMAX_WELLANNEALED );
 	}
 	anno = ioAttributes();
-	anno.add( "unit", string("1/m^2") );
+	anno.add( "unit", string("1 / meter ** 2") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({f64.size() / 1, 1}, {f64.size() / 1, 1}),
@@ -1091,7 +1095,6 @@ void caHdl::nexus_write_snapshot_front_based()
 	} //next region
 
 	anno = ioAttributes();
-	//anno.add( "unit", string("px") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({i16.size() / 3, 3}, {i16.size() / 3, 3}),
