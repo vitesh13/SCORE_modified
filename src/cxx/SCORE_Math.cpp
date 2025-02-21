@@ -1,5 +1,5 @@
 /* 
-*	Copyright Markus K�hbach, 2014-2017
+*	Copyright Markus Kuehbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
@@ -14,16 +14,16 @@
 *	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. K�hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kuehbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
 *	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. K�hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
+*	M. Kuehbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
 
 *	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
 *	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ J�lich within the scope of the JARAHPC project JARA0076.
+*	by RWTH Aachen University and the FZ Juelich within the scope of the JARAHPC project JARA0076.
 
 
 *	This file is part of SCORE.
@@ -465,7 +465,7 @@ void mathMethods::quat2euler_imm( double *q, double* bunge ) {
 	//double tmp1 = atan2( y1, x1 );
 	//double tmp2 = atan2( y0, x0 );
 
-	//according to WolframAlpha atan2(y/a,x/a)-atan2(y,x) = 0 f�r a, x, y positive
+	//according to WolframAlpha atan2(y/a,x/a)-atan2(y,x) = 0 fuer a, x, y positive
 	//according to the same ref atan2(-y/a,-x/a)-atan2(y/a,x/a)=-pi
 	if( SQR(sP) > DOUBLE_ACCURACY ) {
 		phi2 = atan2( y0 / sP, x0 / sP ); //##MK::atan2( y0, x0 )

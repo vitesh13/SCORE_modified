@@ -1,5 +1,5 @@
 /* 
-*	Copyright Markus K�hbach, 2014-2017
+*	Copyright Markus Kuehbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
@@ -14,16 +14,16 @@
 *	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. K�hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kuehbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
 *	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. K�hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
+*	M. Kuehbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
 
 *	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
 *	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ J�lich within the scope of the JARAHPC project JARA0076.
+*	by RWTH Aachen University and the FZ Juelich within the scope of the JARAHPC project JARA0076.
 
 
 *	This file is part of SCORE.
@@ -521,7 +521,7 @@ void caHdl::log_OUTPUT()
 	//2D and 3D sections
 	if ( renderingForThisCA == true ) {
 		//##MK::old way of accounting was volume based i.e. Xcells / myCAGeometry.nboxvol_rdtdnd >= rendering_atthisX[loginfo_rendering_cnt] && loginfo_rendering_cnt < rendering_atthisX.size() ) {
-		//##MK::Diehl/K�hbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
+		//##MK::Diehl/Kuehbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
 		double Xarea_exp = log_rxareafraction( 0.0 );
 		double Xarea_hlf = log_rxareafraction( 0.5 );
 
@@ -609,13 +609,13 @@ void caHdl::log_OUTPUT_Diehl()
 
 	//previous the outputting of CA sections was controlled by passing volume or area rx fractions above predefined thresholds
 	//and then output was rendered for all defined sections
-	//for Diehl/K�hbach, MMM2018 Special Issue paper though we monitor first the recrystallized fraction on specific planes
+	//for Diehl/Kuehbach, MMM2018 Special Issue paper though we monitor first the recrystallized fraction on specific planes
 	//and output individually when these reach predefined thresholds
 
 	//MK::NO PARALLEL RENDERING AT THE MOMENT
 	//2D and 3D sections
 	if ( renderingForThisCA == true ) {
-		//##MK::Diehl/K�hbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
+		//##MK::Diehl/Kuehbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
 
 		uint32_t z00_logcnt = loginfo_rendering_sectionbased_cnt.at(0);
 		if ( z00_logcnt < rendering_atthisX.size() ) {
