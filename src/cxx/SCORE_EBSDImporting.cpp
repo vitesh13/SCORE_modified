@@ -293,7 +293,7 @@ void caHdl::damask2polycrystal()
 	string grpnm = "/DataContainers/SyntheticVolumeDataContainer/";
 	string dsnm = "";
 
-	dsnm = "_SIMPL_GEOMETRY";
+	dsnm = "_SIMPL_GEOMETRY/DIMENSIONS";
 	vector<long> i64;
 	if ( h5r.nexus_read( grpnm + dsnm, i64 ) != MYHDF5_SUCCESS ) {
 		cerr << grpnm << dsnm << "\n";
@@ -315,15 +315,15 @@ void caHdl::damask2polycrystal()
 		cerr << grpnm << dsnm << "\n";
 	}
 
+	struct cadefg dgr; // pool of deformed grains in the CA
+	struct dgopt anopt; // maintainence structure which keeps track of a reduction rho to speed up Euler forward integration
+	struct defgseed aseed; // register this deformed grain as a with tmpdefgseeds for the REPLACE_CA_STRUCTURE function to work properly
+
 	// filling the grain data, the first element in the grain average arrays is neglected as Dream3D adds an extra row/element at index 0
 	for( size_t g = 1; g < rho_vec.size(); g++ ) {
 		double bunge_ref[3] = {eulers_vec[(g*3)+0], eulers_vec[(g*3)+1], eulers_vec[(g*3)+2]};
 		double quaternion_ref[4] = {MYZERO, MYZERO, MYZERO, MYZERO};
 		localmath.euler2quat_damask(bunge_ref,quaternion_ref);
-
-		struct cadefg dgr; // pool of deformed grains in the CA
-		struct dgopt anopt; // maintainence structure which keeps track of a reduction rho to speed up Euler forward integration
-		struct defgseed aseed; // register this deformed grain as a with tmpdefgseeds for the REPLACE_CA_STRUCTURE function to work properly
 
 		dgr.caori = ca_check_disjunctness_core(quaternion_ref, true, bunge_ref[0],bunge_ref[1],bunge_ref[2]);
 		dgr.rho0  = rho_vec[g];

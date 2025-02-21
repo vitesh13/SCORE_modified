@@ -62,5 +62,5 @@ set(EMPLOY_GNUCOMPILER ON)
 ##-O0 -g for debug purposes only
 ##-O1 or -O2 for moderate optimization
 ##-O3 for production level optimization
-set(MYOPTLEVEL "-O2")
+set(MYOPTLEVEL "-O2")  # "-O0 -g")
 

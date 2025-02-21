@@ -1120,40 +1120,18 @@ template<typename T> int HdfFiveSeqHdl::nexus_read( const string dsnm, vector<T>
 					if ( dspcid != H5I_INVALID_HID ) {
 						size_t n_values = 1;
 						const int ndims = H5Sget_simple_extent_ndims( dspcid );
-						if ( ndims == 1 ) {
-							hsize_t dims[1] = { 0 };
-							if ( H5Sget_simple_extent_dims(dspcid, dims, NULL) == ndims ) {
-								n_values = dims[0];
-							}
-							else {
-								return nexus_close( MYHDF5_DSETACCESS_FAILED );
+						vector<hsize_t> dims;
+						for( int d = 0; d < ndims; d++ ) {
+							dims.push_back(0);
+						}
+						if ( H5Sget_simple_extent_dims(dspcid, dims.data(), NULL) == ndims ) {
+							for( int d = 0; d < ndims; d++ ) {
+								n_values *= (size_t) dims[d];
 							}
 						}
-						else if ( ndims == 2 ) {
-							hsize_t dims[2] = { 0, 0 };
-							if ( H5Sget_simple_extent_dims(dspcid, dims, NULL) == ndims ) {
-								n_values = (size_t) dims[0] * (size_t) dims[1];
-							}
-							else {
-								return nexus_close( MYHDF5_DSETACCESS_FAILED );
-							}
-						}
-						/*
-						else if ( ndims == 3 ) {
-							hsize_t dims[3] = { 0, 0, 0 };
-							if ( H5Sget_simple_extent_dims(dspcid, dims, NULL) == ndims ) {
-								n_values = (size_t) dims[0] * (size_t) dims[1] * (size_t) dims[2];
-							}
-							else {
-								return nexus_close( MYHDF5_DSETACCESS_FAILED );
-							}
-						}
-						*/
 						else {
-							cerr << "Reading " << dsnm << " failed, ndims is " << ndims << " but only 1, and 2 is supported!" << "\n";
-							return nexus_close( MYHDF5_NOT_EXPECTED);
+							return nexus_close( MYHDF5_DSETACCESS_FAILED );
 						}
-
 						retval = vector<T>( n_values, (T) 0 );
 						if ( H5Dread( dsetid, dtypid, H5S_ALL, H5S_ALL, H5P_DEFAULT, retval.data() ) >= 0 ) {
 #ifdef MYHDF5_VERBOSE_LEVEL_ONE

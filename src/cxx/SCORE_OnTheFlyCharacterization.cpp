@@ -801,7 +801,7 @@ void caHdl::nexus_write_automaton_geometry()
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({bnd_names.size() / 1, 1}, {bnd_names.size() / 1, 1}),
+		io_info({bnd_names.size()}, {bnd_names.size()}),
 		bnd_names,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -814,7 +814,7 @@ void caHdl::nexus_write_automaton_geometry()
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({bnd_cond.size() / 1, 1}, {bnd_cond.size() / 1, 1}),
+		io_info({bnd_cond.size()}, {bnd_cond.size()}),
 		bnd_cond,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -875,10 +875,10 @@ void caHdl::nexus_write_snapshot_grain_based()
 	vector<double> f64 = vector<double>( ndisjoint_grains, 0. );
 	uint32_t ndefg = mydefgpool.size();
 	for ( uint32_t dg = 0; dg < ndefg; dg++ ) {
-		f64[dg] = (double) mydefgpool[dg].cellcount * cellvolume;
+		f64[dg] = (double) mydefgpool[dg].cellcount; // * cellvolume;
 	}
 	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
-		f64[rg] = (double) myrxgpool[rg-ndefg].cellcount * cellvolume;
+		f64[rg] = (double) myrxgpool[rg-ndefg].cellcount; // * cellvolume;
 	}
 
 	//then correct for partial recrystallized fraction via individual contributions from cells of the RX front
@@ -939,7 +939,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 	/* ##TODO::switched off until uint8 bug fixed in NOMAD
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
+		io_info({u08.size()}, {u08.size()}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -957,7 +957,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 	/* ##TODO::switched off until uint8 bug fixed in NOMAD
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
+		io_info({u08.size()}, {u08.size()}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -968,10 +968,10 @@ void caHdl::nexus_write_snapshot_grain_based()
 
 	dsnm = grpnm + "/volume";
 	anno = ioAttributes();
-	anno.add( "units", string("micrometer ** 3") );
+	//anno.add( "units", string("micrometer ** 3") );
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1}, {f64.size() / 1, 1}),
+		io_info({f64.size()}, {f64.size()}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1042,7 +1042,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 	anno.add( "unit", string("1 / meter ** 2") );
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1}, {f64.size() / 1, 1}),
+		io_info({f64.size()}, {f64.size()}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1126,7 +1126,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u16.size() / 1, 1}, {u16.size() / 1, 1}),
+		io_info({u16.size()}, {u16.size()}),
 		u16,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1155,7 +1155,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u32.size() / 1, 1}, {u32.size() / 1, 1}),
+		io_info({u32.size()}, {u32.size()}),
 		u32,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1183,7 +1183,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u32.size() / 1, 1}, {u32.size() / 1, 1}),
+		io_info({u32.size()}, {u32.size()}),
 		u32,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1212,7 +1212,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
+		io_info({u08.size()}, {u08.size()}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1240,7 +1240,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1}, {u08.size() / 1, 1}),
+		io_info({u08.size()}, {u08.size()}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1269,7 +1269,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1}, {f64.size() / 1, 1}),
+		io_info({f64.size()}, {f64.size()}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1298,7 +1298,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1}, {f64.size() / 1, 1}),
+		io_info({f64.size()}, {f64.size()}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1316,6 +1316,7 @@ void caHdl::nexus_write_snapshot_cell_based()
 			this->myensHdl->ensCAGeometry.nboxvol_rdtdnd, INVALID_CELLASSIGNMENT );
 
 	uint32_t nreg = this->regions.size();
+	uint32_t ndisjoint_grains = mydefgpool.size() + myrxgpool.size();
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		uint32_t xmi = this->regions[r]->myGeom.nreg_rdmin; //global coordinates all inclusive [imi, imx]
 		uint32_t ymi = this->regions[r]->myGeom.nreg_tdmin;
@@ -1350,13 +1351,13 @@ void caHdl::nexus_write_snapshot_cell_based()
 						u32[index] = gridvalue;
 					}
 					else if ( gridvalue == CURRENTLY_INFECTED ) {
-						u32[index] = CURRENTLY_INFECTED;
+						u32[index] = ndisjoint_grains + 2000; //CURRENTLY_INFECTED;
 					}
 					else if ( gridvalue == CELL_IS_A_PARTICLE ) {
-						u32[index] = CELL_IS_A_PARTICLE;
+						u32[index] = ndisjoint_grains + 1000; //CELL_IS_A_PARTICLE;
 					}
 					else {
-						u32[index] = INVALID_CELLASSIGNMENT;
+						u32[index] = ndisjoint_grains + 3; //INVALID_CELLASSIGNMENT;
 					}
 					c++;
 				} //scan +x line
