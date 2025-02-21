@@ -48,7 +48,7 @@
 #include "SCORE_Kernel.h"
 
 
-void caHdl::log_initialization( void )
+void caHdl::log_initialization()
 {
 	//user defined recrystallized fraction of desired logpoints are inputted as normalized quantities, so multiply with boxdimensions
 	double boxvolume = myCAGeometry.nboxvol_rdtdnd;
@@ -196,7 +196,7 @@ double caHdl::log_rxareafraction( double zpos )
 }
 
 
-void caHdl::log_rxareaprofile( void )
+void caHdl::log_rxareaprofile()
 {
 	//monitor how much area fraction is recrystallized in zpos, used to control output in Martin/Markus MMM2018 model
 	//shared memory every thread processes it and will get the same result
@@ -407,7 +407,7 @@ void caHdl::log_rxareaprofile( uint32_t threshold )
 
 
 
-void caHdl::log_rxfrontstats( void )
+void caHdl::log_rxfrontstats()
 {
 	struct loginfo_rxfrontstats_ca rflog;
 
@@ -432,7 +432,7 @@ void caHdl::log_rxfrontstats( void )
 }
 
 
-void caHdl::log_grainevo( void )
+void caHdl::log_grainevo()
 {
 	//collect current microstructure state
 	//MUST NOT BE CALLED BY MORE THAN ONE THREAD
@@ -510,7 +510,7 @@ void caHdl::log_ca_physics( loginfo_ca_physicsP  container )
 }
 
 
-void caHdl::log_OUTPUT( void )
+void caHdl::log_OUTPUT()
 {
 	//CALLED FROM WITHIN PARALLEL REGION BUT BY THE MASTER THREAD ONLY
 	if ( this->outopt_localrxfront == OUTPUT_RXFRONTSTATS_YES ) {
@@ -1552,7 +1552,7 @@ void caHdl::binarize_partiallyrxed_microstructure( vector<bool>* outp )
 }
 
 
-void caHdl::log_PERCOLATION( void )
+void caHdl::log_PERCOLATION()
 {
 	//CALLED FROM WITHIN A PARALLEL REGION
 	//MK::currently called by omp thread master only!

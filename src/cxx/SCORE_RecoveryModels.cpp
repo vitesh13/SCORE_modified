@@ -1,5 +1,5 @@
 /* 
-*	Copyright Markus Kühbach, 2014-2017
+*	Copyright Markus Kï¿½hbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
@@ -14,16 +14,16 @@
 *	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kï¿½hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
 *	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
+*	M. Kï¿½hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
 
 *	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
 *	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
+*	by RWTH Aachen University and the FZ Jï¿½lich within the scope of the JARAHPC project JARA0076.
 
 
 *	This file is part of SCORE.
@@ -47,7 +47,7 @@
 
 #include "SCORE_Kernel.h"
 
-void caHdl::nes_networkgrowthmodel_vacancycorediff( void )
+void caHdl::nes_networkgrowthmodel_vacancycorediff()
 {
 	//MK::template code for a recovery according to Nes vacancy diffusion controlled themrally-activated glide
 	//MK::Euler forward difference scheme with dr/dt ~ r(t+dt) - r(t) / dt
@@ -80,13 +80,13 @@ void caHdl::nes_networkgrowthmodel_vacancycorediff( void )
 }
 
 
-void caHdl::nes_networkgrowthmodel_solutedrag( void )
+void caHdl::nes_networkgrowthmodel_solutedrag()
 {
 	//#MK::not implemented yet
 }
 
 
-void caHdl::nes_michalakpaxton( void ) 
+void caHdl::nes_michalakpaxton() 
 {
 //set of parameter determined as in Michalak Paxton 1961, TransAIME, 221, 1961 p853
 //and Nes, Recovery revisited
@@ -125,7 +125,7 @@ cout << "Michalak Paxton Recovery;tau2;tau5;factor;currrhomax\t\t" << this->t <<
 }
 
 
-void caHdl::update_mydgoptimize_rho( void ) {
+void caHdl::update_mydgoptimize_rho() {
 	//ONLY CALL FROM ONE THREAD
 	uint32_t ndg = mydgoptimize.size();
 	for ( uint32_t dg = 0; dg < ndg; dg++ ) {
@@ -135,7 +135,7 @@ void caHdl::update_mydgoptimize_rho( void ) {
 	std::sort( mydgoptimize.begin(), mydgoptimize.end(), SortDoubleDescending );
 }
 
-void caHdl::update_mydgoptimize_cnt( void ) {
+void caHdl::update_mydgoptimize_cnt() {
 	//ONLY CALL FROM ONE THREAD
 	uint32_t ndg = mydgoptimize.size();
 	for ( uint32_t dg = 0; dg < ndg; dg++ ) { //##MK::utilize that  array thins out
@@ -144,7 +144,7 @@ void caHdl::update_mydgoptimize_cnt( void ) {
 	}
 }
 
-void caHdl::update_myrhomax( void ) {
+void caHdl::update_myrhomax() {
 	uint32_t ndg = mydgoptimize.size();
 	double rmax = RHOMAX_WELLANNEALED;
 	//scan control structure of how much volume with specific dislocation density
@@ -181,7 +181,7 @@ unsigned char caHdl::rho2grayscale( double r ) {
 }
 
 
-void caHdl::log_initrho_scalebar( void ) {
+void caHdl::log_initrho_scalebar() {
 	//MK::mapping of dislocation density values on [RHO_ on solitary unit domain dependent grayscale bar via
 	double rmax = RHO_DEFORMED_MATERIAL_MAX;
 	if ( this->mydgoptimize.size() > 0 ) //if existent take actual value

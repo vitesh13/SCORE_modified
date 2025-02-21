@@ -1,5 +1,5 @@
 /* 
-*	Copyright Markus Kühbach, 2014-2017
+*	Copyright Markus Kï¿½hbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
@@ -14,16 +14,16 @@
 *	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kï¿½hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
 *	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
+*	M. Kï¿½hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
 
 *	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
 *	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
+*	by RWTH Aachen University and the FZ Jï¿½lich within the scope of the JARAHPC project JARA0076.
 
 
 *	This file is part of SCORE.
@@ -47,7 +47,7 @@
 	Implements functionalities to detect whether the microstructure has a percolating network of RX grains
 	utilizes the Hoshen-Kopelman algorithm in 3D and implements a pathcompressed weighted union/find algorithm based
 	on Kartik Kukreja's implementation http://kartikkukreja.wordpress.com
-	Markus Kühbach, m.kuehbach (at) mpie.de
+	Markus Kï¿½hbach, m.kuehbach (at) mpie.de
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ using namespace std;
 
 
 /*
-void percAnalyzer::initialize( void )
+void percAnalyzer::initialize()
 {
 cout << "SCORE PercolationAnalyzer 3D, SC site perc N = " << (unsigned int) N << "^3" << " p = " << dummyoccupancy << " seed = " << dummyseed << endl;
 cout << "Initializing..." << endl;
@@ -287,7 +287,7 @@ void percAnalyzer::hk3d_core_nonperiodic( unsigned int x, unsigned int y, unsign
 }*/
 
 
-void percAnalyzer::hoshen_kopelman( void )
+void percAnalyzer::hoshen_kopelman()
 {
 cout << "\t\t\t\tLabeling cluster via Hoshen-Kopelman..." << endl;
 	//this->horatiocaine.profiling_start();
@@ -331,7 +331,7 @@ cout << "\t\t\t\tLabeling cluster via Hoshen-Kopelman..." << endl;
 }
 
 
-void percAnalyzer::compactify( void )
+void percAnalyzer::compactify()
 {
 cout << "\t\t\t\tCompactifying..." << endl;
 	//this->horatiocaine.profiling_start();
@@ -394,7 +394,7 @@ cout << "\t\t\t\tCompactifying..." << endl;
 cout << "\t\t\t\tTotal number of clusters = " << results.nClusterTotal << endl;
 }
 
-void percAnalyzer::checkLabeling( void )
+void percAnalyzer::checkLabeling()
 {
 cout << "\t\t\t\tChecking the correct labeling with the compactified IDs..." << endl;
 	bool labelingerror = false;
@@ -497,7 +497,7 @@ cout << "\t\tThis cluster occupies a volume fraction of P_L = " << setprecision(
 }*/
 
 
-bool percAnalyzer::percolates( void )
+bool percAnalyzer::percolates()
 {
 cout << "\t\t\t\tAnalyzing for possible percolating cluster..." << endl;
 	//this->horatiocaine.profiling_start();
@@ -614,7 +614,7 @@ cout << "\t\t\t\tPercolation along Z for cluster " << cluster << endl;
 
 
 
-void percAnalyzer::determine_clustersize_distr( void )
+void percAnalyzer::determine_clustersize_distr()
 {
 	//determine cluster size distribution first
 	cout << "\t\t\t\tCharacterizing cluster size distribution..." << endl;
@@ -665,7 +665,7 @@ void percAnalyzer::handover_distribution( unsigned int* dist )
 }
 
 
-void percAnalyzer::reset( void ) 
+void percAnalyzer::reset() 
 {
 	delete [] id;
 	id = NULL;

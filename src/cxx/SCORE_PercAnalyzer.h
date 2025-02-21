@@ -225,18 +225,18 @@ public:
 	//class timer horatiocaine;
 
 	void initialize( vector<bool>* threshold, unsigned int cube_edge_length );
-	//void initialize( void );
+	//void initialize();
 	//void printStatus( bool io, const char* fname );
 	void hk3d_core_nonperiodic( unsigned int x, unsigned int y, unsigned int z );
 	//void hk3d_core_periodic( unsigned int x, unsigned int y, unsigned int z );
-	void hoshen_kopelman( void );
-	void compactify( void );
-	void checkLabeling( void );
+	void hoshen_kopelman();
+	void compactify();
+	void checkLabeling();
 	//void characterize( bool io, const char* fname );
-	bool percolates( void );
-	void determine_clustersize_distr( void );
+	bool percolates();
+	void determine_clustersize_distr();
 	void handover_distribution( unsigned int* dist );
-	void reset( void );
+	void reset();
 
 	percAnalyzer(){
 		id = NULL;
@@ -260,10 +260,10 @@ public:
 	void setGridsize( unsigned int n ) { N = n; NN = SQR(N); NNN = CUBE(N); }
 	//void setDummyOccupancy( double p ) { dummyoccupancy = p; }
 	//void setDummySeed( int sd ){ dummyseed = sd; }
-	unsigned int getNCluster( void ) {
+	unsigned int getNCluster() {
 		return results.nClusterTotal;
 	}
-	unsigned int getClusterSize( void ) {
+	unsigned int getClusterSize() {
 		return results.LargestClusterCnt;
 	}
 

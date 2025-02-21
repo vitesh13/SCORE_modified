@@ -240,7 +240,7 @@ void ensembleHdl::init_ensprng( int targetseed )
 
 
 
-void ensembleHdl::init_mpidatatypes( void )
+void ensembleHdl::init_mpidatatypes()
 {
 	if ( myRank == MASTER ) 
 		cout << "Initializing MPI I/O Datatypes..." << endl;
@@ -457,11 +457,13 @@ bool ensembleHdl::init_parameter_from_hdf_deformation() {
 
 	experimentInput = false;
 
-	string model = "";
 	grpnm = "/entry1/deformation/";
-	if ( h5r.nexus_read( grpnm + "model", model ) != MYHDF5_SUCCESS ) {
+	string dsnm = "model";
+	string model = "";
+	if ( h5r.nexus_read( grpnm + dsnm, model ) != MYHDF5_SUCCESS ) {
 		status = false; cerr << grpnm << "model" << endl;
 	}
+	cout << grpnm << dsnm << "\t" << model << "\n";
 	if ( model.compare("cuboidal") == 0 ) {
 		defmsmethod = CUBOID_DEFMS;
 		vector<double> defg_size_mean;
@@ -481,7 +483,7 @@ bool ensembleHdl::init_parameter_from_hdf_deformation() {
 			status = false; cerr << grpnm << "extent" << endl;
 		} //no upper bound check necessary
 	}
-	if ( model.compare("poisson") == 0 ) {
+	else if ( model.compare("poisson") == 0 ) {
 		defmsmethod = POISSONVORONOI_DEFMS;
 
 		double diameter = 0.;
@@ -493,7 +495,7 @@ bool ensembleHdl::init_parameter_from_hdf_deformation() {
 			status = false; cerr << grpnm << "deformation/diameter" << endl;
 		}
 	}
-	if ( model.compare("ebsd") == 0 ) {
+	else if ( model.compare("ebsd") == 0 ) {
 		cerr << "Model ebsd not implemented !" << endl;
 		//if ( val == 4 ) defmsmethod = SEMEBSD_2D3D_COLUMNSINGLE;
 		//if ( val == 5 ) defmsmethod = SEMEBSD_2D3D_COLUMNSTACK;
@@ -512,15 +514,20 @@ bool ensembleHdl::init_parameter_from_hdf_deformation() {
 			}
 		}
 	}
-	if ( model.compare("damask") == 0 ) {
+	else if ( model.compare("damask") == 0 ) {
 		defmsmethod = CPFEMDAMASK_DEFMS;
 		damaskInput = true;
-		if ( h5r.nexus_path_exists( grpnm + "simulation" ) ) {
-			if ( h5r.nexus_read( grpnm + "path", damask_file_name ) != MYHDF5_SUCCESS ) {
-				status = false; cerr << grpnm << "path" << endl;
+		grpnm = "/entry1/deformation/damask";
+		dsnm = "/file_name";
+		if ( h5r.nexus_path_exists( grpnm ) ) {
+			if ( h5r.nexus_read( grpnm + dsnm, damask_file_name ) != MYHDF5_SUCCESS ) {
+				status = false; cerr << grpnm << dsnm << endl;
 			}
 			cout << "The input file name is: " << damask_file_name << endl;
 		}
+	}
+	else {
+		cerr << "Unsupported defmsmethod" << "\n";
 	}
 	return status;
 }
@@ -1445,7 +1452,7 @@ bool ensembleHdl::init_parameter_from_yml_additional() {
 }
 
 #else
-bool ensembleHdl::init_parameter_from_uds_runtime( void ) {
+bool ensembleHdl::init_parameter_from_uds_runtime() {
 	bool status = true;
 
 	dataBlockP runtimecontrol = readDataBlock("RuntimeControl", score_input);
@@ -1513,7 +1520,7 @@ bool ensembleHdl::init_parameter_from_uds_runtime( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_output( void ) {
+bool ensembleHdl::init_parameter_from_uds_output() {
 	bool status = true;
 
 	dataBlockP outputopts = readDataBlock( "SimulationOutput", score_input );
@@ -1589,7 +1596,7 @@ bool ensembleHdl::init_parameter_from_uds_output( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_ensemble( void ) {
+bool ensembleHdl::init_parameter_from_uds_ensemble() {
 	bool status = true;
 
 	dataBlockP ensembledef = readDataBlock("EnsembleDefinition", score_input);
@@ -1667,7 +1674,7 @@ bool ensembleHdl::init_parameter_from_uds_ensemble( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_nucleation( void ) {
+bool ensembleHdl::init_parameter_from_uds_nucleation() {
 	bool status = true;
 
 	dataBlockP nucleationmodeling = readDataBlock( "NucleationModeling", score_input );
@@ -1735,7 +1742,7 @@ bool ensembleHdl::init_parameter_from_uds_nucleation( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_material( void ) {
+bool ensembleHdl::init_parameter_from_uds_material() {
 	bool status = true;
 
 	dataBlockP matpara = readDataBlock("MaterialProperties", score_input);
@@ -1754,7 +1761,7 @@ bool ensembleHdl::init_parameter_from_uds_material( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_mobilities( void ) {
+bool ensembleHdl::init_parameter_from_uds_mobilities() {
 	bool status = true;
 
 	dataBlockP mobilitymodeling = readDataBlock( "BoundaryMobilityModel", score_input );
@@ -1794,7 +1801,7 @@ bool ensembleHdl::init_parameter_from_uds_mobilities( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_recovery( void ) {
+bool ensembleHdl::init_parameter_from_uds_recovery() {
 	bool status = true;
 
 	dataBlockP recoverypara = readDataBlock("RecoveryParameter", score_input);
@@ -1823,7 +1830,7 @@ bool ensembleHdl::init_parameter_from_uds_recovery( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_drag( void ) {
+bool ensembleHdl::init_parameter_from_uds_drag() {
 	bool status = true;
 
 	dataBlockP dragpara = readDataBlock("DragParameter", score_input );
@@ -1868,7 +1875,7 @@ bool ensembleHdl::init_parameter_from_uds_drag( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_idealtexture( void ) {
+bool ensembleHdl::init_parameter_from_uds_idealtexture() {
 	bool status = true;
 
 	//import ideal texture components
@@ -1915,7 +1922,7 @@ bool ensembleHdl::init_parameter_from_uds_idealtexture( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_processing( void ) {
+bool ensembleHdl::init_parameter_from_uds_processing() {
 	bool status = true;
 
 	dataBlockP timetemp = readDataBlock( "AnnealingSchedule", score_input );
@@ -1955,7 +1962,7 @@ bool ensembleHdl::init_parameter_from_uds_processing( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_defgpool( void ) {
+bool ensembleHdl::init_parameter_from_uds_defgpool() {
 	bool status = true;
 
 	dataBlockP defgpara = readDataBlock("DeformedGrainsPool", score_input);
@@ -2002,7 +2009,7 @@ bool ensembleHdl::init_parameter_from_uds_defgpool( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_rxgpool( void ) {
+bool ensembleHdl::init_parameter_from_uds_rxgpool() {
 	bool status = true;
 
 	dataBlockP rxgpara = readDataBlock("RXGrainsPool", score_input);
@@ -2047,7 +2054,7 @@ bool ensembleHdl::init_parameter_from_uds_rxgpool( void ) {
 	return status;
 }
 
-bool ensembleHdl::init_parameter_from_uds_additional( void ) {
+bool ensembleHdl::init_parameter_from_uds_additional() {
 	bool status = true;
 
 	if ( outopt_rendermethod == RENDERING_MS2D || outopt_rendermethod == RENDERING_MS3D || outopt_localrenderboundaries == RENDERING_BOUNDARIES_YES ) {
@@ -2282,7 +2289,7 @@ cout << "SEM/EBSD grain id/phi1/Phi/phi2//KAM = " << ap.gid << ";" << ap.bunge1 
 }
 
 
-bool ensembleHdl::init_parameter_defgpool_exp( void )
+bool ensembleHdl::init_parameter_defgpool_exp()
 {
 	if ( expUniqueGrainIDs.size() > DEFAULT_MAX_DEFORMEDGRAINS ) { cerr << "WARNING::The pool of EBSD grains is very large." << endl; }
 
@@ -2467,24 +2474,24 @@ bool ensembleHdl::init_parameter_defgpool_exp( void )
 	return true;
 }
 
-bool ensembleHdl::init_parameter_defgpool_damask( void )
+bool ensembleHdl::init_parameter_defgpool_damask()
 {
 	//in Martin Diehl's project nuclei will be generated from the structure so no importing of a priori information on nucleation spectrum required
 	return true;
 }
-bool ensembleHdl::init_parameter_rxgpool_damask( void )
+bool ensembleHdl::init_parameter_rxgpool_damask()
 {
 	//in Martin Diehl's project nuclei will be generated from the structure so no importing of a priori information on nucleation spectrum required
 	return true;
 }
-bool ensembleHdl::init_parameter_rxgpool_exp( void )
+bool ensembleHdl::init_parameter_rxgpool_exp()
 {
 	//in Martin Diehl's project nuclei will be generated from the structure so no importing of a priori information on nucleation spectrum required
 	return true;
 }
 
 
-void ensembleHdl::report_successful_setup( void )
+void ensembleHdl::report_successful_setup()
 {
 	cout << "\t\tEnsemble size " << nworldCAs << "\n";
 	cout << "\t\tSU-Geometry " << ensCAGeometry.nboxedge_rd << ";" << ensCAGeometry.nboxedge_td << ";" << ensCAGeometry.nboxedge_nd << " is RD x ND x TD CA geometry with " << ensCAGeometry.cellsize << " cellsize" << " m\n";
@@ -2504,7 +2511,7 @@ void ensembleHdl::report_successful_setup( void )
 	//cout << ensPhysData.LAGBHact << "," << ensPhysData.HAGBHact << "," << ensPhysData.GSHact << ", LAGB/HAGB/GS Hact=" << endl;
 }
 
-void ensembleHdl::report_datastructures( void ) 
+void ensembleHdl::report_datastructures() 
 {
 	if ( myRank == MASTER ) { 
 		cout << "The size of the SCORE datastructures is as follows..." << endl;
@@ -2757,7 +2764,7 @@ void ensembleHdl::ipf_colormap( double ipf_stretch_r, double ipf_stretch_g, doub
 }
 
 
-bool ensembleHdl::init_parameter( void )
+bool ensembleHdl::init_parameter()
 {
 	//read user input, master checks data integrity
 	bool good = true;
@@ -2957,7 +2964,7 @@ bool ensembleHdl::init_parameter( void )
 	}
 }
 
-void ensembleHdl::init_distributeWorkOnRanks( void )
+void ensembleHdl::init_distributeWorkOnRanks()
 {
 	//partition ensemble of solitary units on the ranks in MPI_COMM_WORLD
 	if ( myRank == MASTER ) {
@@ -2981,7 +2988,7 @@ void ensembleHdl::init_distributeWorkOnRanks( void )
 	cout << "\t\t" << myRank << " got " << myIDs.size() << " CAs to process" << endl;
 }
 
-void ensembleHdl::init_distributeWorkOnThreads( void )
+void ensembleHdl::init_distributeWorkOnThreads()
 {
 	//MK::currently each process works sequentially through a queue (myIDs) of SU domains
 	//each in turn is executed with all available OpenMP threads
@@ -3023,7 +3030,7 @@ void ensembleHdl::init_distributeWorkOnThreads( void )
 	} //for all the solitary unit CA domains of the MPI process
 }
 
-void ensembleHdl::SIMULATE_myCAs( void )
+void ensembleHdl::SIMULATE_myCAs()
 {
 	//MPI rank works through queue of solitary unit domains, each domain is solved with OMP_NUM_THREADS
 	for ( uint32_t tid = 0; tid < ALL_THREADS_WORK_ONONECA; tid++) {
@@ -3089,7 +3096,7 @@ void ensembleHdl::SIMULATE_myCAs( void )
 	}
 }
 
-void ensembleHdl::PERFORM_SOLITARYUNIT_MODELING_ANALYSIS( void ) 
+void ensembleHdl::PERFORM_SOLITARYUNIT_MODELING_ANALYSIS() 
 {
 	if ( postProcessing == true ) {
 		if ( myRank == MASTER ) {
@@ -3107,7 +3114,7 @@ void ensembleHdl::PERFORM_SOLITARYUNIT_MODELING_ANALYSIS( void )
 }
 
 
-void ensembleHdl::destroy_myCAs( void )
+void ensembleHdl::destroy_myCAs()
 {
 	//necessary because the ensembleHdl member vector<caHdlP> can only deconstruct the vector but not the heap memory the individual element pointers are pointing to
 	for ( uint32_t tid = 0; tid < myCAs.size(); tid++) {
@@ -3751,7 +3758,7 @@ caregionMemHdl::~caregionMemHdl()
 }
 
 
-void caregionMemHdl::ompshar_init_mycellgrid ( void )
+void caregionMemHdl::ompshar_init_mycellgrid ()
 {
 	//CALLED FROM WITHIN PARALLEL REGION
 
@@ -4307,7 +4314,7 @@ double caregionMemHdl::reg_calc_mobilityweight( uint32_t rgpoolid, uint32_t dgpo
 }
 
 
-void caregionMemHdl::ompshar_init_mySeedFrontInside( void )
+void caregionMemHdl::ompshar_init_mySeedFrontInside()
 {
 	uint32_t ninitialSeedFront = (uint32_t) ( mycaHdl->initialRelCellCaching * (double) myGeom.nregvol_rdtdnd );
 	QUICKASSERT ( ninitialSeedFront < CA_ALLOCATION_MAXIMUM );
@@ -4364,7 +4371,7 @@ void caregionMemHdl::ompshar_init_mySeedFrontInside( void )
 }
 
 
-void caregionMemHdl::ompshar_init_mySeedFrontBorder( void )
+void caregionMemHdl::ompshar_init_mySeedFrontBorder()
 {
 	//MK::it can happen that a thread infects from its border into the border of an adjacent thread memory region,
 	//thus memory in the mySeedFrontBorder of thread B is required to store the cell, however that array might not have been allocated large enough
@@ -4533,7 +4540,7 @@ uint32_t caregionMemHdl::omp_getNextFreeSlotInSeedFrontBorder( bool how )
 }
 
 
-void caregionMemHdl::ompshar_voxelize_growthStepInside( void )
+void caregionMemHdl::ompshar_voxelize_growthStepInside()
 {
 	double tprof = omp_get_wtime();
 	double shapefactors[27] = { FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG, 
@@ -4587,7 +4594,7 @@ void caregionMemHdl::ompshar_voxelize_growthStepInside( void )
 }
 
 
-void caregionMemHdl::ompshar_voxelize_growthStepBorder( void )
+void caregionMemHdl::ompshar_voxelize_growthStepBorder()
 {
 	double tprof = omp_get_wtime();
 	double shapefactors[27] = { FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG, 
@@ -4629,7 +4636,7 @@ void caregionMemHdl::ompshar_voxelize_growthStepBorder( void )
 }
 
 
-void caregionMemHdl::ompshar_voxelize_updateFullInside( void )
+void caregionMemHdl::ompshar_voxelize_updateFullInside()
 {
 	double tprof = omp_get_wtime();
 	//CALLED FROM WITHIN PARALLEL REGION
@@ -4735,7 +4742,7 @@ void caregionMemHdl::ompshar_voxelize_updateFullInside( void )
 }
 
 
-void caregionMemHdl::ompshar_voxelize_updateFullBorder( void )
+void caregionMemHdl::ompshar_voxelize_updateFullBorder()
 {
 	double tprof = omp_get_wtime();
 	//CALLED FROM WITHIN PARALLEL REGION
@@ -4830,7 +4837,7 @@ void caregionMemHdl::ompshar_voxelize_updateFullBorder( void )
 }
 
 
-void caregionMemHdl::ompshar_synchronize_haloregions_def( void )
+void caregionMemHdl::ompshar_synchronize_haloregions_def()
 {
 	double tprof = omp_get_wtime();
 
@@ -5265,7 +5272,7 @@ void caregionMemHdl::append_to_recycseed_border_list( uint32_t cid )
 }
 
 
-void caregionMemHdl::omp_resetHaloRegions( void )
+void caregionMemHdl::omp_resetHaloRegions()
 {
 	//reset the halos to the initial stage such that for the solve_RXGROWTH automaton they can be reutilized
 	for (uint32_t h = 0; h < (MYSELF + NUMBER_OF_NEIGHBORS); h++ ) { //MK::YOU MUST NOT DELETE THE HALOS AS THEY ARE REUTILIZED IN solve_RXGROWTH!
@@ -5285,7 +5292,7 @@ void caregionMemHdl::omp_resetHaloRegions( void )
 }
 
 
-void caregionMemHdl::omp_resetInternalCounters( void )
+void caregionMemHdl::omp_resetInternalCounters()
 {
 	mycaHdl->nmynuclei = 0;
 
@@ -5312,7 +5319,7 @@ void caregionMemHdl::omp_resetInternalCounters( void )
 }
 
 
-void caregionMemHdl::omp_voxelize_memoryCleanup( void ) 
+void caregionMemHdl::omp_voxelize_memoryCleanup() 
 {
 	if ( mySeedFrontInside != NULL ) {
 		delete [] mySeedFrontInside;
@@ -5364,7 +5371,7 @@ void caregionMemHdl::omp_voxelize_memoryCleanup( void )
 
 
 
-void caregionMemHdl::ompshar_init_myRXFrontInside( void )
+void caregionMemHdl::ompshar_init_myRXFrontInside()
 {
 	uint32_t ninitialRXFront = (uint32_t) ( mycaHdl->initialRelCellCaching * (double) myGeom.nregvol_rdtdnd );
 	QUICKASSERT ( ninitialRXFront < CA_ALLOCATION_MAXIMUM );
@@ -5424,7 +5431,7 @@ void caregionMemHdl::ompshar_init_myRXFrontInside( void )
 }
 
 
-void caregionMemHdl::ompshar_init_myRXFrontBorder( void )
+void caregionMemHdl::ompshar_init_myRXFrontBorder()
 {
 	//MK::it can happen that a thread infects from its border into the border of an adjacent thread memory region,
 	//thus memory in the myRXFrontBorder of thread B is required to store the cell, however that array might not have been allocated large enough
@@ -5646,7 +5653,7 @@ uint32_t caregionMemHdl::omp_getNextFreeSlotInRXFrontBorder( bool how )
 }
 
 
-void caregionMemHdl::ompshar_defragmentation( void ) 
+void caregionMemHdl::ompshar_defragmentation() 
 {
 	//CALLED FROM WITHIN PARALLEL REGION!
 	//MK::usually the function is kicked in shortly after the peak of the Sv(X) function
@@ -5815,7 +5822,7 @@ void caregionMemHdl::append_to_recycling_inside_list( uint32_t cid )
 
 
 
-void caregionMemHdl::ompshar_sim_myCA_calcGrowthStepInside( void )
+void caregionMemHdl::ompshar_sim_myCA_calcGrowthStepInside()
 {
 	double tprof = omp_get_wtime();
 
@@ -5952,7 +5959,7 @@ void caregionMemHdl::append_to_recycling_border_list( uint32_t cid )
 }
 
 
-void caregionMemHdl::ompshar_sim_myCA_calcGrowthStepBorder( void )
+void caregionMemHdl::ompshar_sim_myCA_calcGrowthStepBorder()
 {
 	double tprof = omp_get_wtime();
 
@@ -5974,7 +5981,7 @@ void caregionMemHdl::ompshar_sim_myCA_calcGrowthStepBorder( void )
 	//scan the whole myRXFront on the interval [0;nextSlotNeverActiveRXFront) to 
 	//	a) to find ACTIVE cells for which boundary migration is simulated during dt
 	//	b) to find INACTIVE cells
-	//all comments from caHdl::ompshar_sim_myCA_calcGrowthStepInside( void ) apply as well
+	//all comments from caHdl::ompshar_sim_myCA_calcGrowthStepInside() apply as well
 
 	double dVrx = 0.0;
 	double v = 0.0;
@@ -6333,7 +6340,7 @@ void caregionMemHdl::omp_infect_OutOfRXFrontBorder (
 }
 
 
-void caregionMemHdl::ompshar_sim_myCA_updateFullRXInside( void )
+void caregionMemHdl::ompshar_sim_myCA_updateFullRXInside()
 {
 	double tprof = omp_get_wtime();
 	//CALLED FROM WITHIN PARALLEL REGION
@@ -6441,7 +6448,7 @@ void caregionMemHdl::ompshar_sim_myCA_updateFullRXInside( void )
 }
 
 
-void caregionMemHdl::ompshar_clear_halo_bookkeeping( void )
+void caregionMemHdl::ompshar_clear_halo_bookkeeping()
 {
 	//CALLED FROM WITHIN PARALLEL REGION
 	//it is necessary before a node can collect new infections in each integration step to clear the infection buffer
@@ -6452,7 +6459,7 @@ void caregionMemHdl::ompshar_clear_halo_bookkeeping( void )
 }
 
 
-void caregionMemHdl::ompshar_sim_myCA_updateFullRXBorder( void )
+void caregionMemHdl::ompshar_sim_myCA_updateFullRXBorder()
 {
 	double tprof = omp_get_wtime();
 	//CALLED FROM WITHIN PARALLEL REGION
@@ -6551,7 +6558,7 @@ void caregionMemHdl::ompshar_sim_myCA_updateFullRXBorder( void )
 }
 
 
-void caregionMemHdl::ompshar_synchronize_haloregions_rx( void )
+void caregionMemHdl::ompshar_synchronize_haloregions_rx()
 {
 	double tprof = omp_get_wtime();
 
@@ -6731,7 +6738,7 @@ void ompshar_sectioning_analysis_rx()
 */
 
 
-void caregionMemHdl::omp_log_synthfrontstats( void )
+void caregionMemHdl::omp_log_synthfrontstats()
 {
 	//CALLED FROM WITHIN PARALLEL REGION
 	struct omp_log_synthfstats memca;
@@ -6759,7 +6766,7 @@ void caregionMemHdl::omp_log_synthfrontstats( void )
 }
 
 
-void caregionMemHdl::omp_log_rxfrontstats( void )
+void caregionMemHdl::omp_log_rxfrontstats()
 {
 	//CALLED FROM WITHIN PARALLEL REGION
 	struct omp_log_rxfstats memca;
@@ -6806,7 +6813,7 @@ void caregionMemHdl::omp_log_rxfrontstats( void )
 }
 
 
-void caregionMemHdl::omp_cleanupMemoryUsedForManagement( void )
+void caregionMemHdl::omp_cleanupMemoryUsedForManagement()
 {
 	delete [] reg_myrxgp_counts;
 	reg_myrxgp_counts = NULL;
@@ -6818,7 +6825,7 @@ void caregionMemHdl::omp_cleanupMemoryUsedForManagement( void )
 }
 
 
-void caregionMemHdl::omp_cleanupMemoryUsedForGrowthMachine( void )
+void caregionMemHdl::omp_cleanupMemoryUsedForGrowthMachine()
 {
 	//MK::when the solve_RXGROWTH has been executed the mygrainevolution contains the intermediate stage of all grains but 
 	//the memory for the cellgrid and the dynamic memory allocated for managing cells in no longer necessary so delete it
@@ -6857,7 +6864,7 @@ void caregionMemHdl::omp_cleanupMemoryUsedForGrowthMachine( void )
 }
 
 
-void caregionMemHdl::omp_cleanupMemoryUsedForHaloRegion( void )
+void caregionMemHdl::omp_cleanupMemoryUsedForHaloRegion()
 {
 	//first free memory in the halos
 	for (uint32_t h = 0; h < (NUMBER_OF_NEIGHBORS + MYSELF); h++ ) {
@@ -7059,7 +7066,7 @@ void caHdl::update_system_fixedtime( double time )
 }
 
 
-void caHdl::update_temperature( void )
+void caHdl::update_temperature()
 {
 	uint32_t i = 0;
 	//scan vector t and perform linear interpolation to get Ti(ti)
@@ -7080,7 +7087,7 @@ void caHdl::update_temperature( void )
 }
 
 
-void caHdl::update_atomisticproperties( void )
+void caHdl::update_atomisticproperties()
 {
 	CurrentG = get_shearmodulus( CurrentTemperature );
 	myPhysData.G = CurrentG;
@@ -7096,7 +7103,7 @@ void caHdl::update_atomisticproperties( void )
 }
 
 
-void caHdl::update_intrinsicmobilities( void )
+void caHdl::update_intrinsicmobilities()
 {
 	//intrinsic grain boundary mobilities
 	mLAGB = myPhysData.LAGBm0 * exp( -1.0 *  myPhysData.LAGBHact / (kboltzman * CurrentTemperature) );
@@ -7113,7 +7120,7 @@ void caHdl::update_intrinsicmobilities( void )
 }
 
 
-void caHdl::update_microchemistry( void )
+void caHdl::update_microchemistry()
 {
 	//update the Zener Drag
 	if ( myDragData.ZenerConsider == DISPERSOIDDRAG_NO ) {
@@ -7152,7 +7159,7 @@ void caHdl::update_microchemistry( void )
 }
 
 
-void caHdl::update_deformedsubstructure( void )
+void caHdl::update_deformedsubstructure()
 {
 	//##MK::inject the recovery model here which updates rho
 	//evolution of the statistical dislocation density affecting mydefgpool[i].rho
@@ -7191,7 +7198,7 @@ double caHdl::get_rho ( uint32_t mydefgpoolid )
 }
 
 
-double caHdl::get_zener( void )
+double caHdl::get_zener()
 {
 	if ( myDragData.ZenerConsider == DISPERSOIDDRAG_NO ) 
 		return 0.0;
@@ -7262,7 +7269,7 @@ uint32_t caHdl::characterize_cellstatus( uint32_t r, uint32_t lx, uint32_t ly, u
 }
 
 
-double caHdl::get_dtmax_instantslope_cells( void ) //double when )
+double caHdl::get_dtmax_instantslope_cells() //double when )
 {
 	double dtmax = INFINITE;
 
@@ -7303,7 +7310,7 @@ double caHdl::get_dtmax_instantslope_cells( void ) //double when )
 }
 
 
-double caHdl::get_dtmax_instantslope_temp( void )
+double caHdl::get_dtmax_instantslope_temp()
 {
 	uint32_t i = 0; //scan vector t and get current linear heating rate
 	double dtmax = INITIAL_DELTAT;
@@ -7337,7 +7344,7 @@ double caHdl::get_dtmax_instantslope_temp( void )
 }
 
 
-double caHdl::get_dtmax_instantslope_rho( void )
+double caHdl::get_dtmax_instantslope_rho()
 {
 	unsigned char recoverymodel = myRecoveryModel.RecoveryConsider;
 
@@ -7382,7 +7389,7 @@ double caHdl::get_dtmax_instantslope_rho( void )
 }
 
 
-double caHdl::get_dtmax_instantslope_zener( void )
+double caHdl::get_dtmax_instantslope_zener()
 {
 	if ( myDragData.ZenerConsider != DISPERSOIDDRAG_TIMEDEP ) { //when there is no ZenerDrag simulated or the drag is not time-dependent there is no necessity to adjust the numerical time integration of the CA
 		return INFINITE;
@@ -7414,7 +7421,7 @@ double caHdl::get_dtmax_instantslope_zener( void )
 }
 
 
-double caHdl::get_dtmax_instantslope_nucleation( void )
+double caHdl::get_dtmax_instantslope_nucleation()
 {
 	return INFINITE;
 
@@ -7430,7 +7437,7 @@ double caHdl::get_dtmax_instantslope_nucleation( void )
 }
 
 
-double caHdl::get_dtmax_minimum( void )
+double caHdl::get_dtmax_minimum()
 {
 	double min_dtmax = INFINITE;
 	double dtmax_model = INFINITE;
@@ -7472,7 +7479,7 @@ double caHdl::get_dtmax_minimum( void )
 
 
 
-void caHdl::init_cahdlprng( void )
+void caHdl::init_cahdlprng()
 {
 	long localseed = (long) -1*( this->jobid  + 1); //+1 because jobid can be 0, MK::do not set seeds like myensHdl->myRank because then all SUs from the rank would reinitialize the same PRNG stream!
 	if ( myensHdl->ensembleprngseed == DEFAULT_SEED ) {
@@ -7491,7 +7498,7 @@ void caHdl::init_cahdlprng( void )
 }
 
 
-void caHdl::init_parameter( void )
+void caHdl::init_parameter()
 {
 	//beneficial, because I/O only for each process, not each automaton...
 	ensembleHdlP myens = this->myensHdl; //MK::allows class object caHdl to refer to his executing MPI rank!
@@ -7643,7 +7650,7 @@ void caHdl::init_parameter( void )
 }
 
 
-void caHdl::init_processing( void )
+void caHdl::init_processing()
 {
 	ensembleHdlP myens = this->myensHdl;
 	tprocessingend = 0.0;
@@ -7659,7 +7666,7 @@ void caHdl::init_processing( void )
 }
 
 
-void caHdl::init_zenerdrag( void ) 
+void caHdl::init_zenerdrag() 
 {
 	ensembleHdlP myens = this->myensHdl;
 	for ( uint32_t t = 0; t < myens->dispersoidtime.size(); t++) {
@@ -7669,7 +7676,7 @@ void caHdl::init_zenerdrag( void )
 }
 
 
-void caHdl::solve_INITIALIZATION( void )
+void caHdl::solve_INITIALIZATION()
 {
 	cout << "\t\tSolitary unit initializing..." << endl;
 	init_cahdlprng();
@@ -7716,7 +7723,7 @@ void caHdl::ompshar_initialize_region_mydfgpools( int regionid )
 }
 
 
-void caHdl::synchronize_mydefpool_counts( void )
+void caHdl::synchronize_mydefpool_counts()
 {
 	//CALLED FROM WITHIN PARALLEL REGION
 	//##MK::clear current content of the mydefgpool.cellcount
@@ -7740,7 +7747,7 @@ void caHdl::synchronize_mydefpool_counts( void )
 }
 
 
-void caHdl::synchronize_myrxgpool_counts( void )
+void caHdl::synchronize_myrxgpool_counts()
 {
 	//CALLED FROM WITHIN PARALLEL REGION
 	//##MK::clear current content of the myrxgpool.cellcount
@@ -7764,7 +7771,7 @@ void caHdl::synchronize_myrxgpool_counts( void )
 }
 
 
-void caHdl::determine_initial_nucleitexture_myrxgpoolids( void )
+void caHdl::determine_initial_nucleitexture_myrxgpoolids()
 {
 	//cache deformation structure
 	uint32_t* nucmicrotex = NULL;
@@ -7791,7 +7798,7 @@ void caHdl::determine_initial_nucleitexture_myrxgpoolids( void )
 }
 
 
-void caHdl::solve_INITIALIZATION_THREADED_DOMAIN_DECOMPOSITION( void )
+void caHdl::solve_INITIALIZATION_THREADED_DOMAIN_DECOMPOSITION()
 {
 	//MK::this function exemplifies how to initialize in parallel the CA region construct and an associated deformed microstructure representation
 	//MK::first threads need initalization and allocation and first-touch of NUMA-local memory, then critical functions can be executed after which
@@ -7835,7 +7842,7 @@ void caHdl::solve_INITIALIZATION_THREADED_DOMAIN_DECOMPOSITION( void )
 }
 
 
-void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_CUBOIDBLOCKS( void )
+void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_CUBOIDBLOCKS()
 {
 	#pragma omp parallel
 	{
@@ -7856,7 +7863,7 @@ void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_CUBOIDBLOCKS( void )
 }
 
 
-void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA( void )
+void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA()
 {
 	/*ebsd2polycrystal();
 
@@ -7876,16 +7883,16 @@ void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA( void )
 
 
 
-void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK( void )
+void caHdl::solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK()
 {
-        DAMASKtoCA();
+	damask2polycrystal();
 	for ( uint32_t mr = 0; mr < regions.size(); mr++ ) {
 		regions[mr]->reg_nmydefgpool = mydefgpool.size();
 	}
 
 }
 
-void caHdl::solve_SYNTHESIZE_DEFORMATIONSTRUCTURE( void )
+void caHdl::solve_SYNTHESIZE_DEFORMATIONSTRUCTURE()
 {
 	//init log file
 	if ( renderingForThisCA == true && outopt_localrenderhow == RENDERING_MS3D ) {
@@ -7901,17 +7908,17 @@ void caHdl::solve_SYNTHESIZE_DEFORMATIONSTRUCTURE( void )
 	if ( myCADefMS.defmstype == CUBOID_DEFMS ) {
 		solve_SYNTHESIZED_DEFORMEDSTRUCTURE_CUBOIDBLOCKS();
 	}
-        else if ( myCADefMS.defmstype == CPFEMDAMASK_DEFMS ){
-        // currently setup that it still runs with the default simulation settings
-	//else if ( 	myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSINGLE ||
-	//			myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSTACK ||
-	//			myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSHIFT  ) {
-                solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
-        }
+	else if ( myCADefMS.defmstype == CPFEMDAMASK_DEFMS ){
+		// currently setup that it still runs with the default simulation settings
+		//else if ( 	myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSINGLE ||
+		//			myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSTACK ||
+		//		myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSHIFT  ) {
+		solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
+	}
 	else if ( 	myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSINGLE ||
 				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSTACK ||
 				myCADefMS.defmstype == SEMEBSD_2D3D_COLUMNSHIFT  ) {
-                //solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
+		//solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
 		solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA();
 	}
 	else {
@@ -7924,7 +7931,7 @@ void caHdl::solve_SYNTHESIZE_DEFORMATIONSTRUCTURE( void )
 }
 
 
-void caHdl::solve_DETECT_GRAINBOUNDARIES( void ) 
+void caHdl::solve_DETECT_GRAINBOUNDARIES() 
 {
 	double timer = MPI_Wtime();
 	bool stillgood = true;
@@ -8019,7 +8026,7 @@ void caHdl::solve_DETECT_GRAINBOUNDARIES( void )
 
 //////////////NUCLEATION MODELING at TRACKED DEFORMED GRAIN BOUNDARIES UTILIZING AUTOMATON WITH SEEDIDS
 
-void caHdl::solve_GRAINBOUNDARYNUCLEATION( void )
+void caHdl::solve_GRAINBOUNDARYNUCLEATION()
 {
 	//##MK in M. Kuehbach's Phd thesis the specific implementation of grain boundary nucleated reactions which were exercised within 
 	//C. Haase's HighMn SFB761 Twip steel project aided to model site-saturated grain boundary nucleated RX processes
@@ -8072,7 +8079,7 @@ uint32_t caHdl::getDeformedGrainID( uint32_t xglo, uint32_t yglo, uint32_t zglo 
 }
 
 
-void caHdl::solve_NUCLEATIONMODELING( void ) 
+void caHdl::solve_NUCLEATIONMODELING() 
 {
 	if ( myNucleationModel.gbnucleation != GBNUCLEATION_NO ) {
 		solve_GRAINBOUNDARYNUCLEATION();
@@ -8110,7 +8117,7 @@ void caHdl::solve_NUCLEATIONMODELING( void )
 }
 
 
-void caHdl::solve_REPLACE_CA_STRUCTURE( void ) 
+void caHdl::solve_REPLACE_CA_STRUCTURE() 
 {
 	//now we know all potential nuclei, so no new orientations are added further because only existing ones grow
 	nmyrxgpool = myrxgpool.size();
@@ -8208,7 +8215,7 @@ void caHdl::solve_REPLACE_CA_STRUCTURE( void )
 }
 
 
-void caHdl::cleanMyGrainEvolution( void )
+void caHdl::cleanMyGrainEvolution()
 {
 	//because caHdl does not know about dynamic allocation of memory from within the struct
 	for ( uint32_t s = 0; s < mygrainevolution.size(); s++) {
@@ -8225,7 +8232,7 @@ void caHdl::cleanMyGrainEvolution( void )
 }
 
 
-void caHdl::cleanBookkeeping( void )
+void caHdl::cleanBookkeeping()
 {
 	delete [] DefMicrotexture;
 	DefMicrotexture = NULL;
@@ -8257,7 +8264,7 @@ void caHdl::cleanBookkeeping( void )
 }
 
 
-void caHdl::solve_RXGROWTH( void )
+void caHdl::solve_RXGROWTH()
 {
 	log_initialization();
 
@@ -8551,7 +8558,7 @@ void caHdl::solve_RXGROWTH( void )
 	cout << myensHdl->myRank << " myRank,jobid = " << this->jobid << " local CA simulation was successfully executed, tsimend = " << tsimend << ", stepsimend = " << stepsimend << endl;
 }
 
-void caHdl::solve_FINAL_IO( void )
+void caHdl::solve_FINAL_IO()
 {
 	//add all I/O functionalities after the simulation executed
 	if ( outopt_localrxfront == OUTPUT_RXFRONTSTATS_YES )

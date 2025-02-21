@@ -98,7 +98,7 @@ void caHdl::ompshar_deformedgrains_infect_JuvenileNucleation( uint32_t seedid, u
 }
 
 
-void caHdl::ompshar_placeAllSeeds( void )
+void caHdl::ompshar_placeAllSeeds()
 {
 	//this function expects the mycellgrid positions to be marked with mydefgpool ids not tmpdefg seedids!
 	//CALLED FROM WITHIN PARALLEL REGIONS BECAUSE OF THAT JUVENILE NUCLEATION INTO MYCELLGRID
@@ -161,7 +161,7 @@ void caHdl::ompshar_placeAllSeeds( void )
 }
 
 
-void caHdl::grow_deformedgrains_voxelize_omp( void )
+void caHdl::grow_deformedgrains_voxelize_omp()
 {
 	//grows synthetic deformed grains from the seed.locations with unit speed
 	//function is an adaption of solve_RXGROWTH() but made leaner for computational efficiency
@@ -347,7 +347,7 @@ void caHdl::grow_deformedgrains_voxelize_omp( void )
 }
 
 
-void caHdl::determine_polycrystalline_geometry( void )
+void caHdl::determine_polycrystalline_geometry()
 {
 	//synthesize polycrystalline aggregate of cuboids displace the lower left front origin of this aggregate randomly 
 	//to the lower left front origin of the SU coordinate system to enable random sampling of the domain
@@ -386,7 +386,7 @@ void caHdl::determine_polycrystalline_geometry( void )
 }
 
 
-void caHdl::pick_deformedgrains( void )
+void caHdl::pick_deformedgrains()
 {
 	//MK::everything is possible, GIA-aggregate packing, MODF optimization or simply random picking
 	//##MK::here we start with sampling by picking randomly from the worlddefgpool grains resulting in an uncorrelated MODF
@@ -458,7 +458,7 @@ void caHdl::pick_deformedgrains( void )
 }
 
 
-void caHdl::ompshar_voxelize_defms( void )
+void caHdl::ompshar_voxelize_defms()
 {
 	//if ( this->myensHdl->myRank == MASTER && omp_get_thread_num() == MASTER ) cout << "\t\tVoxelizing SU domain." << endl;
 	//CALLED FROM WITHIN PARALLEL REGION, function call so variables private because on thread local function stack!

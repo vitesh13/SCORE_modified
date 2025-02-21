@@ -875,8 +875,8 @@ public:
 	void init_ensprng( bool SetDissimilarSeedsForAll );				//true - seed is -1*myRank, false - all the same DEFAULT_PRNG_SEED
 	void init_ensprng( int targetseed );							//##MK::only for single CA sets seeds explicitly the same for all CAs
 
-	void init_mpidatatypes( void );
-	bool init_parameter ( void );
+	void init_mpidatatypes();
+	bool init_parameter ();
 
 #ifdef PARSE_CONFIG_FROM_HDF
 	bool init_parameter_from_hdf_runtime();
@@ -908,50 +908,50 @@ public:
 		bool init_parameter_from_yml_rxgpool();
 		bool init_parameter_from_yml_additional();
 	#else
-		bool init_parameter_from_uds_runtime( void );
-		bool init_parameter_from_uds_output( void );
-		bool init_parameter_from_uds_ensemble( void );
-		bool init_parameter_from_uds_nucleation( void );
-		bool init_parameter_from_uds_material( void );
-		bool init_parameter_from_uds_mobilities( void );
-		bool init_parameter_from_uds_recovery( void );
-		bool init_parameter_from_uds_drag( void );
-		bool init_parameter_from_uds_idealtexture( void );
-		bool init_parameter_from_uds_processing( void );
-		bool init_parameter_from_uds_defgpool( void );
-		bool init_parameter_from_uds_rxgpool( void );
-		bool init_parameter_from_uds_additional( void );
+		bool init_parameter_from_uds_runtime();
+		bool init_parameter_from_uds_output();
+		bool init_parameter_from_uds_ensemble();
+		bool init_parameter_from_uds_nucleation();
+		bool init_parameter_from_uds_material();
+		bool init_parameter_from_uds_mobilities();
+		bool init_parameter_from_uds_recovery();
+		bool init_parameter_from_uds_drag();
+		bool init_parameter_from_uds_idealtexture();
+		bool init_parameter_from_uds_processing();
+		bool init_parameter_from_uds_defgpool();
+		bool init_parameter_from_uds_rxgpool();
+		bool init_parameter_from_uds_additional();
 	#endif
 #endif
 	bool init_ebsdmap_read( const char* ebsdfname );
-	bool init_parameter_defgpool_exp( void );
-	bool init_parameter_rxgpool_exp( void );
-	bool init_parameter_defgpool_damask( void );
-	bool init_parameter_rxgpool_damask( void );
+	bool init_parameter_defgpool_exp();
+	bool init_parameter_rxgpool_exp();
+	bool init_parameter_defgpool_damask();
+	bool init_parameter_rxgpool_damask();
 
-	void report_successful_setup( void );
-	void report_datastructures( void );
+	void report_successful_setup();
+	void report_datastructures();
 	void compare_two_ang_files( const char* inputang, const char* snpang );
 	void ang_file_coloring( const char* inputang, unsigned int nskip );
 	void ipf_colormap( double ipf_stretch_r, double ipf_stretch_g, double ipf_stretch_b, unsigned int id );
 
-	void init_distributeWorkOnRanks( void );						//does the work distribution at process level, then caHdl takes over
-	void init_distributeWorkOnThreads( void );
-	void SIMULATE_myCAs ( void );
+	void init_distributeWorkOnRanks();						//does the work distribution at process level, then caHdl takes over
+	void init_distributeWorkOnThreads();
+	void SIMULATE_myCAs ();
 
 	//internally MPI synchronized postprocessing routines, MASTER writing output
-	void postprocess_write_mycas_mpislow( void );
-	void postprocess_write_mycas_mpifast( void );
-	void postprocess_initrediscrtimes( void );						//set the timeslotting in which local data are analyzed
-	void postprocess_init ( void );									//ensembleHdl is friend to caHdl so it can access output data
+	void postprocess_write_mycas_mpislow();
+	void postprocess_write_mycas_mpifast();
+	void postprocess_initrediscrtimes();						//set the timeslotting in which local data are analyzed
+	void postprocess_init ();									//ensembleHdl is friend to caHdl so it can access output data
 
-	void postprocess_rediscr_kinetics( void );
-	void postprocess_rediscr_macrotexture( void );
-	void postprocess_rediscr_finalgrainsizedistribution( void );
-	bool postprocess_rediscr_finalgrainsizedistribution_mpifast( void );
-	void PERFORM_SOLITARYUNIT_MODELING_ANALYSIS( void );
+	void postprocess_rediscr_kinetics();
+	void postprocess_rediscr_macrotexture();
+	void postprocess_rediscr_finalgrainsizedistribution();
+	bool postprocess_rediscr_finalgrainsizedistribution_mpifast();
+	void PERFORM_SOLITARYUNIT_MODELING_ANALYSIS();
 
-	void destroy_myCAs( void );
+	void destroy_myCAs();
 
 	void init_nexus_results_file();
 	void finish_nexus_results_file();
@@ -1084,7 +1084,7 @@ public:
 	uint32_t ca_get_closest_standardlage( double * quat );
 	uint32_t ca_check_disjunctness_core( double* q_ori, bool thesebunge, double phi1, double Phi, double phi2 );
 	uint32_t ca_check_disjunctness_io( double * bunge_ori );
-	void colorize_myoripool_ipfz( void );
+	void colorize_myoripool_ipfz();
 
 	//general physics
 	double kam2rho( double kam );
@@ -1093,11 +1093,11 @@ public:
 	double calculateBoundaryDisoriFast( uint_fast32_t seedup, uint_fast32_t seeddown );
 
 	//EBSD importing
-	void ebsd2polycrystal( void );
-	void ebsd2polycrystal2( void ); //directly sets voxel
+	void ebsd2polycrystal();
+	void ebsd2polycrystal2(); //directly sets voxel
 
-        // DAMASK importing
-        void DAMASKtoCA( void );
+	// DAMASK importing
+	void damask2polycrystal();
 
 	//GB physics
 	double calc_mobilityweight( uint32_t rgp, uint32_t dgp );
@@ -1105,70 +1105,70 @@ public:
 	double calc_mobilityweight_rollettholm( uint32_t rgp, uint32_t dgp );
 
 	//handling of recovery submodels
-	void nes_networkgrowthmodel_vacancycorediff( void );
-	void nes_networkgrowthmodel_solutedrag( void );
-	void nes_michalakpaxton( void );
-	void update_mydgoptimize_rho( void );
-	void update_mydgoptimize_cnt( void );
-	void update_myrhomax( void );
+	void nes_networkgrowthmodel_vacancycorediff();
+	void nes_networkgrowthmodel_solutedrag();
+	void nes_michalakpaxton();
+	void update_mydgoptimize_rho();
+	void update_mydgoptimize_cnt();
+	void update_myrhomax();
 	unsigned char rho2grayscale( double r );
-	void log_initrho_scalebar( void );
+	void log_initrho_scalebar();
 
 	//handling of nucleation submpdels
 	uint32_t solve_nucmodeling_countgbcells( vector<organizeGBNuc>* luu );
 	struct organizeGBNuc find_gbface( uint32_t idx, vector<organizeGBNuc>* luu );
-	void solve_nucmodeling_gbnuc_pickrandomly( void );
-	void solve_nucmodeling_csr_enforced( void );
-	void solve_nucmodeling_csr_pickrandomly( void );
+	void solve_nucmodeling_gbnuc_pickrandomly();
+	void solve_nucmodeling_csr_enforced();
+	void solve_nucmodeling_csr_pickrandomly();
 	uint32_t getDeformedGrainID( uint32_t xglo, uint32_t yglo, uint32_t zglo );
-	void solve_nucmodeling_csrdiehl( void );
-        void solve_nucmodelling_dislo_ori_based ( void );
-	void init_myMaternUniverse( void );
+	void solve_nucmodeling_csrdiehl();
+        void solve_nucmodelling_dislo_ori_based ();
+	void init_myMaternUniverse();
 	void pickrandomly_myMaternUniverse(void );
-	void solve_nucmodeling_ellipsoidalcluster_pickrandomly( void );
+	void solve_nucmodeling_ellipsoidalcluster_pickrandomly();
 
 	//domain grid partitioning for threading of Solitary Unit Execution
 	void ompshar_init_regions( int threadid );
-	void ompshar_ca2regions( void );
+	void ompshar_ca2regions();
 	void ompshar_init_regionlimits( int threadid );
 	uint32_t exists_nborhalo( int regid, short dx, short dy, short dz, int npx, int npy, int npz, uint32_t cand );
 	void ompshar_link_haloregions( int threadid );
 
 	//CA core functionalities
-	void solve_INITIALIZATION ( void );
-	void solve_INITIALIZATION_THREADED_DOMAIN_DECOMPOSITION( void );
-	void solve_SYNTHESIZED_DEFORMEDSTRUCTURE_CUBOIDBLOCKS ( void );
-	void solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA( void );
-        void solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK( void );
-	void solve_SYNTHESIZE_DEFORMATIONSTRUCTURE( void );
-	void solve_DETECT_GRAINBOUNDARIES( void );
-	void solve_GRAINBOUNDARYNUCLEATION( void );
-	void solve_NUCLEATIONMODELING( void );
-	void solve_REPLACE_CA_STRUCTURE( void );
-	void solve_RXGROWTH( void );
-	void solve_FINAL_IO( void );
+	void solve_INITIALIZATION ();
+	void solve_INITIALIZATION_THREADED_DOMAIN_DECOMPOSITION();
+	void solve_SYNTHESIZED_DEFORMEDSTRUCTURE_CUBOIDBLOCKS ();
+	void solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROMEBSDDATA();
+        void solve_SYNTHESIZED_DEFORMEDSTRUCTURE_FROM_DAMASK();
+	void solve_SYNTHESIZE_DEFORMATIONSTRUCTURE();
+	void solve_DETECT_GRAINBOUNDARIES();
+	void solve_GRAINBOUNDARYNUCLEATION();
+	void solve_NUCLEATIONMODELING();
+	void solve_REPLACE_CA_STRUCTURE();
+	void solve_RXGROWTH();
+	void solve_FINAL_IO();
 
 	//CA helper functionalities and init
 	//MK::data in ensembleHdl serve as a library for all possible grain orientations and mobility weights
-	void init_cahdlprng( void );
-	void init_parameter ( void );
-	void init_processing ( void );
-	void init_zenerdrag ( void );
+	void init_cahdlprng();
+	void init_parameter ();
+	void init_processing ();
+	void init_zenerdrag ();
 	void ompshar_initialize_region_myrxgpools( int regionid );
 	void ompshar_initialize_region_mydfgpools( int regionid );
-	void synchronize_mydefpool_counts( void );
-	void synchronize_myrxgpool_counts( void );
-	void determine_initial_nucleitexture_myrxgpoolids( void );
+	void synchronize_mydefpool_counts();
+	void synchronize_myrxgpool_counts();
+	void determine_initial_nucleitexture_myrxgpoolids();
 
 //MK::there are two CAs, one that is utilized to synthetize the deformation structure
 	//3D OMP parallelized synthesis automaton for Poisson and other structures based on seeds for deformed grains
 	void ompshar_deformedgrains_infect_JuvenileNucleation( uint32_t seedid, uint32_t xglo, uint32_t yglo, uint32_t zglo, uint32_t infectWhereRegion, bool inside, double frac0 );
-	void ompshar_placeAllSeeds( void );
-	void grow_deformedgrains_voxelize_omp( void );
+	void ompshar_placeAllSeeds();
+	void grow_deformedgrains_voxelize_omp();
 	//regular cuboids
-	void determine_polycrystalline_geometry( void );
-	void pick_deformedgrains( void ); //selects from ensembleHdl GIA defgpool deformed grains
-	void ompshar_voxelize_defms( void );
+	void determine_polycrystalline_geometry();
+	void pick_deformedgrains(); //selects from ensembleHdl GIA defgpool deformed grains
+	void ompshar_voxelize_defms();
 
 	//3D growth machine
 	void ompshar_sim_myCA_sitesaturatedNucleation( vector<rxgcommit>* sync );
@@ -1177,35 +1177,35 @@ public:
 
 	//handle processing during the simulation
 	void update_system_fixedtime( double time );
-	void update_temperature( void );				//to the time set in this->t
-	void update_atomisticproperties( void );		//G and b and temperature dependence
-	void update_intrinsicmobilities( void );		//Grain boundary properties
-	void update_microchemistry( void );
+	void update_temperature();				//to the time set in this->t
+	void update_atomisticproperties();		//G and b and temperature dependence
+	void update_intrinsicmobilities();		//Grain boundary properties
+	void update_microchemistry();
 	void update_deformedsubstructure(void );
 	//helper functions for managing the dynamic adaptive timestepping at the CA scale at any time
 	double get_rho( uint32_t defgid );
-	double get_zener( void );
+	double get_zener();
 	double get_currentintrinsicmobility( double Pvalue );
 	uint32_t characterize_cellstatus( uint32_t r, uint32_t lx, uint32_t ly, uint32_t lz );
 
-	double get_dtmax_instantslope_cells( void );
-	double get_dtmax_instantslope_temp ( void );
+	double get_dtmax_instantslope_cells();
+	double get_dtmax_instantslope_temp ();
 	//exchange when recovery and Zener drag is simulated
-	double get_dtmax_instantslope_rho ( void );
-	double get_dtmax_instantslope_zener ( void );
-	double get_dtmax_instantslope_nucleation( void );
-	double get_dtmax_minimum ( void );
+	double get_dtmax_instantslope_rho ();
+	double get_dtmax_instantslope_zener ();
+	double get_dtmax_instantslope_nucleation();
+	double get_dtmax_minimum ();
 	
 	
 	//on the fly microstructural state characterization
-	void log_initialization( void );
+	void log_initialization();
 	double log_rxareafraction( double zpos );
-	void log_rxfrontstats( void );						//traces status information on the current state of the automaton
-	void log_grainevo( void );							//keeps track of what the individual grains did
-	void log_rxareaprofile( void );
+	void log_rxfrontstats();						//traces status information on the current state of the automaton
+	void log_grainevo();							//keeps track of what the individual grains did
+	void log_rxareaprofile();
 	void log_rxareaprofile( uint32_t threshold );
 	void log_ca_physics( loginfo_ca_physicsP  container );
-	void log_OUTPUT( void );
+	void log_OUTPUT();
 	void log_OUTPUT_Diehl();
 	void log_OUTPUT_NeXus();
 
@@ -1217,7 +1217,7 @@ public:
 	void nexus_write_snapshot();
 
 	void binarize_partiallyrxed_microstructure( vector<bool>* out );
-	void log_PERCOLATION( void );
+	void log_PERCOLATION();
         void log_grain_IDs( double t);
         void log_grain_rho_cell_based( double t);
         void log_grain_ori_cell_based( double t);
@@ -1231,21 +1231,21 @@ public:
 
 	//characterization I/O allow a particular node to write status information into a plain file
 	//##MK::SOME OF THESE FUNCTIONS HAVE NOT BEEN TESTED WITH THE HYBRID CODE!
-	void write_rxfrontstats( void );					//outputs simulation metadata from the myca-th of my automata in a file
-	void write_ThreadProfilingSummarySynthMachine( void );
-	void write_ThreadProfilingSummaryGrowthMachine( void );
-	void write_grainevolution_ascii( void );			//outputs grain-resolved metadata from the myca-th of my automata in a file
-	void write_grainevolution_binary( void );
-	void write_PercolationProfilingSummary( void );
-	void write_rxareaprofile_ascii( void );
+	void write_rxfrontstats();					//outputs simulation metadata from the myca-th of my automata in a file
+	void write_ThreadProfilingSummarySynthMachine();
+	void write_ThreadProfilingSummaryGrowthMachine();
+	void write_grainevolution_ascii();			//outputs grain-resolved metadata from the myca-th of my automata in a file
+	void write_grainevolution_binary();
+	void write_PercolationProfilingSummary();
+	void write_rxareaprofile_ascii();
 
 	//OMP Thread
-	void ompcrit_write_voxeldata_coloring_regions( void );
+	void ompcrit_write_voxeldata_coloring_regions();
 	void ompcrit_write_voxeldata_coloring_grainids( string postfix );
 	void ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char mode );
 	void ompcrit_write_zsection_looping_ipfz( double rxfraction, char thatmode );
 	void ompcrit_clarify_status_infectedcells( double rxthreshold );
-	void test_lodepng( void );
+	void test_lodepng();
 
 	//artifical SEM/EBSD output
 	void ompcrit_write_semebsd_core( double zpos, char mode );
@@ -1260,8 +1260,8 @@ public:
 	//deformed grain boundary tracking functionalities
 	void write_junction_skeleton( unsigned char mode );
 	void write_junction_log_gb( uint32_t thread, bool consolidated );
-	void write_junction_log_tj( void );
-	void write_junction_log_hj( void );
+	void write_junction_log_tj();
+	void write_junction_log_hj();
 
 	bool mpiio_write_voxelgrid_ipfz( string fname );
 	//HDF5 I/O
@@ -1302,12 +1302,12 @@ public:
 	void h5_return_dislocationdensity( float* buffer, uint32_t buffersize );
 	void hdf5_dummy( string fnsuffix );
 	void write_damask_geom_h5( string suffix ); //outputs microstructure as an ASCII file which can be loaded into DAMASK
-	void write_clustersizedistr_h5_create( void );
+	void write_clustersizedistr_h5_create();
 	void write_clustersizedistr_h5( unsigned int* dist, unsigned int ndist ); //outputs data column with volume of current cluster of recrystallized matter to an HDF5 file
 
 	//cleaning functions
-	void cleanMyGrainEvolution( void );
-	void cleanBookkeeping( void );
+	void cleanMyGrainEvolution();
+	void cleanBookkeeping();
 
 	vector<double> defragRXFront_atthisX;
 	vector<double> output_atthisX; //copied from ensembleHdl when should the automaton log local information?
@@ -1497,12 +1497,12 @@ public:
 	void registerMissingFaces( uint32_t p, vector<organizeBnd>* luu );
 	void updateFaceCellBuffers( uint32_t p, vector<organizeBnd>* luu );
 	void addRemoteFaceCells( uint32_t p, uint32_t, vector<organizeBnd>* luu );
-	void ompshar_init_junctions( void );
-	void ompshar_detect_junctions( void );
-	void ompshar_report_junctions( void );
-	void ompshar_consolidate_junctions( void );
-	void ompshar_calc_junction_properties( void );
-	void ompshar_cleanup_foreign_junctions( void );
+	void ompshar_init_junctions();
+	void ompshar_detect_junctions();
+	void ompshar_report_junctions();
+	void ompshar_consolidate_junctions();
+	void ompshar_calc_junction_properties();
+	void ompshar_cleanup_foreign_junctions();
 };
 typedef class juncHdl * juncHdlP;
 
@@ -1619,7 +1619,7 @@ public:
 	juncHdl myjunctions;
 
 	//Initialization and halo management
-	void ompshar_init_mycellgrid( void );
+	void ompshar_init_mycellgrid();
 	uint32_t get_nbortid( int regid, short dx, short dy, short dz, int npx, int npy, int npz );
 	void ompshar_init_neighbortopology( uint32_t party, uint32_t partz );
 	void ompshar_initialize_halo( uint32_t whichhalo, uint32_t extx, uint32_t exty, uint32_t extz, uint32_t originx, uint32_t originy, uint32_t originz );
@@ -1629,39 +1629,39 @@ public:
 
 
 	//3D CA to VOXELIZE STRUCTURE
-	void ompshar_init_mySeedFrontInside( void );
-	void ompshar_init_mySeedFrontBorder( void );
+	void ompshar_init_mySeedFrontInside();
+	void ompshar_init_mySeedFrontBorder();
 	uint32_t omp_getNextFreeSlotInSeedFrontInside( bool how );
 	uint32_t omp_getNextFreeSlotInSeedFrontBorder( bool how );
-	void ompshar_voxelize_growthStepInside( void );
-	void ompshar_voxelize_growthStepBorder( void );
-	void ompshar_voxelize_updateFullInside( void );
-	void ompshar_voxelize_updateFullBorder( void );
-	void ompshar_synchronize_haloregions_def( void );
+	void ompshar_voxelize_growthStepInside();
+	void ompshar_voxelize_growthStepBorder();
+	void ompshar_voxelize_updateFullInside();
+	void ompshar_voxelize_updateFullBorder();
+	void ompshar_synchronize_haloregions_def();
 	void omp_infect_OutOfSeedFrontInside( uint32_t seedid, uint32_t seedfrontid, bool intoborder, short dx, short dy, short dz, unsigned char direction, double carryOver ); //###currently no overshoot! 
 	void omp_infect_OutOfSeedFrontBorder( uint32_t seedid, uint32_t seedfrontid, short dx, short dy, short dz, unsigned char direction, double carryOver ); //##currently no carryOver
 	void append_to_fullseed_inside_list( uint32_t cid );
 	void append_to_recycseed_inside_list( uint32_t cid );
 	void append_to_fullseed_border_list( uint32_t cid );
 	void append_to_recycseed_border_list( uint32_t cid );
-	void omp_resetHaloRegions( void );
-	void omp_resetInternalCounters( void );
-	void omp_voxelize_memoryCleanup( void );
+	void omp_resetHaloRegions();
+	void omp_resetInternalCounters();
+	void omp_voxelize_memoryCleanup();
 
 
 	//3D CA to EVOLVE RX GRAINS
-	void ompshar_init_myRXFrontInside ( void );
-	void ompshar_init_myRXFrontBorder ( void );
+	void ompshar_init_myRXFrontInside ();
+	void ompshar_init_myRXFrontBorder ();
 	uint32_t omp_getNextFreeSlotBorderAnotherRegion ( uint32_t nbortid, bool how );
 	uint32_t omp_getNextFreeSlotInRXFrontInside( bool how );
 	uint32_t omp_getNextFreeSlotInRXFrontBorder( bool how );
-	void ompshar_defragmentation( void );
-	void ompshar_sim_myCA_calcGrowthStepInside( void );
-	void ompshar_sim_myCA_calcGrowthStepBorder( void );
-	void ompshar_sim_myCA_updateFullRXInside( void );
-	void ompshar_clear_halo_bookkeeping( void );
-	void ompshar_sim_myCA_updateFullRXBorder( void );
-	void ompshar_synchronize_haloregions_rx( void );
+	void ompshar_defragmentation();
+	void ompshar_sim_myCA_calcGrowthStepInside();
+	void ompshar_sim_myCA_calcGrowthStepBorder();
+	void ompshar_sim_myCA_updateFullRXInside();
+	void ompshar_clear_halo_bookkeeping();
+	void ompshar_sim_myCA_updateFullRXBorder();
+	void ompshar_synchronize_haloregions_rx();
 	//void ompshar_sim_myCA_clarify_status( double threshold );
 	//void ompshar_sectioning_analysis_rx();
 	void omp_infect_OutOfRXFrontInside( uint32_t rxgpoolid, uint32_t rxfrontid, bool intoborder, short dx, short dy, short dz, unsigned char direction, double carryOver ); //###currently no overshoot! 
@@ -1670,11 +1670,11 @@ public:
 	void append_to_recycling_inside_list( uint32_t cid );
 	void append_to_fullrx_border_list( uint32_t cid );
 	void append_to_recycling_border_list( uint32_t cid );
-	void omp_cleanupMemoryUsedForGrowthMachine( void );
-	void omp_cleanupMemoryUsedForManagement( void );
-	void omp_cleanupMemoryUsedForHaloRegion( void );
-	void omp_log_synthfrontstats( void );
-	void omp_log_rxfrontstats( void ); //traces status information on the current state of the automaton
+	void omp_cleanupMemoryUsedForGrowthMachine();
+	void omp_cleanupMemoryUsedForManagement();
+	void omp_cleanupMemoryUsedForHaloRegion();
+	void omp_log_synthfrontstats();
+	void omp_log_rxfrontstats(); //traces status information on the current state of the automaton
 
 	uint32_t* reg_myrxgp_counts;
 	uint32_t* reg_mydfgp_counts;

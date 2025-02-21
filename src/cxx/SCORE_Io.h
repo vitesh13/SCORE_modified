@@ -131,9 +131,9 @@ typedef univData * univDataP;
 class dataLine
 {
 public:
-	dataLine( void );
+	dataLine();
 	dataLine( int size );
-	~dataLine( void );
+	~dataLine();
 
 	univDataP dat;
 	long dataCount;
@@ -146,8 +146,8 @@ public:
 class dataBlock
 {
 public:
-	dataBlock( void );
-	~dataBlock( void );
+	dataBlock();
+	~dataBlock();
 	long columnCount;
 	long lineCount;
 	
@@ -163,7 +163,7 @@ class io
 
 public:
 	io( void  );
-	~io( void );
+	~io();
 
 	short open( short rw, const char * filename, FILE ** file );
 	short open( const char * filename, ofstream * file );

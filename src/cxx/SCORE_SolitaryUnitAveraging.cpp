@@ -1,5 +1,5 @@
 /* 
-*	Copyright Markus Kühbach, 2014-2017
+*	Copyright Markus Kï¿½hbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
@@ -14,16 +14,16 @@
 *	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kï¿½hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
 *	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
+*	M. Kï¿½hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
 
 *	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
 *	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
+*	by RWTH Aachen University and the FZ Jï¿½lich within the scope of the JARAHPC project JARA0076.
 
 
 *	This file is part of SCORE.
@@ -48,7 +48,7 @@
 #include "SCORE_Kernel.h"
 
 
-void ensembleHdl::postprocess_initrediscrtimes( void )
+void ensembleHdl::postprocess_initrediscrtimes()
 {
 	//acceptable time frame investigated
 	//double dtworld = ensRediscretization.tensmax - ensRediscretization.tensmin;
@@ -91,7 +91,7 @@ void ensembleHdl::postprocess_initrediscrtimes( void )
 #define SENDRECRXTEX	69
 
 
-void ensembleHdl::postprocess_write_mycas_mpislow( void )
+void ensembleHdl::postprocess_write_mycas_mpislow()
 {
 	//collect from the workers the profiling information
 	MPI_IO_CAProfilingInfoData* bucket = NULL;
@@ -295,7 +295,7 @@ void ensembleHdl::postprocess_write_mycas_mpislow( void )
 }
 
 
-void ensembleHdl::postprocess_write_mycas_mpifast( void )
+void ensembleHdl::postprocess_write_mycas_mpifast()
 {
 	//collect from the workers the profiling information, worker can have different number of cellular automata domains!
 	double prof_tio = 0.0;
@@ -506,7 +506,7 @@ void ensembleHdl::postprocess_write_mycas_mpifast( void )
 }
 
 
-void ensembleHdl::postprocess_init( void )
+void ensembleHdl::postprocess_init()
 {
 	//ensembleHdl first determines maximum local tsimend
 	double ensmin_tsimend = INFINITE;
@@ -543,7 +543,7 @@ void ensembleHdl::postprocess_init( void )
 
 
 //##MK::the postprocessing functions
-void ensembleHdl::postprocess_rediscr_kinetics( void )
+void ensembleHdl::postprocess_rediscr_kinetics()
 {
 	//thread based interpolation possible //##pragma but pending
 	//##MK::strategy cache-friendly when, as here, each grain is analyzed along all times
@@ -670,7 +670,7 @@ void ensembleHdl::postprocess_rediscr_kinetics( void )
 }
 
 
-void ensembleHdl::postprocess_rediscr_macrotexture( void )
+void ensembleHdl::postprocess_rediscr_macrotexture()
 {
 	//thread based interpolation possible //##pragma but pending
 	//##MK::strategy cache-friendly if each grain is analyzed along all times
@@ -806,7 +806,7 @@ void ensembleHdl::postprocess_rediscr_macrotexture( void )
 
 #define SENDINGGSD		56
 
-void ensembleHdl::postprocess_rediscr_finalgrainsizedistribution( void )
+void ensembleHdl::postprocess_rediscr_finalgrainsizedistribution()
 {
 	if (myRank == MASTER ) { cout << "Sequential FinalGrainSizeDistribution collection." << endl; }
 	//uint32_t nmax = ensRediscretization.nslots;
@@ -1063,7 +1063,7 @@ cout << "Master outputs his own results nid=" << nid << endl;
 }
 
 
-bool ensembleHdl::postprocess_rediscr_finalgrainsizedistribution_mpifast( void )
+bool ensembleHdl::postprocess_rediscr_finalgrainsizedistribution_mpifast()
 {
 	if (myRank == MASTER ) { cout << "Fast FinalGrainSizeDistribution collection." << endl; }
 	//IT IS NECESSARY A LARGE ENOUGH BUFFER IN THE MASTER TO COLLECT ALL GRAINS AT ONCE!

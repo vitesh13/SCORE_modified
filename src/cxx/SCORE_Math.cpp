@@ -50,13 +50,13 @@
 //##MK: Quaternion algebra: q = -q define an equivalent rotation.
 
 
-mathMethods::mathMethods( void )
+mathMethods::mathMethods()
 {
 	r.init( MYMATH_STANDARD_SEED );
 }
 
 
-mathMethods::~mathMethods( void )
+mathMethods::~mathMethods()
 {
 }
 

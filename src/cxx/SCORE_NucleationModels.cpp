@@ -97,7 +97,7 @@ struct organizeGBNuc caHdl::find_gbface( uint32_t idx, vector<organizeGBNuc>* lu
 }
 
 
-void caHdl::solve_nucmodeling_gbnuc_pickrandomly( void )
+void caHdl::solve_nucmodeling_gbnuc_pickrandomly()
 {
 	//this grain boundary nucleation model spreads a total of NucleiDesired randomly on the available boundary sites
 	uint32_t NucleiDesired = this->myNucleationModel.defaultnucdensity;
@@ -204,7 +204,7 @@ void caHdl::solve_nucmodeling_gbnuc_pickrandomly( void )
 }
 
 
-void caHdl::solve_nucmodeling_csr_enforced( void )
+void caHdl::solve_nucmodeling_csr_enforced()
 {
 	//MK::place exactly myNucleationModel.defaultnucdensity in each solitary unit domain (THIS IS THE OLD SCORE NUCLEATION MODEL utilzed in the K\"uhbach et. al. 2015 paper)
 	uint32_t nuc = 0;
@@ -289,7 +289,7 @@ void caHdl::solve_nucmodeling_csr_enforced( void )
 }
 
 
-void caHdl::solve_nucmodeling_csr_pickrandomly( void )
+void caHdl::solve_nucmodeling_csr_pickrandomly()
 {
 	//MK::in a large CSR point pattern with a unit density what is the size of the observation window in generalized coordinates?
 	//with myNucleationModel.defaultnucdensity as the limiting unit density for very many draws of owins
@@ -402,7 +402,7 @@ void caHdl::solve_nucmodeling_csr_pickrandomly( void )
 }
 
 
-void caHdl::solve_nucmodeling_csrdiehl( void )
+void caHdl::solve_nucmodeling_csrdiehl()
 {
 	//if ( myensHdl->experimentInput == false ) { cout << "ERROR::This nucleation model is design only for utilization with a SEM/EBSD mapping!" << endl; return; }
 	//MK::random subwindow of a CSR point process (without enforcing fixed number of nuclei), orientation inheriting from parent grains + scatter
@@ -532,7 +532,7 @@ void caHdl::solve_nucmodeling_csrdiehl( void )
 }
 
 
-void caHdl::init_myMaternUniverse( void )
+void caHdl::init_myMaternUniverse()
 {
 	//a very large Matern cluster process on a cubic RVE of size rvesize in micron is squeezed on a unit cube in \mathbb{R}^3
 	//point process is on cubic RVE with myNucleationModel.cluster_rvesize^3 micron each cluster radius is cluster_extenda * cellsize
@@ -610,7 +610,7 @@ cout << this->jobid << " -- GenerateMaternClusterUniverse NClust/MeanDensityPerC
 }
 
 
-void caHdl::pickrandomly_myMaternUniverse( void )
+void caHdl::pickrandomly_myMaternUniverse()
 {
 	//the solitary unit domain has a specific size (edge length in microns) that is a fraction of myNucleationModel.clust_rvesize
 	double owinx = myCAGeometry.boxedge_rd / myNucleationModel.cluster_rvesize;
@@ -745,74 +745,75 @@ cout << "The window = " << owinoo[XMI] << ";" << owinoo[XMX] << ";" << owinoo[YM
 	cout << "Clustering process performed with so many entries = " << myrxgpool.size() << endl;
 }
 
-void caHdl::solve_nucmodelling_dislo_ori_based( void )
+void caHdl::solve_nucmodelling_dislo_ori_based()
 {
-// This nucleation model is based on the nucleation criterion described in paper by Shah et al. (2022)
-// The actual nucleation sites are already detected by a post processing script. 
-// Here this info is read from the HDF5 file and then incorporated in the CA framework for their growth.
-        hid_t file;
-        hid_t group_ID;
-        std::vector<int> nuc_flag;
-    
-        uint32_t nbx = myCAGeometry.nboxedge_rd;
-        uint32_t nby = myCAGeometry.nboxedge_td;
-        uint32_t nbz = myCAGeometry.nboxedge_nd;
-        uint32_t ix,iy,iz,luckysite;
-        bool valid = false;
+	// This nucleation model is based on the nucleation criterion described in paper by Shah et al. (2022)
+	// The actual nucleation sites are already detected via a proprietary nucleation model, nuclei are marked in DREAM.3D
+	// Here this info is read from the HDF5 file and then incorporated in the CA framework for their growth.
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( damask_file_name );
+	string grpnm = "/DataContainers/SyntheticVolumeDataContainer/";
+	string dsnm = "";
 
-        // read the nucleation flag dataset from HDF5
-        file = HDF5_openFile( damask_file_name );
-        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
-        nuc_flag = HDF5_read_dataset_int_rank_4( group_ID, "nuc_flag");
-       
-        double qderived[4] = {1.0, 0.0, 0.0, 0.0};
-        for (uint32_t i = 0; i < nbx*nby*nbz; i++){
-            if (nuc_flag[i] == 1){
-                luckysite = i;
-                valid = true;
-                // check if the nucleus was already placed in the CA box
-                for (uint32_t s = 0; s < myrxgpool.size(); s++){
-                    if ( luckysite == myrxgpool[s].nucsite ){valid = false; break;}
-                }
-                // still true, so plant a nucleus
-                if ( valid == true ){
-	            //inspect parent grain at the site, as nucleation functions are executed before solve_REPLACE_CA_STRUCTURE() we have to
-	            //access deformed grains via the tmpdefgseeds ID references
-                    // how to get co-ordinates from indices
-                    // https://stackoverflow.com/questions/10155893/1d-vector-3d-indices
-                    ix = i%nbx; 
-                    iy = (i/nbx)%nby;
-                    iz = ((i/nbx)/nby)%nbz;
-	            uint32_t parentid = tmpdefgseeds[getDeformedGrainID( ix, iy, iz )].mydefgpoolid;
-	            uint32_t oid = mydefgpool[parentid].caori;
-	            double qparent_ref[4] = { myoripool[oid].q0, myoripool[oid].q1, myoripool[oid].q2, myoripool[oid].q3 };
-                    qderived[0] = qparent_ref[0];
-                    qderived[1] = qparent_ref[1];
-                    qderived[2] = qparent_ref[2];
-                    qderived[3] = qparent_ref[3];
-                    
-                }
-            
-            struct carxg rxg;
-            rxg.caori = ca_check_disjunctness_core( qderived, false, 0.0, 0.0, 0.0 ); //internal quat2euler
-            rxg.cellcount = 0;
-            rxg.nucsite   = luckysite;
-            rxg.startingsite = luckysite;
-            rxg.tincub    = 0.0; //## assume site-saturation
+	dsnm = "CellData/nuc_flag";
+	vector<int> nuc_flag;
+	if ( h5r.nexus_read( grpnm + dsnm, nuc_flag ) != MYHDF5_SUCCESS ) {
+		cerr << grpnm << dsnm << "\n";
+	}
 
-            myrxgpool.push_back( rxg );
+	uint32_t nbx = myCAGeometry.nboxedge_rd;
+	uint32_t nby = myCAGeometry.nboxedge_td;
+	uint32_t nbz = myCAGeometry.nboxedge_nd;
+	uint32_t ix, iy, iz, luckysite;
+	bool valid = false;
+	double qderived[4] = {MYONE, MYZERO, MYZERO, MYZERO};
+	for ( uint32_t i = 0; i < nbx*nby*nbz; i++ ) {
+		if ( nuc_flag[i] != 1 ) { //only a small fraction of cells are typically set as nuclei
+			continue;
+		}
+		luckysite = i;
+		valid = true;
+		// check if the nucleus was already placed in the CA box
+		for ( uint32_t rg = 0; rg < myrxgpool.size(); rg++ ){
+			if ( luckysite == myrxgpool[rg].nucsite ){
+				valid = false;
+				break;
+			}
+		}
+		// still true, so plant a nucleus
+		if ( valid == true ) {
+			//inspect parent grain at the site, as nucleation functions are executed before solve_REPLACE_CA_STRUCTURE() we have to
+			//access deformed grains via the tmpdefgseeds ID references
+			// how to get co-ordinates from indices
+			// https://stackoverflow.com/questions/10155893/1d-vector-3d-indices
+			ix = i % nbx; 
+			iy = (i / nbx) % nby;
+			iz = ((i / nbx ) / nby) % nbz;
+			uint32_t parentid = tmpdefgseeds[getDeformedGrainID( ix, iy, iz )].mydefgpoolid;
+			uint32_t oid = mydefgpool[parentid].caori;
+			double qparent_ref[4] = { myoripool[oid].q0, myoripool[oid].q1, myoripool[oid].q2, myoripool[oid].q3 };
+			qderived[0] = qparent_ref[0];
+			qderived[1] = qparent_ref[1];
+			qderived[2] = qparent_ref[2];
+			qderived[3] = qparent_ref[3];
 
-            }
+			struct carxg rxg;
+			rxg.caori = ca_check_disjunctness_core( qderived, false, 0.0, 0.0, 0.0 ); //internal quat2euler
+			rxg.cellcount = 0;
+			rxg.nucsite = luckysite;
+			rxg.startingsite = luckysite;
+			rxg.tincub = 0.; //## assume site-saturation
 
-        }
-
-
+			myrxgpool.push_back( rxg );
+		}
+	}
+	nuc_flag = vector<int>();
+	cout << "solve_nucmodelling_dislo_ori_based done" << "\n";
 }
 
-void caHdl::solve_nucmodeling_ellipsoidalcluster_pickrandomly( void )
+
+void caHdl::solve_nucmodeling_ellipsoidalcluster_pickrandomly()
 {
-	
-cout << "Pick cluster randomly" << endl;
+	cout << "Pick cluster randomly" << endl;
 
 	//generate a large Matern cluster process on the unit cube [0,1]^3
 	init_myMaternUniverse();
