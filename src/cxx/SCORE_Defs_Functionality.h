@@ -62,8 +62,7 @@
 #define VERSION_MAJOR				1
 #define VERSION_MINOR				3
 #define VERSION_REVISION			0
-#define VERSION_BUILD				0
-#define IS_BETAVERSION_YES
+//#define IS_BETAVERSION
 
 
 //STL functionalities

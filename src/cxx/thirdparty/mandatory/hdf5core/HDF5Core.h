@@ -18,7 +18,7 @@
 #ifndef __HDFFIVECORE_H__
 #define __HDFFIVECORE_H__
 
-#include "../STLInterface.h"
+#include "../STL_Interface.h"
 
 //use functions from the HDF5 library
 #include "hdf5.h"

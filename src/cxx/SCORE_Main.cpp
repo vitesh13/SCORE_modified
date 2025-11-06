@@ -72,7 +72,7 @@ void versioninfo( int myrank, int nranks ) {
 	cout << "SCORE GITSHA " << string(xstr(GITSHA)) << "\n";
 	cout << "SCORE starting rank " << myrank << " within " << nranks << "\n";
 	cout << "SCORE v" << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_REVISION;
-#ifdef IS_BETAVERSION_YES
+#ifdef IS_BETAVERSION
 		cout << "beta" << endl;
 #else
 		cout << endl;

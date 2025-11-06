@@ -52,8 +52,8 @@
 #include "SCORE_Math.h" //thus implicitly including SCORE_Random as well
 
 #include "thirdparty/mandatory/hdf5core/HDF5Core.h"
-#include "thirdparty/mandatory/chrono/CHRONOTimeAndDateHandling.h"
-#include "thirdparty/mandatory/openssl/OPENSSLInterface.h"
+#include "thirdparty/mandatory/chrono/TimeAndDateHandling.h"
+#include "thirdparty/mandatory/openssl/OpenSslHandling.h"
 
 
 //MK::Cluster IDs of 0 mark non-recrystallized microstructure

@@ -42,7 +42,7 @@
 *	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "CHRONOTimeAndDateHandling.h"
+#include "TimeAndDateHandling.h"
 
 template <class Precision>
 string getISOCurrentTimestamp()

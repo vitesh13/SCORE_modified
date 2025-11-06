@@ -68,8 +68,8 @@ include_directories(${MPI_INCLUDE_PATH})
 
 add_executable(${MYPROJECTNAME}
 	${MYSRCPATH}/thirdparty/mandatory/lodepng/lodepng.cpp
-	${MYSRCPATH}/thirdparty/mandatory/chrono/CHRONOTimeAndDateHandling.cpp
-	${MYSRCPATH}/thirdparty/mandatory/openssl/OPENSSLInterface.cpp
+	${MYSRCPATH}/thirdparty/mandatory/chrono/TimeAndDateHandling.cpp
+	${MYSRCPATH}/thirdparty/mandatory/openssl/OpenSslHandling.cpp
 	${MYSRCPATH}/thirdparty/mandatory/hdf5core/HDF5Core.cpp
 	# ${MYSRCPATH}/thirdparty/mandatory/yamlcore/RAPIDYAMLCore.h
 	${MYSRCPATH}/SCORE_Random.cpp

@@ -15,7 +15,7 @@
 * along with paraprobe-toolbox. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "OPENSSLInterface.h"
+#include "OpenSslHandling.h"
 
 string SHA256(const char* const path)
 {
