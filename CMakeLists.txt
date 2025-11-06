@@ -18,7 +18,7 @@ message([STATUS] "MYHDFPATH: ${MYHDFPATH}")
 #message([STATUS] "LIB_ZPATH: ${LIB_ZPATH}")
 #message([STATUS] "LIB_AECPATH: ${LIB_AECPATH}")
 message([STATUS] "MYHDFLINKPATH: ${MYHDFLINKFLAGS}")
-message([STATUS] "MYRYMLLINKPATH: ${MYRYMLLINKFLAGS}")
+#message([STATUS] "MYRYMLLINKPATH: ${MYRYMLLINKFLAGS}")
 
 
 ################################################################################################################
@@ -95,7 +95,7 @@ add_executable(${MYPROJECTNAME}
 )
 
 #linking process
-target_link_libraries(${MYPROJECTNAME} ${MYOMP} ${MPI_LIBRARIES} ${MYHDFLINKFLAGS} ${MYSSLLINKFLAGS} ${MYRYMLLINKFLAGS})
+target_link_libraries(${MYPROJECTNAME} ${MYOMP} ${MPI_LIBRARIES} ${MYHDFLINKFLAGS} ${MYSSLLINKFLAGS}) # ${MYRYMLLINKFLAGS})
 
 #MPI compilation settings
 if(MPI_COMPILE_FLAGS)

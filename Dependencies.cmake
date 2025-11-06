@@ -44,7 +44,7 @@ set(MYHDFLINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPAT
 # mkdir build && cd build
 # cmake -DCMAKE_BUILD_TYPE=Release ..
 # make -j8 && cd ..
-set(MYRYMLLINKFLAGS "-L${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/rapidyaml/build/libryml.a")
+# set(MYRYMLLINKFLAGS "-L${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/rapidyaml/build/libryml.a")
 
 #find installed locations of files from libssl-dev package via typing dpkg -L libssl-dev on the command line
 
