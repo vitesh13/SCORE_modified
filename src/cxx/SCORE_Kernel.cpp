@@ -47,7 +47,7 @@
 
 #include "SCORE_Kernel.h"
 //#include <omp.h>
-#include "thirdparty/mandatory/yamlcore/RAPIDYAMLCore.h"
+#include "thirdparty/optional/yamlcore/RAPIDYAMLCore.h"
 
 //if defined will use the new yaml input files
 //if undefined will use the legacy IMM UDS format

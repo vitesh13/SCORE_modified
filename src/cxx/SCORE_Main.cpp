@@ -44,7 +44,7 @@
 
 
 #include "SCORE_Kernel.h"
-//#include "thirdparty/mandatory/yamlcore/RAPIDYAMLCore.h"
+//#include "thirdparty/optional/yamlcore/RAPIDYAMLCore.h"
 
 //using namespace std;
 

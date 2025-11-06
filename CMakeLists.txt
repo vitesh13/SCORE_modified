@@ -71,7 +71,7 @@ add_executable(${MYPROJECTNAME}
 	${MYSRCPATH}/thirdparty/mandatory/chrono/TimeAndDateHandling.cpp
 	${MYSRCPATH}/thirdparty/mandatory/openssl/OpenSslHandling.cpp
 	${MYSRCPATH}/thirdparty/mandatory/hdf5core/HDF5Core.cpp
-	# ${MYSRCPATH}/thirdparty/mandatory/yamlcore/RAPIDYAMLCore.h
+	# ${MYSRCPATH}/thirdparty/optional/yamlcore/RAPIDYAMLCore.h
 	${MYSRCPATH}/SCORE_Random.cpp
 	${MYSRCPATH}/SCORE_Math.cpp
 	${MYSRCPATH}/SCORE_Io.cpp
