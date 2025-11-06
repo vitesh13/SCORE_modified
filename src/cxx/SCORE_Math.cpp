@@ -184,7 +184,7 @@ double mathMethods::huge(double A) {
 	//HUGE(X) returns the largest number that is not an infinity in the model of the type of X. 
 	//cannot assumed to be equivalent to the DAMASK function if a is not pReal kind 8
 	//no type checking here ###
-	return 1.8e+308; //std::numeric_limits<double>:: max();
+	return numeric_limits<double>:: max();
 }
 
 //Select values from two arrays according to a logical mask. The result is equal to TSOURCE if MASK is .TRUE., or equal to FSOURCE if it is .FALSE.. 

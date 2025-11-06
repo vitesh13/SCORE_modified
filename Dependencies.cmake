@@ -21,37 +21,30 @@ string(REGEX REPLACE "-" "_" MYCLEANGITSHA ${GITSHA}) #'-' is an invalid charact
 message([STATUS] "MYCLEANGITSHA: ${MYCLEANGITSHA}")
 add_definitions("-DGITSHA=${MYCLEANGITSHA}")
 
-#tell where the source code of PARAPROBE is
+#tell where the source code is
 set(MYSRCPATH "${MYPROJECTPATH}/src/cxx")
 
-#SPECIFY LOCATION OF UTILITIES
-# set(MYSZPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/szip/szip-2.1.1/install")
-# set(MYZPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/zlib/zlib-1.3.1/install")
-# set(LIB_AECPATH "/usr/local/")
-
-# set(MYHDFPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/hdf5/hdf5-1.14.6/build/HDF5-1.14.6-Linux/HDF_Group/HDF5/1.14.6")
-set(MYHDFPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/hdf5/CMake-hdf5-1.14.2/HDF5-1.14.2-Linux/HDF_Group/HDF5/1.14.2")
+#mandatory hdf5 library
+set(MYHDFPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/hdf5/HDF5-1.14.6-Linux/HDF_Group/HDF5/1.14.6")
+set(MYHDFLINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPATH}/lib/libhdf5.a ${MYHDFPATH}/lib/libszaec.a ${MYHDFPATH}/lib/libaec.a -ldl")  # ${MYHDFPATH}/lib/libzlib-static.a -ldl")
 include_directories("${MYHDFPATH}/include")
 link_directories("${MYHDFPATH}/lib")
-#link against static libraries
-set(MYHDFLINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPATH}/lib/libhdf5.a ${MYHDFPATH}/lib/libz.a")
-# ${MYHDFPATH}/lib/libaec.a -ldl")
-# ${MYZPATH}/lib/libz.a ${MYSZPATH}/lib/libsz.a")  #  ${MYHDFPATH}/lib/libaec.a -ldl")
 
-# python e.g. 3.11
+
+#find installed locations of files from libssl-dev package via typing dpkg -L libssl-dev on the command line
+set(MYOPENSSL "/usr/lib/x86_64-linux-gnu")
+include_directories("${MYOPENSSL}/lib")
+#find_package(OpenSSL REQUIRED)
+set(MYSSLLINKFLAGS "-L${MYOPENSSL} ${MYOPENSSL}/libssl.a ${MYOPENSSL}/libcrypto.a")
+
+# optional stuff for developers for using ryml
+# python
 # git clone --recursive https://github.com/biojppm/rapidyaml.git
 # cd tools && python amalgamate.py ryml_all.hpp && cd ..
 # mkdir build && cd build
 # cmake -DCMAKE_BUILD_TYPE=Release ..
 # make -j8 && cd ..
 # set(MYRYMLLINKFLAGS "-L${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/rapidyaml/build/libryml.a")
-
-#find installed locations of files from libssl-dev package via typing dpkg -L libssl-dev on the command line
-
-set(MYOPENSSL "/usr/lib/x86_64-linux-gnu")
-include_directories("${MYOPENSSL}/lib")
-#find_package(OpenSSL REQUIRED)
-set(MYSSLLINKFLAGS "-L${MYOPENSSL} ${MYOPENSSL}/libssl.a ${MYOPENSSL}/libcrypto.a")
 
 
 #choose which compiler to use
@@ -63,4 +56,3 @@ set(EMPLOY_GNUCOMPILER ON)
 ##-O1 or -O2 for moderate optimization
 ##-O3 for production level optimization
 set(MYOPTLEVEL "-O2")  # "-O0 -g")
-

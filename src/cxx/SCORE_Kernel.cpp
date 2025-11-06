@@ -47,10 +47,17 @@
 
 #include "SCORE_Kernel.h"
 //#include <omp.h>
-#include "thirdparty/optional/yamlcore/RAPIDYAMLCore.h"
 
-//if defined will use the new yaml input files
-//if undefined will use the legacy IMM UDS format
+#ifdef PARSE_CONFIG_FROM_HDF
+	//default since v1.3.0 using NeXus/HDF5 files
+#endif
+#ifdef PARSE_CONFIG_FROM_YML
+	//prototypic yaml input files
+	#include "thirdparty/optional/yamlcore/RAPIDYAMLCore.h"
+#endif
+#ifdef PARSE_CONFIG_FROM_IMM_UDS
+	//legacy IMM UDS format switched off with v1.3.0
+#endif
 
 
 ensembleHdl::ensembleHdl()

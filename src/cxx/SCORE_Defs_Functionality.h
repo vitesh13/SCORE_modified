@@ -341,10 +341,12 @@
 #define GREENCHAN							1
 #define BLUECHAN							2
 #define ALPHACHAN							3
+*/
+
 #define	DEFAULT_ZSECTIONING_ZPOS			(0.5)
 #define BLACK								0
 #define WHITE								255
-*/
+
 
 //plotting mode
 #define COLORIZE_RX_LEAVE_DEFORMED_BLACK	0x01
