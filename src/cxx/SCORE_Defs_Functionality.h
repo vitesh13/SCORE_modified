@@ -335,6 +335,7 @@
 //defragmentation
 #define L1_CACHE_LENGTH						((32)*(1024)/(8)/(32))
 
+/*
 //lodepng
 #define REDCHAN								0
 #define GREENCHAN							1
@@ -343,6 +344,7 @@
 #define	DEFAULT_ZSECTIONING_ZPOS			(0.5)
 #define BLACK								0
 #define WHITE								255
+*/
 
 //plotting mode
 #define COLORIZE_RX_LEAVE_DEFORMED_BLACK	0x01

@@ -675,6 +675,7 @@ void caHdl::ompcrit_write_voxeldata_coloring_grainids( string postfix )
 }
 
 
+/*
 void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char mode )
 {
 	//master executes this has to pull from neighboring threads memory
@@ -760,9 +761,9 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 								img_rgba[4*c + ALPHACHAN ] = myoripool[oid].RGB_A;
 							} //leave gridvalue < ndg BLACK
 						}
-						/*if ( gridvalue == CURRENTLY_INFECTED ) {
-							//read cellStatii and update later for now leave BLACK!
-						}*/
+						//if ( gridvalue == CURRENTLY_INFECTED ) {
+						//	//read cellStatii and update later for now leave BLACK!
+						//}
 						//else leave definately BLACK
 					}
 					else if ( mode == COLORIZE_DEF_LEAVE_RX_BLACK ) {
@@ -775,9 +776,9 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 								img_rgba[4*c + ALPHACHAN ] = myoripool[oid].RGB_A;
 							} //leave RX BLACK
 						}
-						/*if ( gridvalue == CURRENTLY_INFECTED ) {
-							//read cellStatii and update later for now leave BLACK!
-						}*/
+						//if ( gridvalue == CURRENTLY_INFECTED ) {
+						//	//read cellStatii and update later for now leave BLACK!
+						//}
 						//else leave definately BLACK
 					}
 					else { //COLORIZE_RX_RHOGREYSCALE_DEFORMED
@@ -791,10 +792,10 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 							}
 							else { //>= ndg
 								//else if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //implicitly >= ndg and explicitly <= CA_GRAINIDS_MAXIMUM < CURRENTLY_INFECTED by definition! hence implicitly RX because && >= ndg
-								/*img_rgba[4*c + REDCHAN ] = UCHAR_RANGE_MIN;
-								img_rgba[4*c + GREENCHAN ] = UCHAR_RANGE_MAX; //MK::DEBUG mask RX grains as pure green
-								img_rgba[4*c + BLUECHAN ] = UCHAR_RANGE_MIN;
-								img_rgba[4*c + ALPHACHAN ] = UCHAR_RANGE_MAX;*/
+								//img_rgba[4*c + REDCHAN ] = UCHAR_RANGE_MIN;
+								//img_rgba[4*c + GREENCHAN ] = UCHAR_RANGE_MAX; //MK::DEBUG mask RX grains as pure green
+								//img_rgba[4*c + BLUECHAN ] = UCHAR_RANGE_MIN;
+								//img_rgba[4*c + ALPHACHAN ] = UCHAR_RANGE_MAX;
 								//#######changing masking and instead IPFZ colorize RXGrains as in COLORIZE_RX
 								oid = myrxgpool[gridvalue-ndg].caori;
 								img_rgba[4*c + REDCHAN ] = myoripool[oid].RGB_R;
@@ -803,12 +804,11 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 								img_rgba[4*c + ALPHACHAN ] = myoripool[oid].RGB_A;
 							}
 						}
-						/*else { colorize > CA_GRAINIDS_MAXIMUM,i.e. implicitly == CURRENTLY_INFECTED later, i.e. infected, thus leave initial RGB assignment and explicitly set ALPHACHAN again
-							img_rgba[4*c + REDCHAN ] = UCHAR_RANGE_MAX; //mask currently infected cells as pure red
-							img_rgba[4*c + GREENCHAN ] = UCHAR_RANGE_MIN;
-							img_rgba[4*c + BLUECHAN ] = UCHAR_RANGE_MIN;
-							img_rgba[4*c + ALPHACHAN] = UCHAR_RANGE_MAX;
-						}*/
+						//else { colorize > CA_GRAINIDS_MAXIMUM,i.e. implicitly == CURRENTLY_INFECTED later, i.e. infected, thus leave initial RGB assignment and explicitly set ALPHACHAN again
+						//	img_rgba[4*c + REDCHAN ] = UCHAR_RANGE_MAX; //mask currently infected cells as pure red
+						//	img_rgba[4*c + GREENCHAN ] = UCHAR_RANGE_MIN;
+						//	img_rgba[4*c + BLUECHAN ] = UCHAR_RANGE_MIN;
+						//	img_rgba[4*c + ALPHACHAN] = UCHAR_RANGE_MAX;
 					}
 
 					c++; //stitching of the image occurs implicitly as yregion is increased
@@ -862,10 +862,10 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 							img_rgba[cx + ALPHACHAN ] = UCHAR_RANGE_MAX;
 						}
 						else {
-							/*img_rgba[c + REDCHAN ] = UCHAR_RANGE_MIN;
-							img_rgba[c + GREENCHAN ] = UCHAR_RANGE_MAX; //MK::DEBUG mask RX grains as pure green
-							img_rgba[c + BLUECHAN ] = UCHAR_RANGE_MIN;
-							img_rgba[c + ALPHACHAN ] = UCHAR_RANGE_MAX;*/
+							//img_rgba[c + REDCHAN ] = UCHAR_RANGE_MIN;
+							//img_rgba[c + GREENCHAN ] = UCHAR_RANGE_MAX; //MK::DEBUG mask RX grains as pure green
+							//img_rgba[c + BLUECHAN ] = UCHAR_RANGE_MIN;
+							//img_rgba[c + ALPHACHAN ] = UCHAR_RANGE_MAX;
 							//#######changing masking and instead IPFZ colorize RXGrains as in COLORIZE_RX
 							oid = myrxgpool[gridvalue-ndg].caori;
 							img_rgba[cx + REDCHAN ] = myoripool[oid].RGB_R;
@@ -920,6 +920,7 @@ void caHdl::ompcrit_write_zsection_looping_ipfz( double rxfraction, char thatmod
 		ompcrit_write_zsection_coloring_ipfz( rendering_atthisZPos.at(zr), rxfraction, thatmode );
 	}
 }
+*/
 
 
 void caHdl::ompcrit_clarify_status_infectedcells( double rxthreshold ) {
@@ -1590,7 +1591,7 @@ void caHdl::ompcrit_write_semebsd_looping( char thatmode ) {
 	}
 }
 
-
+/*
 void caHdl::test_lodepng() {
 	
 	//allocate memory to store the resulting image
@@ -1631,7 +1632,7 @@ void caHdl::test_lodepng() {
 
 	delete [] img_rgba; img_rgba = NULL;
 }
-
+*/
 
 #define DAMASK_GRAININDEXING_OFFSET			1		//MK::because in SCORE grains start at 0
 #define DAMASK_TEXTUREINDEXING_OFFSET		1

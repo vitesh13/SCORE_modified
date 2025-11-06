@@ -538,6 +538,7 @@ void caHdl::log_OUTPUT()
 
 			ompcrit_clarify_status_infectedcells( RXFRACTION_THRESHOLD );
 
+			/*
 			if ( outopt_localrenderhow == RENDERING_MS2D ) {
 				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW ) {
 					if ( outopt_localrendercolor == RENDERING_COLOR_IPFZ ) {
@@ -551,6 +552,7 @@ void caHdl::log_OUTPUT()
 				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ) 
 					cout << "ERROR::2D output with HDF5 currently not supported!" << endl;
 			}
+			*/
 
 			if ( outopt_localrenderhow == RENDERING_MS3D ) {
 				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW ) {
@@ -624,6 +626,7 @@ void caHdl::log_OUTPUT_Diehl()
 			//cout << "z00_area_13px\t\t" << z00_area_13px << endl;
 
 			if ( z00_area_13px >= rendering_atthisX[z00_logcnt] ) {
+				/*
 				if ( outopt_localrenderhow == RENDERING_MS2D &&
 						outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW &&
 							outopt_localrendercolor == RENDERING_COLOR_IPFZ ) {
@@ -632,6 +635,7 @@ void caHdl::log_OUTPUT_Diehl()
 							ompcrit_write_zsection_looping_ipfz( z00_area_13px, COLORIZE_DEF_LEAVE_RX_BLACK );
 							ompcrit_write_zsection_looping_ipfz( z00_area_13px, COLORIZE_RX_RHOGREYSCALE_DEFORMED );
 				}
+				*/
 				if ( outopt_localartsemebsd == OUTPUT_SEMEBSD_YES ) {
 	cout << "Reporting a zsection at 0.0 for z00_logcnt\t\t" << z00_logcnt << "\t\t" << z00_area_13px << endl;
 					ompcrit_write_semebsd_core( 0.0, z00_area_13px, 13, DEFAULT_SEMEBSD_MODE );
@@ -647,6 +651,7 @@ void caHdl::log_OUTPUT_Diehl()
 			//cout << "z05_area_13px\t\t" << z05_area_13px << endl;
 
 			if ( z05_area_13px >= rendering_atthisX[z05_logcnt] ) {
+				/*
 				if ( outopt_localrenderhow == RENDERING_MS2D &&
 						outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW &&
 							outopt_localrendercolor == RENDERING_COLOR_IPFZ ) {
@@ -654,6 +659,7 @@ void caHdl::log_OUTPUT_Diehl()
 							ompcrit_write_zsection_looping_ipfz( z05_area_13px, COLORIZE_DEF_LEAVE_RX_BLACK );
 							ompcrit_write_zsection_looping_ipfz( z05_area_13px, COLORIZE_RX_RHOGREYSCALE_DEFORMED );
 				}
+				*/
 				if ( outopt_localartsemebsd == OUTPUT_SEMEBSD_YES ) {
 	cout << "Reporting a zsection at 0.5 for z05_logcnt\t\t" << z05_logcnt << "\t\t" << z05_area_13px << endl;
 					ompcrit_write_semebsd_core( 0.5, z05_area_13px, 13, DEFAULT_SEMEBSD_MODE );
@@ -669,6 +675,7 @@ void caHdl::log_OUTPUT_Diehl()
 			//cout << "z10_area_13px\t\t" << z10_area_13px << endl;
 
 			if ( z10_area_13px >= rendering_atthisX[z10_logcnt] ) {
+				/*
 				if ( outopt_localrenderhow == RENDERING_MS2D &&
 					outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW &&
 						outopt_localrendercolor == RENDERING_COLOR_IPFZ ) {
@@ -676,6 +683,7 @@ void caHdl::log_OUTPUT_Diehl()
 						ompcrit_write_zsection_looping_ipfz( z10_area_13px, COLORIZE_DEF_LEAVE_RX_BLACK );
 						ompcrit_write_zsection_looping_ipfz( z10_area_13px, COLORIZE_RX_RHOGREYSCALE_DEFORMED );
 				}
+				*/
 				if ( outopt_localartsemebsd == OUTPUT_SEMEBSD_YES ) {
 	cout << "Reporting a zsection at 1.0 for z10_logcnt\t\t" << z10_logcnt << "\t\t" << z10_area_13px << endl;
 					ompcrit_write_semebsd_core( 1.0, z10_area_13px, 13, DEFAULT_SEMEBSD_MODE );

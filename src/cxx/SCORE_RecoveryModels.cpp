@@ -181,6 +181,7 @@ unsigned char caHdl::rho2grayscale( double r ) {
 }
 
 
+/*
 void caHdl::log_initrho_scalebar() {
 	//MK::mapping of dislocation density values on [RHO_ on solitary unit domain dependent grayscale bar via
 	double rmax = RHO_DEFORMED_MATERIAL_MAX;
@@ -255,5 +256,6 @@ void caHdl::log_initrho_scalebar() {
 	delete [] img_rgba;
 	img_rgba = NULL;
 }
+*/
 
 #endif

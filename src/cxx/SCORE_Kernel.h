@@ -62,7 +62,7 @@
 
 #include "hdf5.h"
 
-#include "thirdparty/mandatory/lodepng/lodepng.h"
+//#include "thirdparty/mandatory/lodepng/lodepng.h"
 //##MK::in case of local installation of HDF5 library
 //#include "thirdparty/hdf5-1.10.0-patch1/hdf5/include/hdf5.h"
 
@@ -1112,7 +1112,7 @@ public:
 	void update_mydgoptimize_cnt();
 	void update_myrhomax();
 	unsigned char rho2grayscale( double r );
-	void log_initrho_scalebar();
+	//void log_initrho_scalebar();
 
 	//handling of nucleation submpdels
 	uint32_t solve_nucmodeling_countgbcells( vector<organizeGBNuc>* luu );
@@ -1242,10 +1242,10 @@ public:
 	//OMP Thread
 	void ompcrit_write_voxeldata_coloring_regions();
 	void ompcrit_write_voxeldata_coloring_grainids( string postfix );
-	void ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char mode );
-	void ompcrit_write_zsection_looping_ipfz( double rxfraction, char thatmode );
+	//void ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char mode );
+	//void ompcrit_write_zsection_looping_ipfz( double rxfraction, char thatmode );
 	void ompcrit_clarify_status_infectedcells( double rxthreshold );
-	void test_lodepng();
+	//void test_lodepng();
 
 	//artifical SEM/EBSD output
 	void ompcrit_write_semebsd_core( double zpos, char mode );

@@ -67,7 +67,7 @@ find_package(MPI REQUIRED)
 include_directories(${MPI_INCLUDE_PATH})
 
 add_executable(${MYPROJECTNAME}
-	${MYSRCPATH}/thirdparty/mandatory/lodepng/lodepng.cpp
+	# ${MYSRCPATH}/thirdparty/optional/lodepng/lodepng.cpp
 	${MYSRCPATH}/thirdparty/mandatory/chrono/TimeAndDateHandling.cpp
 	${MYSRCPATH}/thirdparty/mandatory/openssl/OpenSslHandling.cpp
 	${MYSRCPATH}/thirdparty/mandatory/hdf5core/HDF5Core.cpp

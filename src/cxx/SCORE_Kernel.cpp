@@ -2622,6 +2622,7 @@ void ensembleHdl::compare_two_ang_files( const char* inputang, const char* snpan
 }
 
 
+/*
 void ensembleHdl::ang_file_coloring( const char* inputang, unsigned int nskip )
 {
 	//MK::testing function to export ang file color coding with internal routines
@@ -2661,8 +2662,10 @@ void ensembleHdl::ang_file_coloring( const char* inputang, unsigned int nskip )
 		//user format currently no header, format is phi1, PHI, phi2 from TSL
 		//for ( unsigned int h = 0; h < 135; h++ ) getline( ebsdfile, ebsdline );
 		//user format 6-lines header thaen bunge1,bunge2,Bunge3 in rad
-		for ( unsigned int h = 0; h < nskip; h++ ) getline( ebsdfile, ebsdline );
-cout << "I have now skipped " << nskip << " header lines!" << endl;
+		for ( unsigned int h = 0; h < nskip; h++ ) {
+			getline( ebsdfile, ebsdline );
+		}
+		cout << "I have now skipped " << nskip << " header lines!" << endl;
 
 		while ( ebsdfile.good() == true ) { //read data
 			getline( ebsdfile, ebsdline );
@@ -2762,6 +2765,7 @@ void ensembleHdl::ipf_colormap( double ipf_stretch_r, double ipf_stretch_g, doub
 
 	delete [] img_rgba; img_rgba = NULL;
 }
+*/
 
 
 bool ensembleHdl::init_parameter()
@@ -8324,6 +8328,7 @@ void caHdl::solve_RXGROWTH()
 		#pragma omp barrier
 
 		//initial output
+		/*
 		if ( outopt_localrenderhow == RENDERING_MS2D ) {
 			if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW ) {
 				if ( outopt_localrendercolor == RENDERING_COLOR_IPFZ ) {
@@ -8331,13 +8336,15 @@ void caHdl::solve_RXGROWTH()
 					ompcrit_write_zsection_looping_ipfz( 0.0, COLORIZE_DEF_LEAVE_RX_BLACK );
 					ompcrit_write_zsection_looping_ipfz( 0.0, COLORIZE_RX_RHOGREYSCALE_DEFORMED );
 				}
-				else
-                                    cerr << "2D output in RAW format supports currently only IPFZ coloring!" << endl;
+				else {
+					cerr << "2D output in RAW format supports currently only IPFZ coloring!" << endl;
+				}
 			}
-			if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ){
-                           cerr << "2D output of complete 2D structure with HDF5 currently not supported!" << endl;
-		        }
-                }
+			if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ) {
+				cerr << "2D output of complete 2D structure with HDF5 currently not supported!" << endl;
+			}
+		}
+		*/
 
 		//##MK:for study with Martin Diehl, MMM2018 Proceedings Paper
 		//switched off initial ang file
