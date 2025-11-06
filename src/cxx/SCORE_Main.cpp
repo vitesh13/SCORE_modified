@@ -69,8 +69,7 @@ void die( const char* message, bool inmpi ) {
 }
 
 void versioninfo( int myrank, int nranks ) {
-	string test = replace_all_occurrences(string("____"), '_', '-');
-	cout << test << "\n";
+	//string test = replace_all_occurrences(string("____"), '_', '-'); cout << test << "\n";
 	string score = replace_all_occurrences(string(xstr(SCOREVERSION)), '_', '-');
 	string nexus = replace_all_occurrences(string(xstr(NEXUSVERSION)), '_', '-');
 	//replacement is necessary because during the compilation in cmake
