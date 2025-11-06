@@ -1,0 +1,8 @@
+[submodule "src/cxx/thirdparty/mandatory/date"]
+	path = src/cxx/thirdparty/mandatory/date
+	url = https://github.com/HowardHinnant/date.git
+	branch = v3.0.4
+[submodule "src/cxx/thirdparty/mandatory/nexus_definitions"]
+	path = src/cxx/thirdparty/mandatory/nexus_definitions
+	url = https://github.com/FAIRmat-NFDI/nexus_definitions.git
+	branch = main

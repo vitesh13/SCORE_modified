@@ -6,7 +6,7 @@ examples/.*
 
 src/cxx/thirdparty/mandatory/hdf5-*
 src/cxx/thirdparty/mandatory/hdf5
-src/cxx/thirdparty/mandatory/date
+#src/cxx/thirdparty/mandatory/date
 src/cxx/thirdparty/mandatory/szip
 src/cxx/thirdparty/mandatory/zlib
 src/cxx/thirdparty/optional/lodepng
