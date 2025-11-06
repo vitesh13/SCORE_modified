@@ -3,6 +3,7 @@ build
 examples/verification/SCORE*
 examples/damask/SCORE*
 examples/.*
+examples/.ipynb_checkpoints
 
 src/cxx/thirdparty/mandatory/hdf5-*
 src/cxx/thirdparty/mandatory/hdf5

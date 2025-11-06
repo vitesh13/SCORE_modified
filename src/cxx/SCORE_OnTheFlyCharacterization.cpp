@@ -1027,7 +1027,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 	}
 
 	anno = ioAttributes();
-	anno.add( "unit", string("radian") );
+	anno.add( "units", string("radian") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({f64.size() / 3, 3}, {f64.size() / 3, 3}),
@@ -1047,7 +1047,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 		f64.push_back( RHOMAX_WELLANNEALED );
 	}
 	anno = ioAttributes();
-	anno.add( "unit", string("1 / meter ** 2") );
+	anno.add( "units", string("1 / meter ** 2") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({f64.size()}, {f64.size()}),

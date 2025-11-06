@@ -69,15 +69,16 @@ void die( const char* message, bool inmpi ) {
 }
 
 void versioninfo( int myrank, int nranks ) {
-	cout << "SCORE GITSHA " << string(xstr(GITSHA)) << "\n";
+	string test = replace_all_occurrences(string("____"), '_', '-');
+	cout << test << "\n";
+	string score = replace_all_occurrences(string(xstr(SCOREVERSION)), '_', '-');
+	string nexus = replace_all_occurrences(string(xstr(NEXUSVERSION)), '_', '-');
+	//replacement is necessary because during the compilation in cmake
+	//- is replaced with _ as - is not allow by the C preprocessor
+	cout << "SCORE version " << score << "\n";
+	cout << "NeXus version " << nexus << "\n";
 	cout << "SCORE starting rank " << myrank << " within " << nranks << "\n";
-	cout << "SCORE v" << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_REVISION;
-#ifdef IS_BETAVERSION
-		cout << "beta" << endl;
-#else
-		cout << endl;
-#endif
-		cout << "SCORE the coordinate system is right-handed with x pointing right and ||RD, y pointing inwards and ||TD, and z pointing upwards and ||ND" << endl;
+	cout << "SCORE the coordinate system is right-handed with x pointing right and ||RD, y pointing inwards and ||TD, and z pointing upwards and ||ND" << endl;
 #ifdef USE_QUATLIB_DEGRAEF
 		cout << "SCORE the mathlibrary is the Rowenhorst/Rollett/Konijnenberg/deGraef et. al. library" << endl;
 #endif

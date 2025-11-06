@@ -56,13 +56,8 @@
 #define	__SCORE_DEFS_FUNCTIONALITY_H_INCLUDED__
 
 //MK::here all default and constant values for the functionality of the implementation should be placed!
-
-
-//versioning
-#define VERSION_MAJOR				1
-#define VERSION_MINOR				3
-#define VERSION_REVISION			0
-//#define IS_BETAVERSION
+//stringification of strings passed from cmake at compile time
+//https://gcc.gnu.org/onlinedocs/gcc-4.8.5/cpp/Stringification.html
 
 
 //STL functionalities
@@ -371,16 +366,27 @@
 #define HDF5_MAXIMUM_SINGLE_WRITE			((1600)*(1024)*(1024)) //1.2GB
 #define MPIIO_MAXIMUM_SINGLE_WRITE			((50)*(1024)*(1024)) //50MB
 
-//carry over preprocessor definitions
-//low level stuff to parse the GitSHA of the parent commit into the executable upon build using cmake
-//GITSHA gets defined from cmake -DGITSHA="
-#ifndef GITSHA									//otherwise we could not compile without adding -DGITSHA="d123" a dummy GitSha
-	#define GITSHA								0
+//carry over preprocessor definitions, low-level stuff to parse
+//the GitSHA of the parent commit into the executable upon build using cmake
+#ifndef SCOREVERSION
+	#define SCOREVERSION					0
+#endif
+#ifndef NEXUSVERSION
+	#define NEXUSVERSION					0
 #endif
 
 //stringification of strings passed from cmake at compile time
 //https://gcc.gnu.org/onlinedocs/gcc-4.8.5/cpp/Stringification.html
 #define xstr(s)									mystr(s)
 #define mystr(s) 								#s
+
+
+/*
+//versioning
+#define VERSION_MAJOR				1
+#define VERSION_MINOR				3
+#define VERSION_REVISION			0
+//#define IS_BETAVERSION
+*/
 
 #endif

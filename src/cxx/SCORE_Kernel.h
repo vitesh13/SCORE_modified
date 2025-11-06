@@ -73,6 +73,7 @@
 //leave only this defined for legacy IMM UDS file formats
 //#define PARSE_CONFIG_FROM_UDS
 
+string replace_all_occurrences( string str, const char search, const char replacement );
 
 using namespace std;
 

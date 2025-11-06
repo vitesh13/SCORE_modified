@@ -3294,7 +3294,7 @@ void test_hdf5()
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
 
 	anno = ioAttributes();
-	anno.add( "unit", string("nm") );
+	anno.add( "units", string("nm") );
 	//contiguous
 	//()
 	string dsnm = "/entry/u32_0d_cnt";

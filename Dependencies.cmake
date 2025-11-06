@@ -16,10 +16,14 @@ endif()
 #update GitSHA of the paraprobe repository prior commit, i.e. pre-processing upon compilation pulling last GitSHA
 #we cannot update the current GitSHA as this would create a circular dependency, namely once we have commit, i.e. know the file
 # set(GITSHA "0")
-message([STATUS] "MYGITSHA: ${GITSHA}")
-string(REGEX REPLACE "-" "_" MYCLEANGITSHA ${GITSHA}) #'-' is an invalid character in a C preprocessor macro
-message([STATUS] "MYCLEANGITSHA: ${MYCLEANGITSHA}")
-add_definitions("-DGITSHA=${MYCLEANGITSHA}")
+#'-' is an invalid character in a C preprocessor macro
+string(REGEX REPLACE "-" "_" MYCLEANSCOREVERSION ${SCOREVERSION}) 
+add_definitions("-DSCOREVERSION=${MYCLEANSCOREVERSION}")
+string(REGEX REPLACE "-" "_" MYCLEANNEXUSVERSION ${NEXUSVERSION}) #'-' is an invalid character in a C preprocessor macro
+add_definitions("-DNEXUSVERSION=${MYCLEANNEXUSVERSION}")
+message([STATUS] "DSCOREVERSION: ${DSCOREVERSION}")
+message([STATUS] "DNEXUSVERSION: ${DNEXUSVERSION}")
+
 
 #tell where the source code is
 set(MYSRCPATH "${MYPROJECTPATH}/src/cxx")

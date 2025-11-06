@@ -60,6 +60,24 @@
 #endif
 
 
+string replace_all_occurrences( string str, const char search, const char replacement )
+{
+	string retval = "";
+	string cmp(1, search);
+	string rpl(1, replacement);
+	for ( size_t i = 0; i < str.size(); i++ ) {
+		string test(1, str[i]);
+		if ( test.compare(cmp) == 0 ) {
+			retval += rpl;
+		}
+		else {
+			retval += test;
+		}
+	}
+	return retval;
+}
+
+
 ensembleHdl::ensembleHdl()
 {
 	simid = DEFAULT_SIMID;
@@ -3188,6 +3206,8 @@ void ensembleHdl::init_nexus_results_file()
 	dsnm = grpnm + "/definition";
 	string appdef_name = "NXmicrostructure_score_results";
 	anno = ioAttributes();
+	string nexus = replace_all_occurrences(string(xstr(NEXUSVERSION)), '_', '-');
+	anno.add( "version", nexus );
 	if ( h5w.nexus_write( dsnm, appdef_name, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
@@ -3257,7 +3277,8 @@ void ensembleHdl::init_nexus_results_file()
 	dsnm = grpnm + "/program";
 	string program = "SCORE";
 	anno = ioAttributes();
-	anno.add( "version", string(xstr(GITSHA)) );
+	string score = replace_all_occurrences(string(xstr(SCOREVERSION)), '_', '-');
+	anno.add( "version", score );
 	anno.add( "compile_date", string(__DATE__) );
 	anno.add( "compile_time", string(__TIME__) );
 	if ( h5w.nexus_write( dsnm, program, anno ) != MYHDF5_SUCCESS ) {

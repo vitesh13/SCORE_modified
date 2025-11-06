@@ -724,12 +724,13 @@ void caHdl::hdf5_write_xmffile_3dcorectmesh( string fname, string hfname, string
 	xdmf <<(char)60<<"Xdmf xmlns:xi="<<(char)34<<"http:"<<(char)47<<(char)47<<"www.w3.org/2003/XInclude"<<(char)34<<" Version"<<(char)61<<(char)34<<"2.2"<<(char)34<<">\n";
 	xdmf <<"\t<Domain>\n";
 	
-	string prgname = "SCORE_v" + std::to_string(VERSION_MAJOR) + "." + std::to_string(VERSION_MINOR) + "." + std::to_string(VERSION_REVISION) + "_TimeSeries";
+	string prefix = "SCORE_v130";
+	string prgname = prefix + "_TimeSeries";
 	xdmf <<"\t\t<Grid Name="<<(char)34<<prgname<<(char)34<<" GridType="<<(char)34<<"Collection"<<(char)34<<" CollectionType="<<(char)34<<"Temporal"<<(char)34<<">\n";
 	prgname.clear();
 
 	//autogenerate dimensions and link names to heavy data, utilize that the individual snapshots are named gname/step
-	prgname = "SCORE_v" + std::to_string(VERSION_MAJOR) + "." + std::to_string(VERSION_MINOR) + "." + std::to_string(VERSION_REVISION) + "_Result";
+	prgname = prefix + "_Result";
 	//string corr = hfname + ":" + "/" + "coordinates";
 	string grid;
 	string dim;
@@ -806,12 +807,13 @@ void caHdl::raw_write_xmffile_3dcorectmesh( string fname, string binprefix )
 	xdmf <<(char)60<<"Xdmf xmlns:xi="<<(char)34<<"http:"<<(char)47<<(char)47<<"www.w3.org/2003/XInclude"<<(char)34<<" Version"<<(char)61<<(char)34<<"2.2"<<(char)34<<">\n";
 	xdmf <<"\t<Domain>\n";
 	
-	string prgname = "SCORE_v" + std::to_string(VERSION_MAJOR) + "." + std::to_string(VERSION_MINOR) + "." + std::to_string(VERSION_REVISION) + "_TimeSeries";
+	string prefix = "SCORE_v130";
+	string prgname = prefix + "_TimeSeries";
 	xdmf <<"\t\t<Grid Name="<<(char)34<<prgname<<(char)34<<" GridType="<<(char)34<<"Collection"<<(char)34<<" CollectionType="<<(char)34<<"Temporal"<<(char)34<<">\n";
 	prgname.clear();
 
 	//autogenerate dimensions and link names to heavy data, utilize that the individual snapshots are named gname/step
-	prgname = "SCORE_v" + std::to_string(VERSION_MAJOR) + "." + std::to_string(VERSION_MINOR) + "." + std::to_string(VERSION_REVISION) + "_Result";
+	prgname = prefix + "_Result";
 	string grid;
 	string dim;
 	string attr;
