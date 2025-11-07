@@ -781,7 +781,7 @@ void caHdl::nexus_write_automaton_geometry()
 	}
 	f64 = vector<double>();
 
-	dsnm = grpnm + "/identifier_offset";
+	dsnm = grpnm + "/index_offset_cell";
 	int offset = 0;
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, offset, anno ) != MYHDF5_SUCCESS ) {
@@ -1114,7 +1114,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	i16 = vector<short>();
 
 	vector<unsigned short> u16;
-	dsnm = grpnm + "/identifier_thread";
+	dsnm = grpnm + "/thread_id";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1143,7 +1143,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	u16 = vector<unsigned short>();
 
 	vector<unsigned int> u32;
-	dsnm = grpnm + "/identifier_deformed_grain";
+	dsnm = grpnm + "/deformed_grain_id";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1171,7 +1171,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	}
 	u32 = vector<unsigned int>();
 
-	dsnm = grpnm + "/identifier_recrystallized_grain";
+	dsnm = grpnm + "/recrystallized_grain_id";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1257,7 +1257,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	u08 = vector<unsigned char>();
 
 	vector<double> f64;
-	dsnm = grpnm + "/x";
+	dsnm = grpnm + "/recrystallized_fraction";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1378,7 +1378,7 @@ void caHdl::nexus_write_snapshot_cell_based()
 	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/grid";
 	string dsnm = "";
 
-	dsnm = grpnm + "/identifier_crystal";
+	dsnm = grpnm + "/indices_crystal";
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
@@ -1421,7 +1421,7 @@ void caHdl::nexus_write_snapshot_cell_based()
 			} //scan +y line
 		} //scan +z lines
 	} //for each thread
-	dsnm = grpnm + "/identifier_thread";
+	dsnm = grpnm + "/thread_id";
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
@@ -1495,7 +1495,7 @@ void caHdl::nexus_write_snapshot()
 
 	subgrpnm = grpnm + "/crystals";
 	anno = ioAttributes();
-	anno.add( "NX_class", string("NXobject") );
+	anno.add( "NX_class", string("NXmicrostructure_feature") );
 	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
 		return;
@@ -1503,7 +1503,7 @@ void caHdl::nexus_write_snapshot()
 
 	subgrpnm = grpnm + "/recrystallization_front";
 	anno = ioAttributes();
-	anno.add( "NX_class", string("NXobject") );
+	anno.add( "NX_class", string("NXmicrostructure_feature") );
 	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
 		return;

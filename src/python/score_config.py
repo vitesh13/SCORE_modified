@@ -79,7 +79,7 @@ class ScoreConfig(ConfigBase):
         """Configure contextualizing details about the sample."""
         trg = f"entry{self.entry_id}/sample/"
         self.cfg[f"{trg}@NX_class"] = "NXsample"
-        self.cfg[f"{trg}dimensionality"] = ureg.Quantity(np.uint32(3))
+        self.cfg[f"{trg}dimensionality"] = "3"
         self.cfg[f"{trg}is_simulation"] = "simulation"
         self.cfg[f"{trg}atom_types"] = atom_types
 

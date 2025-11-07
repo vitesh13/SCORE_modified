@@ -512,12 +512,12 @@ bool ensembleHdl::init_parameter_from_hdf_deformation() {
 		defmsmethod = POISSONVORONOI_DEFMS;
 
 		double diameter = 0.;
-		if ( h5r.nexus_read( grpnm + "deformation/diameter", diameter ) != MYHDF5_SUCCESS ) {
-			status = false; cerr << grpnm << "deformation/diameter" << endl;
+		if ( h5r.nexus_read( grpnm + "diameter", diameter ) != MYHDF5_SUCCESS ) {
+			status = false; cerr << grpnm << "diameter" << endl;
 		}
 		ensPhysData.defgmean_poisson = diameter * MICRON2METER;
 		if ( (ensPhysData.defgmean_poisson < mindiscretization && myRank == MASTER ) ) {
-			status = false; cerr << grpnm << "deformation/diameter" << endl;
+			status = false; cerr << grpnm << "diameter" << endl;
 		}
 	}
 	else if ( model.compare("ebsd") == 0 ) {
@@ -3442,7 +3442,7 @@ void ensembleHdl::init_nexus_results_file()
 	}
 
 	dsnm = grpnm + "/x_alias";
-	value = "rolling direction (RD)";
+	value = "rolling_direction"; // (RD)
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -3458,7 +3458,7 @@ void ensembleHdl::init_nexus_results_file()
 	}
 
 	dsnm = grpnm + "/y_alias";
-	value = "transverse direction (TD)";
+	value = "transverse_direction"; // (TD)
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -3474,7 +3474,7 @@ void ensembleHdl::init_nexus_results_file()
 	}
 
 	dsnm = grpnm + "/z_alias";
-	value = "normal direction (ND)";
+	value = "normal_direction"; // (ND)
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -3507,7 +3507,7 @@ void ensembleHdl::init_nexus_results_file()
 
 	grpnm = "/entry1/spatiotemporal1"; //##TODO::make adaptive
 	anno = ioAttributes();
-	anno.add( "NX_class", string("NXobject") );
+	anno.add( "NX_class", string("NXprocess") );
 	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << grpnm << " failed !" << "\n";
 		return;
@@ -3556,7 +3556,7 @@ void ensembleHdl::finish_nexus_results_file()
 	}
 	*/
 
-	dsnm = grpnm + "/number_of_processes";
+	dsnm = grpnm + "/max_processes";
 	unsigned int uint = (unsigned int) nRanks;
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, uint, anno ) != MYHDF5_SUCCESS ) {
@@ -3564,7 +3564,7 @@ void ensembleHdl::finish_nexus_results_file()
 		return;
 	}
 
-	dsnm = grpnm + "/number_of_threads";
+	dsnm = grpnm + "/max_threads";
 	uint = (apt_uint) omp_get_max_threads();
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, uint, anno ) != MYHDF5_SUCCESS ) {
@@ -3572,7 +3572,7 @@ void ensembleHdl::finish_nexus_results_file()
 		return;
 	}
 
-	dsnm = grpnm + "/number_of_gpus";
+	dsnm = grpnm + "/max_gpus";
 	uint = 0;
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, uint, anno ) != MYHDF5_SUCCESS ) {

@@ -43,12 +43,7 @@ class ConfigBase:
 
     def write_config_hfive_file(self):
         with h5py.File(self.hdf5_file_name, "w") as h5w:
-            # sorted_flattened_dict = sorted(fd.FlatDict(self.cfg, delimiter="/").items())
-            sorted_flattened_dict = self.cfg.items()
-            # for key, obj in sorted_flattened_dict:
-            #     print(key)
-            # instantiate groups and their attributes
-            for key, obj in sorted_flattened_dict:
+            for key, obj in self.cfg.items():
                 if key.endswith(("@NX_class")):  # "@default", "@version")):
                     hpath = f"/{key[0 : key.rfind('@')]}"
                     attr_name = f"{key[key.rfind('@') + 1 :]}"
@@ -68,34 +63,23 @@ class ConfigBase:
             # in that group mentioned because making e.g. create_dataset calls
             # can use even deeply nested paths on empty hdf5 and will recursively
             # add all those missing groups along the path from the leaf upwards to root
-            for key, obj in sorted_flattened_dict:
+            for key, obj in self.cfg.items():
                 if "@" not in key:  # not key.endswith("@NX_class"):
                     hpath = f"/{key}"
-                    # print(f"field >>>> {hpath}")
-                    # print(f"{key}, {hpath}, {type(obj)}")
-                    if isinstance(obj, ureg.Quantity):  # TODO fix
+                    # print(f"field >>>> {key}, {hpath}, {type(obj)}")
+                    if isinstance(obj, ureg.Quantity):
                         if obj.dimensionless:
                             if np.shape(obj.magnitude) == ():
-                                # print(f">>>>>>>>> {key}, {np.dtype(obj.magnitude)}")
-                                dst = h5w.create_dataset(
-                                    hpath, data=obj.magnitude
-                                )  # .item()
+                                dst = h5w.create_dataset(hpath, data=obj.magnitude)
                             else:
-                                dst = h5w.create_dataset(
-                                    hpath, data=obj.magnitude
-                                )  # .tolist()
+                                dst = h5w.create_dataset(hpath, data=obj.magnitude)
                             if obj.units == "radian":
                                 dst.attrs["units"] = f"{obj.units}"
                         else:
                             if np.shape(obj.magnitude) == ():
-                                # print(f">>>>>>>>> {key}, {np.dtype(obj.magnitude)}")
-                                dst = h5w.create_dataset(
-                                    hpath, data=obj.magnitude
-                                )  # .item()
+                                dst = h5w.create_dataset(hpath, data=obj.magnitude)
                             else:
-                                dst = h5w.create_dataset(
-                                    hpath, data=obj.magnitude
-                                )  # .tolist()
+                                dst = h5w.create_dataset(hpath, data=obj.magnitude)
                             dst.attrs["units"] = f"{obj.units}"
                     elif isinstance(obj, (str, bool)):
                         dst = h5w.create_dataset(hpath, data=obj)
@@ -104,7 +88,7 @@ class ConfigBase:
                             dst = h5w.create_dataset(hpath, data=obj)
             print("Fields created")
             # add attributes to existent fields and groups which are not NX_class
-            for key, obj in sorted_flattened_dict:
+            for key, obj in self.cfg.items():
                 if ("@" in key) and (not key.endswith("@NX_class")):
                     hpath = f"/{key[0 : key.rfind('@')]}"
                     if hpath != "//":
