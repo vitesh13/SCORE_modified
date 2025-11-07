@@ -12,6 +12,10 @@ class ConfigBase:
     def __init__(self):
         self.cfg: Dict[str, Any] = {}
 
+    def get_config(self):
+        for key, qnt in sorted(self.cfg.items()):
+            print(f"{key}, {qnt}")
+
     def write_config_yaml_file(self):
         """Write YAML config file to be used in SCORE."""
         template = {}
