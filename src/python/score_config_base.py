@@ -76,7 +76,7 @@ class ConfigBase:
                     if isinstance(obj, ureg.Quantity):  # TODO fix
                         if obj.dimensionless:
                             if np.shape(obj.magnitude) == ():
-                                print(f">>>>>>>>> {key}, {np.dtype(obj.magnitude)}")
+                                # print(f">>>>>>>>> {key}, {np.dtype(obj.magnitude)}")
                                 dst = h5w.create_dataset(
                                     hpath, data=obj.magnitude
                                 )  # .item()
@@ -88,7 +88,7 @@ class ConfigBase:
                                 dst.attrs["units"] = f"{obj.units}"
                         else:
                             if np.shape(obj.magnitude) == ():
-                                print(f">>>>>>>>> {key}, {np.dtype(obj.magnitude)}")
+                                # print(f">>>>>>>>> {key}, {np.dtype(obj.magnitude)}")
                                 dst = h5w.create_dataset(
                                     hpath, data=obj.magnitude
                                 )  # .item()
