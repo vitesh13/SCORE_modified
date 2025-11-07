@@ -80,7 +80,7 @@ class ScoreConfig(ConfigBase):
         trg = f"entry{self.entry_id}/sample/"
         self.cfg[f"{trg}@NX_class"] = "NXsample"
         self.cfg[f"{trg}dimensionality"] = ureg.Quantity(np.uint32(3))
-        self.cfg[f"{trg}type"] = "simulation"
+        self.cfg[f"{trg}is_simulation"] = "simulation"
         self.cfg[f"{trg}atom_types"] = atom_types
 
     def material(self, parms: List[Tuple] = DF_MATERIAL):
@@ -132,7 +132,7 @@ class ScoreConfig(ConfigBase):
         if model == "damask":
             self.cfg[f"{trg}orientation"] = "damask"
         else:  # "csr":
-            self.cfg[f"{trg}orientation"] = "sample_from_nucleus_euler"
+            self.cfg[f"{trg}orientation"] = "ensemble"  # "random"
             if "bunge_euler" in parms and "incubation_time" in parms:
                 if (
                     np.shape(parms["bunge_euler"])[0]
@@ -252,7 +252,7 @@ class ScoreConfig(ConfigBase):
         """Configure solitary unit post-processing approach."""
         trg = f"entry{self.entry_id}/solitary_unit/"
         self.cfg[f"{trg}@NX_class"] = "NXparameters"
-        if number_of_domains <= 1:
+        if number_of_domains < 1:
             self.cfg[f"{trg}apply"] = False
             self.cfg[f"{trg}number_of_domains"] = ureg.Quantity(np.uint32(1))
         elif number_of_domains >= 1:

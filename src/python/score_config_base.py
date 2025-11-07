@@ -3,6 +3,7 @@ import flatdict as fd
 import numpy as np
 import yaml
 import h5py
+import datetime as dt
 from score_config_utils import recursive_assign
 from typing import Any, Dict
 from score_config_utils import ureg
@@ -75,9 +76,10 @@ class ConfigBase:
                     if isinstance(obj, ureg.Quantity):  # TODO fix
                         if obj.dimensionless:
                             if np.shape(obj.magnitude) == ():
+                                print(f">>>>>>>>> {key}, {np.dtype(obj.magnitude)}")
                                 dst = h5w.create_dataset(
-                                    hpath, data=obj.magnitude.item()
-                                )
+                                    hpath, data=obj.magnitude
+                                )  # .item()
                             else:
                                 dst = h5w.create_dataset(
                                     hpath, data=obj.magnitude
@@ -86,9 +88,10 @@ class ConfigBase:
                                 dst.attrs["units"] = f"{obj.units}"
                         else:
                             if np.shape(obj.magnitude) == ():
+                                print(f">>>>>>>>> {key}, {np.dtype(obj.magnitude)}")
                                 dst = h5w.create_dataset(
-                                    hpath, data=obj.magnitude.item()
-                                )
+                                    hpath, data=obj.magnitude
+                                )  # .item()
                             else:
                                 dst = h5w.create_dataset(
                                     hpath, data=obj.magnitude
@@ -109,4 +112,7 @@ class ConfigBase:
                         # print(f"attribute >>>> {hpath}, {attr_name}")
                         h5w[hpath].attrs[attr_name] = obj
             print("Attributes other than NX_class")
+            h5w["/entry1/start_time"] = (
+                f"{dt.datetime.now(dt.timezone.utc).isoformat().replace('+00:00', 'Z')}"
+            )
             print(f"{self.hdf5_file_name} written")
