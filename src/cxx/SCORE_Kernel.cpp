@@ -3213,12 +3213,14 @@ void ensembleHdl::init_nexus_results_file()
 		return;
 	}
 
+	/*
 	dsnm = grpnm + "/identifier_simulation";
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, simid, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
+	*/
 
 	dsnm = grpnm + "/start_time";
 	string start_time_stamp = timestamp_now_iso8601();

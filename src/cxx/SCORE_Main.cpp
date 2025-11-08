@@ -53,8 +53,9 @@
 //execute program via $mpiexec -n <numproc> scorehybrid_rhcs <ID> <INPUTFILE> optional:<EBSDMAPPING> <PRNGSEED>
 #define	ID						1
 #define INPUTFILE				2
-#define EBSDMAPPING				3
-#define PRNGSEED				4
+
+//#define EBSDMAPPING			3
+//#define PRNGSEED				4
 
 /*
 #include <sys/types.h>
@@ -218,15 +219,15 @@ int main(int argc, char** argv)
 
 		//preparation phase
 		myensemble->prof_t0 = MPI_Wtime();
-		if ( argc > (1+3) ) {
-			if ( atoi(argv[PRNGSEED]) > 0 )
-				myensemble->init_ensprng( atoi(argv[PRNGSEED]) );
-			else
-				myensemble->init_ensprng( true );
-		}
-		else {
-			myensemble->init_ensprng( true );
-		}
+		//if ( argc > (1+3) ) {
+		//	if ( atoi(argv[PRNGSEED]) > 0 )
+		//		myensemble->init_ensprng( atoi(argv[PRNGSEED]) );
+		//	else
+		//		myensemble->init_ensprng( true );
+		//}
+		//else {
+		myensemble->init_ensprng( true );
+		//}
 
 		myensemble->init_mpidatatypes();
 		if ( myensemble->init_parameter() == false ) { die("Invalid parameterization and/or input data!", true ); delete myensemble; return 0; }
