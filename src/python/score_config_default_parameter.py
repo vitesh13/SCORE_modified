@@ -14,12 +14,6 @@ from typing import List, Tuple, Dict, Any
 DF_MATERIAL: List[Tuple[str, Any]] = [
     ("shear_modulus", ureg.Quantity(np.float64(9.5e9), ureg.pascal)),
     ("burgers_vector", ureg.Quantity(np.float64(0.286), ureg.nanometer)),
-    (
-        "melting_temperature",
-        ureg.Quantity(np.float64(800.0), ureg.degC).to(
-            ureg.kelvin
-        ),  # + CELSIUS_TO_KELVIN_OFFSET ), ureg.kelvin).to,
-    ),
 ]
 
 DF_INIT_CUBOIDAL: Dict[str, Any] = {

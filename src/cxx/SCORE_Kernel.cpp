@@ -620,12 +620,11 @@ bool ensembleHdl::init_parameter_from_hdf_material() {
 	ensPhysData.thermexp_C = geTReal("AlloyConstantThermalExpCoeff", matpara); //thermal lattice expansion model
 	ensPhysData.thermexp_a = geTReal("FirstOrderThermalExpCoeff", matpara);
 	ensPhysData.thermexp_b = geTReal("SecondOrderThermalExpCoeff", matpara);
-	*/
-	//##TODO::check if not already in Kelvin?
 	if ( h5r.nexus_read( grpnm + "melting_temperature", ensPhysData.Tmelt ) != MYHDF5_SUCCESS ) {
 		status = false; cerr << grpnm << "melting_temperature" << endl;
 	}
-	if ( ensPhysData.G0 <= MYZERO || ensPhysData.bZeroCelsius <= MYZERO || ensPhysData.Tmelt <= MYZERO ) {
+	*/
+	if ( ensPhysData.G0 <= MYZERO || ensPhysData.bZeroCelsius <= MYZERO ) {
 		status = false; cerr << "Unrealistic material parameter!" << endl;
 	}
 	return status;
@@ -1299,17 +1298,15 @@ bool ensembleHdl::init_parameter_from_yml_material() {
 	ensPhysData.G0 = ryml_wrapper_read_value<double>(root, grpnm + "reference_shear_modulus/value");
 	ensPhysData.bZeroCelsius = ryml_wrapper_read_value<double>(root, grpnm + "reference_burgers_magnitude/value");
 	/*
-	//##TODO::
 	ensPhysData.dGdt = geTReal("FirstOrderdG0dT", matpara);
 	ensPhysData.thermexp_C = geTReal("AlloyConstantThermalExpCoeff", matpara); //thermal lattice expansion model
 	ensPhysData.thermexp_a = geTReal("FirstOrderThermalExpCoeff", matpara);
 	ensPhysData.thermexp_b = geTReal("SecondOrderThermalExpCoeff", matpara);
-	*/
-	//##TODO::check if not already in Kelvin?
 	ensPhysData.Tmelt = ryml_wrapper_read_value<double>(root, grpnm + "melting_temperature/value") + TOFFSET;
 	if ( ensPhysData.G0 <= 0.0 || ensPhysData.bZeroCelsius <= 0.0 || ensPhysData.Tmelt <= 0.0 ) {
 		status = false; cerr << "Inrealistic material parameter!" << endl;
 	}
+	*/
 	return status;
 }
 
