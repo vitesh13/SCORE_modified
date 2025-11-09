@@ -20,31 +20,34 @@ double caHdl::kam2rho( double kam )
 	//KAM needs to be defined in radiant
 }
 
+
 double caHdl::get_shearmodulus( double T )
 {
-	//temperature dependent shear modulus if desired
-	//see Nadal, M-H and Le Poac, P in J. of Appl. Phys. 93 2472 2003 for further details what to do close to the melting point
+	//temperature-dependent shear modulus if desired
+	//see Nadal, M-H and Le Poac, P in J. of Appl. Phys. 93 2472 2003
+	//for further details what to do close to the melting point
 	//MK::for Alu
-	//double CurrentG = myPhysData.G0 - (myPhysData.dGdt * ( T / myPhysData.Tmelt ));
+	return myPhysData.G0;
+	// - (myPhysData.dGdt * ( T / myPhysData.Tmelt ));
 
 	//overwritten for iron in accordance with Ledbetter, Reed, 1973
 	//MK::for bcc-iron, thesis MK
 	//return ( myPhysData.G0 * (1.0 - ((9e-10 * CUBE(T) - 7e-7*SQR(T) + 0.0003*T - 0.00028))) );
 
 	//MK::for bcc-iron, Kuehbach, Diehl
-	return myPhysData.G0 * ( -1.38e-9 * CUBE(T) + 1.21e-6 * SQR(T) - 4.58e-4 * T + 1.00 );
+	//return myPhysData.G0 * ( -1.38e-9 * CUBE(T) + 1.21e-6 * SQR(T) - 4.58e-4 * T + 1.00 );
 }
 
 
 double caHdl::get_burgersvector( double T )
 {
-	//temperature dependent Burgers vector as a result of lattice elongation/contraction
-	//double T = CurrentTemperature - TOFFSET;
-	//MK::for Alu
-	//double CurrentBurgersVector = myPhysData.bZeroCelsius * ( 1.0 + myPhysData.thermexp_C * ((myPhysData.thermexp_a * T) + ( myPhysData.thermexp_b * SQR(T) )) * 1e-6 );
+	//temperature-dependent Burgers vector as a result of lattice elongation/contraction
+	// Hidnert (1924) model for aluminium
+	return myPhysData.bZeroCelsius;
+	// * ( 1.0 + myPhysData.thermexp_C * ((myPhysData.thermexp_a * T) + ( myPhysData.thermexp_b * SQR(T) )) * 1e-6 );
 
 	//MK::for bcc iron up to 800deg celsius
-	return myPhysData.bZeroCelsius;
+	//return myPhysData.bZeroCelsius;
 }
 
 

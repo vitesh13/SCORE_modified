@@ -3,9 +3,7 @@
 #ifndef __SCORE_MATH_H_INCLUDED__
 #define __SCORE_MATH_H_INCLUDED__
 
-//#include <stdlib.h>
 #include "SCORE_Random.h"
-//#include <vector> //#MK::?
 
 //pure nature
 #define _PI_					3.1415926535897932384626433832795
@@ -65,9 +63,12 @@
 
 //choose the respective quaternion library, because there are still differences in their definitions
 //YOU MAY DEFINE ONLY ONE OF THOSE AT A TIME!
-//#define USE_QUATLIB_DEGRAEF				//following Rowenhorst 2015
-//#define USE_QUATLIB_DAMASK					//the implementations utilized in DAMASK v2.0.1
-#define USE_QUATLIB_IMM					//utilized with the IMM
+//#define USE_QUATLIB_DEGRAEF
+//following Rowenhorst 2015
+#define USE_QUATLIB_DAMASK
+//the implementations utilized in DAMASK v3.0.0
+//#define USE_QUATLIB_IMM
+//utilized with the IMM
 
 //scattering modes
 #define REFERENCE_TO_ROTATED_REFERENCE			(0x01)
