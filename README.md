@@ -4,6 +4,17 @@ SCORE targets computers running a Unix operating system. Windows11/WSL2 is also 
 0. Prerequisities
 Assure you have a working C++ compiler e.g., GNU or Intel installed, alongside
 `build-essentials`, `cmake`, `mpich`, `libssl-dev`, `wget`, and `git`.
+```
+gcc --version
+g++ --version
+# above two lines exemplify for GNU compiler, may need a change, e.g., icx and icpx respectively when using the Intel compiler
+cmake --version
+mpiexec --version
+openssl version -a
+wget --version
+git --version
+```
+
 If some are missing these can be installed e.g., through apt.
 
 1. Clone this repository.
