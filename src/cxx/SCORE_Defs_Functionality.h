@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: GNU General Public License v3.0 or later
 
 //MK::the SCORE --- statistical cellular operator for recrystallization --- modeling approach rests on the assumption
 //that it is sufficient to study a statistical ensemble of many periodic independent volume domains (the so-called)
