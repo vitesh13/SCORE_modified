@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 """Default parameterization of the SCORE model."""
 
 import numpy as np

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 import numpy as np
 import hashlib
 from pint import UnitRegistry

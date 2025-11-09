@@ -1,46 +1,4 @@
-/* 
-*	Copyright Markus Kuehbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. Kuehbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kuehbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Juelich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef __SCORE_KERNEL_H_INCLUDED__
 //#define __SCORE_KERNEL_H_INCLUDED__
@@ -584,7 +542,7 @@ void juncHdl::updateFaces( uint32_t p, vector<organizeBnd>* luu )
 }
 
 
-void juncHdl::registerMissingFaces( uint32_t p, vector<organizeBnd>* luu ) 
+void juncHdl::registerMissingFaces( uint32_t p, vector<organizeBnd>* luu )
 {
 	//CALLED FROM WITHIN PARALLEL REGION
 	uint32_t len = this->fjuncSkeleton[p].len;
@@ -610,7 +568,7 @@ void juncHdl::updateFaceCellBuffers( uint32_t p, vector<organizeBnd>* luu )
 	//CALLED FROM WITHIN PARALLEL REGION
 	QUICKASSERT( this->fjuncSkeleton[p].maxLen == luu->size() ); //checks correct length of threadlocal face container
 
-	for ( uint32_t f = 0; f < this->fjuncSkeleton[p].maxLen; f++ ) { 
+	for ( uint32_t f = 0; f < this->fjuncSkeleton[p].maxLen; f++ ) {
 		//now as all faces are registered we may require further memory to store individual cell positions because the calling thread may have already found
 		//all cells, only a few, none for each face i.e. pmax/pmin pairing
 		QUICKASSERT( this->fjuncSkeleton[p].thefaces[f].gposDown == luu->at(f).key );
@@ -644,7 +602,7 @@ void juncHdl::updateFaceCellBuffers( uint32_t p, vector<organizeBnd>* luu )
 }
 
 
-void juncHdl::addRemoteFaceCells( uint32_t p, uint32_t targetthread, vector<organizeBnd>* luu ) 
+void juncHdl::addRemoteFaceCells( uint32_t p, uint32_t targetthread, vector<organizeBnd>* luu )
 {
 //now collect pieces of information from other threads BUT THE SAME SEED ID!
 	uint32_t nthreads = omp_get_num_threads(); //int 2 uint32 safe because >=1 and not in the near future >INT32_RANGE
@@ -655,7 +613,7 @@ void juncHdl::addRemoteFaceCells( uint32_t p, uint32_t targetthread, vector<orga
 				juncHdlP remotejunc = &(this->mycaHdl->regions[t]->myjunctions);
 
 				for ( uint32_t cand = 0; cand < remotejunc->fjuncSkeleton[p].len; cand++ ) { //wont be executed if len == 0
-					if ( luu->at(f).key == remotejunc->fjuncSkeleton[p].thefaces[cand].gposDown ) { //##MK::micoropt potential when checking key != 
+					if ( luu->at(f).key == remotejunc->fjuncSkeleton[p].thefaces[cand].gposDown ) { //##MK::micoropt potential when checking key !=
 						//copy all cells from this face
 						QUICKASSERT( p == remotejunc->fjuncSkeleton[p].thefaces[cand].gposUp );
 						QUICKASSERT( &(this->fjuncSkeleton[p].thefaces[luu->at(f).poslocal].voxelizedface) == &(this->mycaHdl->regions[targetthread]->myjunctions.fjuncSkeleton[p].thefaces[luu->at(f).poslocal].voxelizedface) );
@@ -757,7 +715,7 @@ void juncHdl::ompshar_detect_junctions()
 					}
 					testseed = INVALID_SEED; //+x
 					if ( (x+1) < gxmx ) {
-						if ( x < xmx ) 
+						if ( x < xmx )
 							testseed = thecells[(x+1-xmi)+(y-ymi)*xx+(z-zmi)*xxyy];
 						//else, ##MK::same as above
 						//	testseed = read_cellstate_px( this->mymemreg->mythreadid, (x+1), y, z );
@@ -784,7 +742,7 @@ void juncHdl::ompshar_detect_junctions()
 					if ( character < 3 ) { //3, [111]
 						//if this executes, character is < 3 and for sure [110] so access to threeseeds still valid and including a test for INVALID_SEED with the last condition
 						testseed = INVALID_SEED; //+y
-						if ( (y+1) < gymx ) { 
+						if ( (y+1) < gymx ) {
 							if ( y < ymx )
 								testseed = thecells[(x-xmi)+(y+1-ymi)*xx+(z-zmi)*xxyy];
 							else
@@ -799,10 +757,10 @@ void juncHdl::ompshar_detect_junctions()
 					}
 					if ( character < 3 ) {
 						testseed = INVALID_SEED; //-z
-						if ( z != 0  ) { 
+						if ( z != 0  ) {
 							if ( z > zmi )
 								testseed = thecells[(x-xmi)+(y-ymi)*xx+(z-1-zmi)*xxyy];
-							else 
+							else
 								testseed = read_cellstate_mz( this->mymemreg->mythreadid, x, y, (z-1) );
 						}
 						if ( testseed != currseed && testseed != threeseeds[0] && testseed != threeseeds[1] && testseed != threeseeds[2] ) {
@@ -862,7 +820,7 @@ void juncHdl::ompshar_detect_junctions()
 		continue;
 }*/
 
-void juncHdl::ompshar_report_junctions() 
+void juncHdl::ompshar_report_junctions()
 {
 	//##MK::output all my junctions via pmax;pmi;poslocal;cnt
 }
@@ -905,7 +863,7 @@ void juncHdl::ompshar_consolidate_junctions()
 			//first add my own pairs pmax/pmin
 			for ( uint32_t f = 0; f < myca->regions[target]->myjunctions.fjuncSkeleton[pmax].len; f++ ) { //may add nothing if len = 0
 				//by construction of the faces pmi ID are mutually exclusive
-				struct organizeBnd akey; 
+				struct organizeBnd akey;
 				akey.key = myca->regions[target]->myjunctions.fjuncSkeleton[pmax].thefaces[f].gposDown;
 				akey.cnt = myca->regions[target]->myjunctions.fjuncSkeleton[pmax].thefaces[f].nextfreevoxelslot;
 				akey.poslocal = f;
@@ -913,7 +871,7 @@ void juncHdl::ompshar_consolidate_junctions()
 			}
 			posloc = myca->regions[target]->myjunctions.fjuncSkeleton[pmax].len;
 			//sweep through all other threads to find further faces logically assigned to pmax or additional cells that require association with any of my pairs pmax/pmin
-			for ( uint32_t t = MASTER; t < nthreads; t++ ) { 
+			for ( uint32_t t = MASTER; t < nthreads; t++ ) {
 				if ( t != target ) { //MK::query remote information
 					for ( uint32_t f = 0; f < myca->regions[t]->myjunctions.fjuncSkeleton[pmax].len; f++ ) { //does not execute when len == 0
 						uint32_t pmi = myca->regions[t]->myjunctions.fjuncSkeleton[pmax].thefaces[f].gposDown;
@@ -939,7 +897,7 @@ void juncHdl::ompshar_consolidate_junctions()
 				} //inspect all pairs on thread t
 			}
 			//by now if lu->size() > 0 we know that the first entries refer to the exact order of pmi ids in the target's thread container | all which follow belong to other ids
-			//only continue if there are at all faces for the grain, this has to be tested even though for sure all grains have physically faces, logically a face 
+			//only continue if there are at all faces for the grain, this has to be tested even though for sure all grains have physically faces, logically a face
 			//is associated always with the grain with the higher ID pmax, therefore grain 1 has for sure logically no boundaries as all neighbors (2,3,4,5) have higher indices
 			if ( lu->size() == 0 ) { //nothing found neither in my database nor in those of the other threads...
 				delete lu;

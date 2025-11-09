@@ -1,9 +1,8 @@
 ## Getting started
 SCORE targets computers running a Unix operating system. Windows11/WSL2 is also possible.
 
-0. Prerequisities
-Assure you have a working C++ compiler e.g., GNU or Intel installed, alongside
-`build-essentials`, `cmake`, `mpich`, `libssl-dev`, `wget`, and `git`.
+0. Assure you have a working C++ compiler e.g., GNU or Intel installed, alongside
+`build-essentials`, `cmake`, `mpich`, `libssl-dev`, `wget`, and `git`. If some are missing these can be installed e.g., through apt.
 ```
 gcc --version
 g++ --version
@@ -15,7 +14,7 @@ wget --version
 git --version
 ```
 
-If some are missing these can be installed e.g., through apt.
+
 
 1. Clone this repository.
 ```

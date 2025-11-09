@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 import numpy as np
 from score_config_utils import ureg
 from typing import List, Tuple, Dict, Any
