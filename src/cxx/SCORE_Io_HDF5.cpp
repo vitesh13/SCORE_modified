@@ -1,20 +1,20 @@
-/* 
+/*
 *	Copyright Markus Kuehbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
+*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying
 *	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
 *	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
+*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables
 *	studies with much higher statistical significance as orders of magnitude more grains can be studied
 *	while these are solved at the same time in independent individual simulations which are thus executable
 *	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
+*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes.
+*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. Kuehbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kuehbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
@@ -65,17 +65,17 @@ bool caHdl::hdf5_write_coordinates( string fname, string grpname )
 	//check if total size of the dataset can be written with HDF5 at once keeping in mind the underlying
 	//MPII/O which cannot handle writes of >2GB!
 	if ( (nxyz*3*sizeof(unsigned int)) > HDF5_MAXIMUM_SINGLE_WRITE ) {
-		cout << "ERROR::HDF5 cannot write " << (nxyz*3*sizeof(unsigned int)) << " Bytes at once!" <<endl; 
+		cout << "ERROR::HDF5 cannot write " << (nxyz*3*sizeof(unsigned int)) << " Bytes at once!" <<endl;
 		return false;
 	}
 
 	/*unsigned int** corr = NULL; //set up coordinate field
 	corr = new unsigned int*[nxyz];
 	uint32_t cxyz = 0;
-	for ( cxyz = 0; cxyz < nxyz; cxyz++ ) 
+	for ( cxyz = 0; cxyz < nxyz; cxyz++ )
 		corr[cxyz] = new unsigned int[3];
 	cxyz = 0; //fill coordinates
-	for ( uint32_t z = 0; z < xmf.nz; z++ ) { 
+	for ( uint32_t z = 0; z < xmf.nz; z++ ) {
 		for ( uint32_t y = 0; y < xmf.ny; y++ ) {
 			for ( uint32_t x = 0; x < xmf.nx; x++ ) {
 				corr[cxyz][0] = x;
@@ -87,7 +87,7 @@ bool caHdl::hdf5_write_coordinates( string fname, string grpname )
 	}*/
 	unsigned int* corr = new unsigned int[3*nxyz];
 	unsigned int cxyz = 0;
-	for ( uint32_t z = 0; z < xmf.nz; z++ ) { 
+	for ( uint32_t z = 0; z < xmf.nz; z++ ) {
 		for ( uint32_t y = 0; y < xmf.ny; y++ ) {
 			for ( uint32_t x = 0; x < xmf.nx; x++ ) {
 				corr[3*cxyz+0] = myrenderwindow.xmi + x;
@@ -114,7 +114,7 @@ bool caHdl::hdf5_write_coordinates( string fname, string grpname )
 	status = H5Sclose(space);
 	status = H5Fclose(file);
 
-	/*for ( cxyz = 0; cxyz < nxyz; cxyz++ ) 
+	/*for ( cxyz = 0; cxyz < nxyz; cxyz++ )
 		delete [] corr[cxyz];
 	delete [] corr;*/
 	delete [] corr;
@@ -183,7 +183,7 @@ bool caHdl::hdf5_write_voxelgrid_grainid( string fname, string grpname, string s
 
 				xper = this->regions[r]->myGeom.nreg_rd; //and width in x
 				xlim = (this->regions[r]->myGeom.nreg_rdmax > myrenderwindow.xmx) ? myrenderwindow.xmx : this->regions[r]->myGeom.nreg_rdmax; //inclusive global coordinates
-				xstart = (this->regions[r]->myGeom.nreg_rdmin < myrenderwindow.xmi) ? myrenderwindow.xmi : this->regions[r]->myGeom.nreg_rdmin; 
+				xstart = (this->regions[r]->myGeom.nreg_rdmin < myrenderwindow.xmi) ? myrenderwindow.xmi : this->regions[r]->myGeom.nreg_rdmin;
 				rxmi = this->regions[r]->myGeom.nreg_rdmin;
 
 				for ( uint32_t yy = ystart; yy <= ylim; yy++ ) { //..mi and ..mx are global automaton coordinates!
@@ -282,7 +282,7 @@ bool caHdl::hdf5_write_voxelgrid_rho( string fname, string grpname, string subgr
 	double* buffer = NULL;
 	buffer = new double[nxyz];
 	QUICKASSERT( buffer != NULL );
-	for ( uint32_t i = 0; i < nxyz; i++ ) { 
+	for ( uint32_t i = 0; i < nxyz; i++ ) {
 		buffer[i] = RHO_RECRYSTALLIZED_MATERIAL; //##MK::currently no particles
 	}
 
@@ -322,7 +322,7 @@ bool caHdl::hdf5_write_voxelgrid_rho( string fname, string grpname, string subgr
 
 				xper = this->regions[r]->myGeom.nreg_rd; //and width in x
 				xlim = (this->regions[r]->myGeom.nreg_rdmax > myrenderwindow.xmx) ? myrenderwindow.xmx : this->regions[r]->myGeom.nreg_rdmax; //inclusive global coordinates
-				xstart = (this->regions[r]->myGeom.nreg_rdmin < myrenderwindow.xmi) ? myrenderwindow.xmi : this->regions[r]->myGeom.nreg_rdmin; 
+				xstart = (this->regions[r]->myGeom.nreg_rdmin < myrenderwindow.xmi) ? myrenderwindow.xmi : this->regions[r]->myGeom.nreg_rdmin;
 				rxmi = this->regions[r]->myGeom.nreg_rdmin;
 
 				for ( uint32_t yy = ystart; yy <= ylim; yy++ ) { //..mi and ..mx are global automaton coordinates!
@@ -408,7 +408,7 @@ bool caHdl::mpiio_write_voxelgrid_ipfz( string fname )
 	//check if total size of the dataset can be written with HDF5 at once keeping in mind the underlying
 	//MPII/O which cannot handle writes of >2GB!
 	if ( nxy * (3*sizeof(unsigned char)) > MPIIO_MAXIMUM_SINGLE_WRITE ) {
-		cout << "ERROR::MPI I/O cannot write " << (nxy * (3*sizeof(unsigned char))) << " Bytes at once!" <<endl; 
+		cout << "ERROR::MPI I/O cannot write " << (nxy * (3*sizeof(unsigned char))) << " Bytes at once!" <<endl;
 		return false;
 	}
 
@@ -463,7 +463,7 @@ bool caHdl::mpiio_write_voxelgrid_ipfz( string fname )
 
 				xper = this->regions[r]->myGeom.nreg_rd; //and width in x
 				xlim = (this->regions[r]->myGeom.nreg_rdmax > myrenderwindow.xmx) ? myrenderwindow.xmx : this->regions[r]->myGeom.nreg_rdmax; //inclusive global coordinates
-				xstart = (this->regions[r]->myGeom.nreg_rdmin < myrenderwindow.xmi) ? myrenderwindow.xmi : this->regions[r]->myGeom.nreg_rdmin; 
+				xstart = (this->regions[r]->myGeom.nreg_rdmin < myrenderwindow.xmi) ? myrenderwindow.xmi : this->regions[r]->myGeom.nreg_rdmin;
 				rxmi = this->regions[r]->myGeom.nreg_rdmin;
 
 
@@ -538,7 +538,7 @@ bool caHdl::hdf5_write_voxelgrid_ipfz( string fname, string grpname, string subg
 	//check if total size of the dataset can be written with HDF5 at once keeping in mind the underlying
 	//MPII/O which cannot handle writes of >2GB!
 	if ( nxyz * (3*sizeof(unsigned char)) > HDF5_MAXIMUM_SINGLE_WRITE ) {
-		cout << "ERROR::HDF5 cannot write " << (nxyz * (3*sizeof(unsigned char))) << " Bytes at once!" <<endl; 
+		cout << "ERROR::HDF5 cannot write " << (nxyz * (3*sizeof(unsigned char))) << " Bytes at once!" <<endl;
 		return false;
 	}
 
@@ -588,7 +588,7 @@ bool caHdl::hdf5_write_voxelgrid_ipfz( string fname, string grpname, string subg
 
 				xper = this->regions[r]->myGeom.nreg_rd; //and width in x
 				xlim = (this->regions[r]->myGeom.nreg_rdmax > myrenderwindow.xmx) ? myrenderwindow.xmx : this->regions[r]->myGeom.nreg_rdmax; //inclusive global coordinates
-				xstart = (this->regions[r]->myGeom.nreg_rdmin < myrenderwindow.xmi) ? myrenderwindow.xmi : this->regions[r]->myGeom.nreg_rdmin; 
+				xstart = (this->regions[r]->myGeom.nreg_rdmin < myrenderwindow.xmi) ? myrenderwindow.xmi : this->regions[r]->myGeom.nreg_rdmin;
 				rxmi = this->regions[r]->myGeom.nreg_rdmin;
 
 				for ( uint32_t yy = ystart; yy <= ylim; yy++ ) { //..mi and ..mx are global automaton coordinates!
@@ -723,7 +723,7 @@ void caHdl::hdf5_write_xmffile_3dcorectmesh( string fname, string hfname, string
 	xdmf <<(char)60<<(char)33<<"DOCTYPE Xdmf SYSTEM "<<(char)34<<"Xdmf.dtd"<<(char)34<<" []>\n";
 	xdmf <<(char)60<<"Xdmf xmlns:xi="<<(char)34<<"http:"<<(char)47<<(char)47<<"www.w3.org/2003/XInclude"<<(char)34<<" Version"<<(char)61<<(char)34<<"2.2"<<(char)34<<">\n";
 	xdmf <<"\t<Domain>\n";
-	
+
 	string prefix = "SCORE_v130";
 	string prgname = prefix + "_TimeSeries";
 	xdmf <<"\t\t<Grid Name="<<(char)34<<prgname<<(char)34<<" GridType="<<(char)34<<"Collection"<<(char)34<<" CollectionType="<<(char)34<<"Temporal"<<(char)34<<">\n";
@@ -806,7 +806,7 @@ void caHdl::raw_write_xmffile_3dcorectmesh( string fname, string binprefix )
 	xdmf <<(char)60<<(char)33<<"DOCTYPE Xdmf SYSTEM "<<(char)34<<"Xdmf.dtd"<<(char)34<<" []>\n";
 	xdmf <<(char)60<<"Xdmf xmlns:xi="<<(char)34<<"http:"<<(char)47<<(char)47<<"www.w3.org/2003/XInclude"<<(char)34<<" Version"<<(char)61<<(char)34<<"2.2"<<(char)34<<">\n";
 	xdmf <<"\t<Domain>\n";
-	
+
 	string prefix = "SCORE_v130";
 	string prgname = prefix + "_TimeSeries";
 	xdmf <<"\t\t<Grid Name="<<(char)34<<prgname<<(char)34<<" GridType="<<(char)34<<"Collection"<<(char)34<<" CollectionType="<<(char)34<<"Temporal"<<(char)34<<">\n";
@@ -870,7 +870,7 @@ void caHdl::ompcrit_write_voxeldata_h5( unsigned char colormodel, string grpnm, 
 		sbgrpn = grpnm + "/grainid_" + std::to_string(stp);
 	else if ( colormodel == RENDERING_COLOR_IPFZ )
 		sbgrpn = grpnm + "/ipfz_" + std::to_string(stp);
-	else if ( colormodel == RENDERING_COLOR_RHO ) 
+	else if ( colormodel == RENDERING_COLOR_RHO )
 		sbgrpn = grpnm + "/rho_" + std::to_string(stp);
 	else
 		return;
@@ -936,6 +936,92 @@ void caHdl::ompcrit_write_voxeldata_h5( unsigned char colormodel, string grpnm, 
 			}
 		}
 	} //end metadatahandling
+}
+
+
+void caHdl::nexus_write_summary_stats()
+{
+	//CALLED FROM WITHIN PARALLEL REGION BY MASTER ONLY!
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
+	string grpnm = "/entry1/spatiotemporal1/summary_statistics";
+	ioAttributes anno = ioAttributes();
+	anno.add( "NX_class", string("NXprocess") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	//add NeXus default plot and annotations
+	string subgrpnm = grpnm + "/kinetics";
+	ioAttributes anno = ioAttributes();
+	anno.add( "NX_class", string("NXdata") );
+	anno.add( "signal", "x" );
+	//anno.add( "axes", string("time") );
+	anno.add( "axes", string("iteration") );
+	anno.add( "time_indices", (unsigned int) 0 );
+	anno.add( "iteration_indices", (unsigned int) 0 );
+	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = subgrpm + "/title";
+	string title = "X(i)"  //"X(t)"
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, title, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	dsnm = subgrpnm + "/time";
+	vector<double> f64 = vector<double>( tmynexusstats.size(), 0.0);
+	for ( size_t i = 0; i < mynexusstats.size(); i++ ) {
+		f64.push_back(mynexusstats[i].localtime );
+	}
+	anno = ioAttributes();
+	anno.add( "long_name", string("t(s)"));
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size()}, {f64.size()}),
+		f64,
+		anno) != MYHDF5_SUCCESS ) {
+			cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+
+	dsnm = subgrpnm + "/x";
+	f64 = vector<double>( mynexusstats.size(), 0.0);
+	for ( size_t i = 0; i < mynexusstats.size(); i++ ) {
+		f64.push_back(mynexusstats[i].localxexact );
+	}
+	anno = ioAttributes();
+	anno.add( "long_name", string("X"));
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size()}, {f64.size()}),
+		f64,
+		anno) != MYHDF5_SUCCESS ) {
+			cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+
+	dsnm = subgrpnm + "/iteration";
+	u32 = vector<unsigned int>( mynexusstats.size(), 0 );
+	for ( size_t i = 0; i < mynexusstats.size(); i++ ) {
+		u32.push_back(mynexusstats[i].localiteration );
+	}
+	anno = ioAttributes();
+	anno.add( "long_name", "Iteration i");
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({u32.size()}, {u32.size()}),
+		u32,
+		anno) != MYHDF5_SUCCESS ) {
+			cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u32 = vector<unsigned int>();
 }
 
 #define DIM0			4
@@ -1105,7 +1191,7 @@ void caHdl::write_clustersizedistr_h5_create()
 	//omp_unset_lock(&h5lock);
 }
 
- 
+
 void caHdl::write_clustersizedistr_h5( unsigned int* dist, unsigned int ndist )
 {
 	//###implement
@@ -1147,7 +1233,7 @@ void caHdl::write_clustersizedistr_h5( unsigned int* dist, unsigned int ndist )
 hid_t caHdl::HDF5_openFile( string fname ){
 // the files can be opened in parallel however as parallelization architecture is not known, only simple file opening is done
        hid_t file;
-       
+
        file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT); // simplest file opening
        // can be improved further to open only when file exists etc (like in DAMASK)
        return file;
@@ -1157,19 +1243,19 @@ hid_t caHdl::HDF5_openFile( string fname ){
 hid_t caHdl::HDF5_openGroup( hid_t loc_id, string groupname ){
 
         hid_t group_ID;
-        
+
         group_ID = H5Gopen( loc_id, groupname.c_str(), H5P_DEFAULT );
         return group_ID;
 }
 
 void caHdl::HDF5_writeFileAttribute( hid_t obj_id, string attribute_name, string attribute_value ){
-        
+
        hid_t attr, type_id, space_id;
 
        // the string needs tobe converted to a char pointer and then it works (this is similar to what DAMASK HDF5 does
        //https://forum.hdfgroup.org/t/write-data-to-variable-length-string-attribute/8101
        const char* val[1] = {attribute_value.c_str()};
-  
+
        type_id = H5Tcopy(H5T_C_S1);
        H5Tset_size(type_id,H5T_VARIABLE);
 
@@ -1181,35 +1267,35 @@ void caHdl::HDF5_writeFileAttribute( hid_t obj_id, string attribute_name, string
 }
 
 void caHdl::HDF5_writeGroupAttribute_int( hid_t obj_id, string attribute_name, uint32_t value ){
-     hid_t attr, space_id; 
+     hid_t attr, space_id;
 
      space_id = H5Screate( H5S_SCALAR );
      attr = H5Acreate( obj_id, attribute_name.c_str(), H5T_NATIVE_UINT, space_id, H5P_DEFAULT, H5P_DEFAULT);
 
-     uint32_t* wdata = &value; 
+     uint32_t* wdata = &value;
      H5Awrite( attr, H5T_NATIVE_UINT, wdata);
      H5Aclose( attr );
 }
 
 void caHdl::HDF5_writeGroupAttribute_int_rank_1( hid_t obj_id, string attribute_name, std::vector<uint32_t> value ){
-     hid_t attr, space_id; 
-     hsize_t dims[1] = {value.size()};  
+     hid_t attr, space_id;
+     hsize_t dims[1] = {value.size()};
 
      space_id = H5Screate_simple( 1, dims, NULL );
      attr = H5Acreate( obj_id, attribute_name.c_str(), H5T_NATIVE_UINT, space_id, H5P_DEFAULT, H5P_DEFAULT);
 
-     uint32_t* wdata = &value[0]; 
+     uint32_t* wdata = &value[0];
      H5Awrite( attr, H5T_NATIVE_UINT, wdata);
      H5Aclose( attr );
 }
 
 void caHdl::HDF5_writeGroupAttribute_float( hid_t obj_id, string attribute_name, double value ){
-     hid_t attr, space_id; 
+     hid_t attr, space_id;
 
      space_id = H5Screate( H5S_SCALAR );
      attr = H5Acreate( obj_id, attribute_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT);
 
-     double* wdata = &value; 
+     double* wdata = &value;
      H5Awrite( attr, H5T_NATIVE_DOUBLE, wdata);
      H5Aclose( attr );
 }
@@ -1219,16 +1305,16 @@ void caHdl::HDF5_write_float_attribute(string fname, string group_name, double f
 
     file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
     group_id = H5Gopen( file, group_name.c_str(), H5P_DEFAULT);
-    
+
     HDF5_writeGroupAttribute_float( group_id,attribute_name,frac_RX );
-    
+
     H5Gclose( group_id );
     H5Fclose( file );
 }
 
 hid_t caHdl::HDF5_openAttribute( hid_t obj_id, string attribute_name ){
         hid_t attr_id;
-       
+
         attr_id = H5Aopen( obj_id, attribute_name.c_str(), H5P_DEFAULT);
         return attr_id;
 }
@@ -1239,7 +1325,7 @@ double* caHdl::HDF5_read_attribute_float(hid_t attr_id){
        int i;
        double *float_array;
        size_t npoints;
-       
+
        mem_type_id = H5Aget_type( attr_id );
 
        // assuming a float array as attribute
@@ -1268,9 +1354,9 @@ std::vector<int> caHdl::HDF5_read_dataset_int_rank_1(hid_t loc_id, string datase
        double *float_array;
        int *rdata;
        size_t npoints;
-       hsize_t adims[1] = {0}, 
+       hsize_t adims[1] = {0},
                dims[1] = {0};
-       
+
        dset_id = H5Dopen( loc_id, datasetname.c_str(),H5P_DEFAULT );
        mem_type_id = H5Dget_type( dset_id );
 
@@ -1297,7 +1383,7 @@ std::vector<std::vector<int>> caHdl::HDF5_read_dataset_int_rank_2(hid_t loc_id, 
        int i, j, ndims;
        size_t npoints;
        hsize_t dims[2] = {0,0};
-       
+
        dset_id = H5Dopen( loc_id, datasetname.c_str(),H5P_DEFAULT );
        mem_type_id = H5Dget_type( dset_id );
 
@@ -1327,7 +1413,7 @@ std::vector<std::vector<int>> caHdl::HDF5_read_dataset_int_rank_2(hid_t loc_id, 
        return rdata_vec;
 }
 
-std::vector<std::vector<double>> caHdl::HDF5_read_dataset_float_rank_2(hid_t loc_id, string datasetname ){ 
+std::vector<std::vector<double>> caHdl::HDF5_read_dataset_float_rank_2(hid_t loc_id, string datasetname ){
 //void caHdl::HDF5_read_dataset_float_rank_2(hid_t loc_id, string datasetname ){
        hid_t mem_type_id, aspace, dset_id, dapl_id;
        herr_t ret;
@@ -1335,7 +1421,7 @@ std::vector<std::vector<double>> caHdl::HDF5_read_dataset_float_rank_2(hid_t loc
        double *float_array;
        size_t npoints;
        hsize_t dims[2] = {0,0};
-       
+
        dset_id = H5Dopen( loc_id, datasetname.c_str(),H5P_DEFAULT );
        mem_type_id = H5Dget_type( dset_id );
 
@@ -1371,7 +1457,7 @@ std::vector<int> caHdl::HDF5_read_dataset_int_rank_4(hid_t loc_id, string datase
        int i, j, k, l, index, ndims;
        size_t npoints;
        hsize_t dims[4] = {0,0,0,0};
-       
+
        dset_id = H5Dopen( loc_id, datasetname.c_str(),H5P_DEFAULT );
        mem_type_id = H5Dget_type( dset_id );
 
@@ -1408,7 +1494,7 @@ int* caHdl::HDF5_read_attribute_int(hid_t attr_id){
        int i;
        int *int_array;
        size_t npoints;
-       
+
        mem_type_id = H5Aget_type( attr_id );
 
        // assuming a float array as attribute
@@ -1431,9 +1517,9 @@ int* caHdl::HDF5_read_attribute_int(hid_t attr_id){
 
 void caHdl::HDF5_create_CA_output( string fname ){
      hid_t file;
-     
-     file = H5Fcreate( fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);   
-     HDF5_writeFileAttribute( file, "InputFileName","example.uds" ); 
+
+     file = H5Fcreate( fname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+     HDF5_writeFileAttribute( file, "InputFileName","example.uds" );
      HDF5_writeFileAttribute( file, "Material", "Aluminium");
      HDF5_writeFileAttribute( file, "Crystal Structure", "FCC");
      H5Fclose( file );
@@ -1453,14 +1539,14 @@ void caHdl::HDF5_write_CA_output_int( string fname, double t, std::vector<int> d
      string sub_group_name_1 = "Grain_based_data";
 
      file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
-  
+
      // create the groups and sub-groups here
      group_id = H5Gcreate( file, group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
 
      sub_group_id_1 = H5Gcreate( group_id, sub_group_name_1.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
 
      sub_group_id = H5Gcreate( group_id, sub_group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
- 
+
      // add attributes to the cell based data group
      HDF5_writeGroupAttribute_int( sub_group_id, "Nx", this->myCAGeometry.nboxedge_rd);
      HDF5_writeGroupAttribute_int( sub_group_id, "Ny", this->myCAGeometry.nboxedge_td);
@@ -1471,11 +1557,11 @@ void caHdl::HDF5_write_CA_output_int( string fname, double t, std::vector<int> d
      HDF5_writeGroupAttribute_int_rank_1( sub_group_id_1, "Recrystallized Grains", rx_grain_lims);
 
      space_id = H5Screate_simple( 1, dims, NULL );
-    
+
      int* wdata = &data[0];
-     dset_id = H5Dcreate( sub_group_id, dset_name.c_str(), H5T_NATIVE_INT, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
+     dset_id = H5Dcreate( sub_group_id, dset_name.c_str(), H5T_NATIVE_INT, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
      status  = H5Dwrite( dset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata);
-     
+
      H5Dclose( dset_id );
      H5Sclose( space_id );
      H5Gclose( sub_group_id_1 );
@@ -1491,15 +1577,15 @@ void caHdl::HDF5_write_CA_output_double_rank_1( string fname, string group_name,
      herr_t status;
 
      file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
-  
+
      group_id = HDF5_openGroup( file, group_name);
 
      space_id = H5Screate_simple( 1, dims, NULL );
-    
+
      double* wdata = &data[0];
-     dset_id = H5Dcreate( group_id, dset_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
+     dset_id = H5Dcreate( group_id, dset_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
      status  = H5Dwrite( dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata);
-     
+
      H5Dclose( dset_id );
      H5Sclose( space_id );
      H5Gclose( group_id );
@@ -1518,11 +1604,11 @@ void caHdl::HDF5_write_CA_output_double_rank_2( string fname, string group_name,
      //string group_name = "Time_" + s;
 
      file = H5Fopen( fname.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
-  
+
      group_id = H5Gopen( file, group_name.c_str(), H5P_DEFAULT);
 
      space_id = H5Screate_simple( 2, dims, NULL );
-    
+
      // convert 2D data to 1D contiguous array
      for (i = 0; i < dims[0]; i++){
          for(j = 0; j < dims[1]; j++){
@@ -1531,11 +1617,11 @@ void caHdl::HDF5_write_CA_output_double_rank_2( string fname, string group_name,
          }
      }
      double* wdata = &cont_data[0];
-     
-     
-     dset_id = H5Dcreate( group_id, dset_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );          
+
+
+     dset_id = H5Dcreate( group_id, dset_name.c_str(), H5T_NATIVE_DOUBLE, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
      status  = H5Dwrite( dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata);
-     
+
      H5Dclose( dset_id );
      H5Sclose( space_id );
      H5Gclose( group_id );

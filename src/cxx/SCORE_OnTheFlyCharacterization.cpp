@@ -1,20 +1,20 @@
-/* 
+/*
 *	Copyright Markus Kuehbach, 2014-2017
 *	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
 *	contributed to the code.
 
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
+*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying
 *	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
 *	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
+*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables
 *	studies with much higher statistical significance as orders of magnitude more grains can be studied
 *	while these are solved at the same time in independent individual simulations which are thus executable
 *	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
+*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes.
+*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread
 *	parallelism accelerates the executing of each individual CA domain. The method is described in:
 
-*	M. Kuehbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
+*	M. Kuehbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton
 *	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
 *	http://dx.doi.org/10.1016/j.actamat.2016.01.068
 
@@ -81,7 +81,7 @@ void caHdl::log_initialization()
 		//write_damask_geom_h5( "NetworkInitialState" );
 	}
 
-	//when desiring percolation analysis create a 
+	//when desiring percolation analysis create a
 	if ( percolation == PERCOLATION_ANALYZE_YES_SZDISTR ) {
 		write_clustersizedistr_h5_create();
 	}
@@ -415,7 +415,7 @@ void caHdl::log_rxfrontstats()
 	rflog.localX = this->X;
 	rflog.localmemory = this->myMemGuard;
 	rflog.localPmax = this->myMobilityWeightMax;
-	
+
 	rflog.localstep = this->step;
 	rflog.localSv = this->Sv;
 
@@ -443,7 +443,7 @@ void caHdl::log_grainevo()
 	//MK::in the old get_interp cell count there was a significant amount of time wasted with scanning mygrainevolution[i].localtime which is 40Byte just to find the internal
 	//now this scanning is first performed on mygrainevolutionlocaltime and then only for the interesting data the cache misses are paid for
 	mygrainevolutionlocaltime.push_back ( t );
-	
+
 	//temporary stack object invoking vector copy constructor of uninitialized grevo
 	struct loginfo_grainevo_ca grevo;
 	mygrainevolution.push_back ( grevo );
@@ -549,7 +549,7 @@ void caHdl::log_OUTPUT()
 					else
 						cout << "ERROR::2D output in RAW format supports currently only IPFZ coloring!" << endl;
 				}
-				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ) 
+				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 )
 					cout << "ERROR::2D output with HDF5 currently not supported!" << endl;
 			}
 			*/
@@ -558,7 +558,7 @@ void caHdl::log_OUTPUT()
 				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW ) {
 					if ( outopt_localrendercolor == RENDERING_COLOR_GRAINID )
 						ompcrit_write_voxeldata_coloring_grainids( "GROWTH.3DGrainID" );
-					else 
+					else
 						cout << "ERROR::3D output in RAW format supports currently only grainid coloring!" << endl;
 				}
 				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ) {
@@ -938,13 +938,20 @@ void caHdl::nexus_write_snapshot_grain_based()
 	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/crystals";
 	string dsnm = "";
 
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXmicrostructure_feature") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	/* ##TODO::switched off until uint8 bug fixed in NOMAD
 	vector<unsigned char> u08 = vector<unsigned char>( ndisjoint_grains, 0x01 );
 	dsnm = grpnm + "/is_deformed";
 	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
 		u08[rg] = 0x00;
 	}
 	anno = ioAttributes();
-	/* ##TODO::switched off until uint8 bug fixed in NOMAD
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({u08.size()}, {u08.size()}),
@@ -953,7 +960,6 @@ void caHdl::nexus_write_snapshot_grain_based()
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
-	*/
 	u08 = vector<unsigned char>();
 
 	u08 = vector<unsigned char>( ndisjoint_grains, 0x01 );
@@ -971,8 +977,8 @@ void caHdl::nexus_write_snapshot_grain_based()
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
-	*/
 	u08 = vector<unsigned char>();
+	*/
 
 	dsnm = grpnm + "/volume";
 	anno = ioAttributes();
@@ -1001,6 +1007,8 @@ void caHdl::nexus_write_snapshot_grain_based()
 		return;
 	}
 	f64 = vector<double>();
+
+	mynexusstats.push_back( loginfo_nexus( this->t, this->Xexact ) );
 
 	dsnm = grpnm + "/x_set";
 	double XXset = output_atthisX[loginfo_grainevo_cnt] / ((double) myCAGeometry.nboxvol_rdtdnd);
@@ -1073,6 +1081,13 @@ void caHdl::nexus_write_snapshot_front_based()
 	ioAttributes anno = ioAttributes();
 	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/recrystallization_front";
 	string dsnm = "";
+
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXmicrostructure_feature") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
 
 	vector<short> i16;
 	dsnm = grpnm + "/coordinate";
@@ -1378,6 +1393,14 @@ void caHdl::nexus_write_snapshot_cell_based()
 	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/grid";
 	string dsnm = "";
 
+	subgrpnm = grpnm + "/grid";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXcg_grid") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
 	dsnm = grpnm + "/indices_crystal";
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
@@ -1485,30 +1508,6 @@ void caHdl::nexus_write_snapshot()
 		return;
 	}
 
-	subgrpnm = grpnm + "/grid";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXcg_grid") );
-	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
-		return;
-	}
-
-	subgrpnm = grpnm + "/crystals";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXmicrostructure_feature") );
-	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
-		return;
-	}
-
-	subgrpnm = grpnm + "/recrystallization_front";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXmicrostructure_feature") );
-	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
-		return;
-	}
-
 	nexus_write_snapshot_kinetics();
 	nexus_write_snapshot_grain_based();
 	nexus_write_snapshot_front_based();
@@ -1550,7 +1549,7 @@ void caHdl::binarize_partiallyrxed_microstructure( vector<bool>* outp )
 				xyzwoff = xmi+(y+ymi)*gx + zwoff;
 				for ( uint32_t x = 0; x < rx; x++ ) {
 					c = thegrid[x+yzroff]; //read cell index, recrystallized?
-					if ( c >= reg_ndgp ) 
+					if ( c >= reg_ndgp )
 						outp->at(x+xyzwoff) = true;
 					if ( c == CURRENTLY_INFECTED )
 						outp->at(x+xyzwoff) = true;
@@ -1686,23 +1685,23 @@ void caHdl::log_grain_IDs( double t ){
 	    uint32_t c = 0;
 
 	    uint32_t* thegrid = this->regions[r]->mycellgrid;
-   
+
             for ( uint32_t z = 0; z < rz; z++){
                 for (uint32_t y = 0; y < ry; y++){
-                    yzoffset = y*rx + z*ry*rx; 
+                    yzoffset = y*rx + z*ry*rx;
                     for (uint32_t x = 0; x < rx; x++){
                        index = x + (y + rymin)*myCAGeometry.nboxedge_rd + (z + rzmin)*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
                        c = thegrid[x + yzoffset];
                        if (c <= CA_GRAINIDS_MAXIMUM){ //not infected
                           grain_ID[index] = c;
                        }
-                    
-                       } 
+
+                       }
 
                 }
 
              } // z layer completed
-             
+
              // assuming that myRXFrontInside & myRXFrontBorder have all the infected cells
              // analyze cells inside
 	     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
@@ -1718,7 +1717,7 @@ void caHdl::log_grain_IDs( double t ){
                     }
                  }
              }
-   
+
              // analyse cells border
 	     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
 	     front = this->regions[r]->myRXFrontBorder;
@@ -1733,7 +1732,7 @@ void caHdl::log_grain_IDs( double t ){
                     }
                  }
              }
-             
+
         } // loop for threads
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         /*
@@ -1769,28 +1768,28 @@ void caHdl::log_grain_rho_cell_based( double t ){
 		    uint32_t c = 0;
 
 		    uint32_t* thegrid = this->regions[r]->mycellgrid;
-	   
+
 		    for ( uint32_t z = 0; z < rz; z++){
 			for (uint32_t y = 0; y < ry; y++){
-			    yzoffset = y*rx + z*ry*rx; 
+			    yzoffset = y*rx + z*ry*rx;
 			    for (uint32_t x = 0; x < rx; x++){
 			       index = x + (y + rymin)*myCAGeometry.nboxedge_rd + (z + rzmin)*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
 			       c = thegrid[x + yzoffset];
 			       if (c <= CA_GRAINIDS_MAXIMUM){ //not infected either RX or deformed
 				  if (c >= ndg){ // recrystallized
-				      rho[index] = RHO_RECRYSTALLIZED_MATERIAL; 
+				      rho[index] = RHO_RECRYSTALLIZED_MATERIAL;
 				  }
 				  else { // deformed
 				      rho[index] = mydefgpool[c].rho;
 				  }
 			       }
-			    
-			       } 
+
+			       }
 
 			}
 
 		     } // z layer completed
-		     
+
 		     // assuming that myRXFrontInside & myRXFrontBorder have all the infected cells
 		     // analyze cells inside
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
@@ -1804,11 +1803,11 @@ void caHdl::log_grain_rho_cell_based( double t ){
 			    }
 			    //grain_ID[ixyz] = ndg + front[c].myrxgid;
 			    else{ //recrystallized
-			    rho[ixyz] = RHO_RECRYSTALLIZED_MATERIAL; 
+			    rho[ixyz] = RHO_RECRYSTALLIZED_MATERIAL;
 			    }
 			 }
 		     }
-	   
+
 		     // analyse cells border
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
 		     front = this->regions[r]->myRXFrontBorder;
@@ -1819,15 +1818,15 @@ void caHdl::log_grain_rho_cell_based( double t ){
 			       rho[ixyz] = mydefgpool[front[c].mydefgid].rho;
 			    }
 			    else{ //recrystallized
-			    rho[ixyz] = RHO_RECRYSTALLIZED_MATERIAL; 
+			    rho[ixyz] = RHO_RECRYSTALLIZED_MATERIAL;
 			    }
 			 }
 		     }
-		     
+
 		} // loop for threads
 
 		// loop over the grain IDs to fill the rho array
-		
+
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         /*
         //##MK::2023-V
@@ -1863,36 +1862,36 @@ void caHdl::log_grain_rho_cell_based( double t ){
 		    uint32_t c = 0;
 
 		    uint32_t* thegrid = this->regions[r]->mycellgrid;
-	   
+
 		    for ( uint32_t z = 0; z < rz; z++){
 			for (uint32_t y = 0; y < ry; y++){
-			    yzoffset = y*rx + z*ry*rx; 
+			    yzoffset = y*rx + z*ry*rx;
 			    for (uint32_t x = 0; x < rx; x++){
 			       index = x + (y + rymin)*myCAGeometry.nboxedge_rd + (z + rzmin)*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
 			       c = thegrid[x + yzoffset];
 			       if (c <= CA_GRAINIDS_MAXIMUM){ //not infected either RX or deformed
 				  if (c >= ndg){ // recrystallized
 				      oid = myrxgpool[c - ndg].caori;
-				      ori_quats[index][0] = myoripool[oid].q0; 
-				      ori_quats[index][1] = myoripool[oid].q1; 
-				      ori_quats[index][2] = myoripool[oid].q2; 
-				      ori_quats[index][3] = myoripool[oid].q3; 
+				      ori_quats[index][0] = myoripool[oid].q0;
+				      ori_quats[index][1] = myoripool[oid].q1;
+				      ori_quats[index][2] = myoripool[oid].q2;
+				      ori_quats[index][3] = myoripool[oid].q3;
 				  }
 				  else { // deformed
 				      oid = mydefgpool[c].caori;
-				      ori_quats[index][0] = myoripool[oid].q0; 
-				      ori_quats[index][1] = myoripool[oid].q1; 
-				      ori_quats[index][2] = myoripool[oid].q2; 
-				      ori_quats[index][3] = myoripool[oid].q3; 
+				      ori_quats[index][0] = myoripool[oid].q0;
+				      ori_quats[index][1] = myoripool[oid].q1;
+				      ori_quats[index][2] = myoripool[oid].q2;
+				      ori_quats[index][3] = myoripool[oid].q3;
 				  }
 			       }
-			    
-			       } 
+
+			       }
 
 			}
 
 		     } // z layer completed
-		     
+
 		     // assuming that myRXFrontInside & myRXFrontBorder have all the infected cells
 		     // analyze cells inside
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
@@ -1916,7 +1915,7 @@ void caHdl::log_grain_rho_cell_based( double t ){
 			    }
 			 }
 		     }
-	   
+
 		     // analyse cells border
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
 		     front = this->regions[r]->myRXFrontBorder;
@@ -1941,11 +1940,11 @@ void caHdl::log_grain_rho_cell_based( double t ){
 			    }
 			 }
 		     }
-		     
+
 		} // loop for threads
 
 		// loop over the grain IDs to fill the rho array
-		
+
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
 		/*
         //##MK::2023-V
@@ -1989,11 +1988,11 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 		    uint32_t c = 0;
 
 		    uint32_t* thegrid = this->regions[r]->mycellgrid;
-	   
+
 		    uint32_t count = 0;
 		    for ( uint32_t z = 0; z < rz; z++){
 			for (uint32_t y = 0; y < ry; y++){
-			    yzoffset = y*rx + z*ry*rx; 
+			    yzoffset = y*rx + z*ry*rx;
 			    for (uint32_t x = 0; x < rx; x++){
 			       index = x + (y + rymin)*myCAGeometry.nboxedge_rd + (z + rzmin)*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
 			       c = thegrid[x + yzoffset];
@@ -2004,23 +2003,23 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 			       if (c <= CA_GRAINIDS_MAXIMUM){ //not infected either RX or deformed
 				  count = count + 1;
 				  if (c >= ndg){ // recrystallized
-				      //RXfrac[index] = RXFRACTION_THRESHOLD; 
-				      RXfrac[index] = 1.0; 
+				      //RXfrac[index] = RXFRACTION_THRESHOLD;
+				      RXfrac[index] = 1.0;
 				  }
 				  else { // deformed
 				      RXfrac[index] = 0.0;
 				  }
 			       }
-			    
-			       } 
+
+			       }
 
 			}
 
 		     } // z layer completed
-	     
+
 		     //std::cout << "The non infected cells at time " << t << "are " << count << std::endl;
-		     //std::cout << "The infected cells would be" << rx*ry*rz - count << std::endl; 
-		     
+		     //std::cout << "The infected cells would be" << rx*ry*rz - count << std::endl;
+
 		     // assuming that myRXFrontInside & myRXFrontBorder have all the infected cells
 		     // analyze cells inside
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
@@ -2033,12 +2032,12 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 			       RXfrac[ixyz] = front[c].rxFrac;
 			    }
 			    else{ // just recrytsallized
-			    //RXfrac[ixyz] = RXFRACTION_THRESHOLD; 
-			    RXfrac[ixyz] = 1.0; 
+			    //RXfrac[ixyz] = RXFRACTION_THRESHOLD;
+			    RXfrac[ixyz] = 1.0;
 			    }
 			 }
 		     }
-	   
+
 		     // analyse cells border
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
 		     front = this->regions[r]->myRXFrontBorder;
@@ -2050,15 +2049,15 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 			       RXfrac[ixyz] = front[c].rxFrac;
 			    }
 			    else {// just recrystalized
-			    //RXfrac[ixyz] = RXFRACTION_THRESHOLD; 
-			    RXfrac[ixyz] = 1.0; 
+			    //RXfrac[ixyz] = RXFRACTION_THRESHOLD;
+			    RXfrac[ixyz] = 1.0;
 			    }
 			 }
 		     }
-		     
+
 		} // loop for threads
 
-		//std::cout << "In the end the RXfrac array is" << RXfrac[166509] << "at time " << t << std::endl; 
+		//std::cout << "In the end the RXfrac array is" << RXfrac[166509] << "at time " << t << std::endl;
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         /*
         //##MK::2023-V
@@ -2079,7 +2078,7 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 
 	    for ( uint32_t g = 0; g < ngrains; g++){
 		if (g < ndg){ //deformed grain
-		    rho[g] = mydefgpool[g].rho; 
+		    rho[g] = mydefgpool[g].rho;
 		}
 		else{ // recrystallized grain
 		    rho[g] = RHO_RECRYSTALLIZED_MATERIAL;
@@ -2104,19 +2103,19 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 		std::vector<std::vector<double>> ori_quats(ngrains, std::vector<double>(4));
 
 		for (uint32_t g = 0; g < ngrains; g++){
-		    if (g < ndg){// deformed 
-			oid = mydefgpool[g].caori; 
-			ori_quats[g][0] = myoripool[oid].q0; 
-			ori_quats[g][1] = myoripool[oid].q1; 
-			ori_quats[g][2] = myoripool[oid].q2; 
-			ori_quats[g][3] = myoripool[oid].q3; 
+		    if (g < ndg){// deformed
+			oid = mydefgpool[g].caori;
+			ori_quats[g][0] = myoripool[oid].q0;
+			ori_quats[g][1] = myoripool[oid].q1;
+			ori_quats[g][2] = myoripool[oid].q2;
+			ori_quats[g][3] = myoripool[oid].q3;
 		    }
 		    else{
                 oid = myrxgpool[g - ndg].caori;
-                ori_quats[g][0] = myoripool[oid].q0; 
-                ori_quats[g][1] = myoripool[oid].q1; 
-                ori_quats[g][2] = myoripool[oid].q2; 
-                ori_quats[g][3] = myoripool[oid].q3; 
+                ori_quats[g][0] = myoripool[oid].q0;
+                ori_quats[g][1] = myoripool[oid].q1;
+                ori_quats[g][2] = myoripool[oid].q2;
+                ori_quats[g][3] = myoripool[oid].q3;
             }
         }
 
