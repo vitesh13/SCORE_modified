@@ -613,9 +613,9 @@ struct loginfo_nexus
 	double localxexact;
 	unsigned int localiteration;
 	unsigned int pad;
-	loginfo_nexus() : localtime(-1.0), localxcoarse(-1.0), localxexact(-1.0), localiteration(0), pad(0);
+	loginfo_nexus() : localtime(-1.0), localxcoarse(-1.0), localxexact(-1.0), localiteration(0), pad(0) {};
 	loginfo_nexus( const double t, const double xcoarse, const double xexact, unsigned int iteration ) :
-		localtime(t), localxcoarse(xcoarse), localxexact(xexact), localiteration(iteration), pad(0);
+		localtime(t), localxcoarse(xcoarse), localxexact(xexact), localiteration(iteration), pad(0) {}
 };
 
 struct loginfo_grainevo_ca

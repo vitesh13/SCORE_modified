@@ -966,7 +966,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 	}
 	f64 = vector<double>();
 
-	mynexusstats.push_back( loginfo_nexus( this->t, this->Xexact ) );
+	mynexusstats.push_back( loginfo_nexus( this->t, this->X, Xexact, this->step ) );
 
 	dsnm = grpnm + "/x_set";
 	double XXset = output_atthisX[loginfo_grainevo_cnt] / ((double) myCAGeometry.nboxvol_rdtdnd);
@@ -1351,7 +1351,6 @@ void caHdl::nexus_write_snapshot_cell_based()
 	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/grid";
 	string dsnm = "";
 
-	subgrpnm = grpnm + "/grid";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXcg_grid") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
@@ -1470,6 +1469,92 @@ void caHdl::nexus_write_snapshot()
 	nexus_write_snapshot_grain_based();
 	nexus_write_snapshot_front_based();
 	nexus_write_snapshot_cell_based();
+}
+
+
+void caHdl::nexus_write_summary_stats()
+{
+	//CALLED FROM WITHIN PARALLEL REGION BY MASTER ONLY!
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
+	string grpnm = "/entry1/spatiotemporal1/summary_statistics";
+	ioAttributes anno = ioAttributes();
+	anno.add( "NX_class", string("NXprocess") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	//add NeXus default plot and annotations
+	string subgrpnm = grpnm + "/kinetics";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXdata") );
+	anno.add( "signal", string("x") );
+	//anno.add( "axes", string("time") );
+	anno.add( "axes", string("iteration") );
+	anno.add( "time_indices", (unsigned int) 0 );
+	anno.add( "iteration_indices", (unsigned int) 0 );
+	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
+		return;
+	}
+
+	string dsnm = subgrpnm + "/title";
+	string title = "X(i)";  //"X(t)"
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, title, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	dsnm = subgrpnm + "/time";
+	vector<double> f64 = vector<double>( mynexusstats.size(), 0.0);
+	for ( size_t i = 0; i < mynexusstats.size(); i++ ) {
+		f64.push_back(mynexusstats[i].localtime );
+	}
+	anno = ioAttributes();
+	anno.add( "long_name", string("t(s)") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size()}, {f64.size()}),
+		f64,
+		anno) != MYHDF5_SUCCESS ) {
+			cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+
+	dsnm = subgrpnm + "/x";
+	f64 = vector<double>( mynexusstats.size(), 0.0);
+	for ( size_t i = 0; i < mynexusstats.size(); i++ ) {
+		f64.push_back(mynexusstats[i].localxexact );
+	}
+	anno = ioAttributes();
+	anno.add( "long_name", string("Recrystallized volume fraction X") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size()}, {f64.size()}),
+		f64,
+		anno) != MYHDF5_SUCCESS ) {
+			cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+
+	dsnm = subgrpnm + "/iteration";
+	vector<unsigned int> u32 = vector<unsigned int>( mynexusstats.size(), 0 );
+	for ( size_t i = 0; i < mynexusstats.size(); i++ ) {
+		u32.push_back(mynexusstats[i].localiteration );
+	}
+	anno = ioAttributes();
+	anno.add( "long_name", string("Iteration step i") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({u32.size()}, {u32.size()}),
+		u32,
+		anno) != MYHDF5_SUCCESS ) {
+			cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u32 = vector<unsigned int>();
 }
 
 
