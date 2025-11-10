@@ -1,46 +1,4 @@
-/* 
-*	Copyright Markus Kuehbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. Kuehbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kuehbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Juelich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GNU General Public License v3.0 or later
 
 #ifndef __SCORE_PERCANALYZER_H_INCLUDED__
 #define __SCORE_PERCANALYZER_H_INCLUDED__
@@ -68,20 +26,20 @@ using namespace std;
 /*
 class timer
 {
-public:	
+public:
 	timer(){};
 	~timer(){};
-	
+
 	vector<long long unsigned int> howlong;
 	vector<string> forwhat;
-	
+
 	void profiling_start(){
-		clock_gettime( CLOCK_MONOTONIC, &ts );		
+		clock_gettime( CLOCK_MONOTONIC, &ts );
 	};
 	void profiling_end(){
 		clock_gettime( CLOCK_MONOTONIC, &te );
 	};
-	void profiling_diff_mem( const char* where ){ 
+	void profiling_diff_mem( const char* where ){
 		diff = BILLION * (te.tv_sec - ts.tv_sec) + te.tv_nsec - ts.tv_nsec; //in ns
 		howlong.push_back( (long long unsigned int) diff );
 		forwhat.push_back( where );
@@ -104,7 +62,7 @@ public:
 			cout << forwhat.at(evts) << "\t\t\t" << ( howlong.at(evts) / 1000 / 1000 ) << endl;
 		}
 	};
-	
+
 	struct timespec ts,te;
 	uint64_t diff;
 };
@@ -132,7 +90,7 @@ public:
 		delete [] id;
 		delete [] sz;
 	}
-	
+
 	//Return the id of component corresponding to object p.
 	unsigned int initialAssgn(unsigned int i) {
 		return i;
@@ -154,15 +112,15 @@ public:
 		unsigned int i = find_root(x);
 		unsigned int j = find_root(y);
 		if ( i == j ) return i; //MK::return simply one...
-	
+
 		// make smaller root point to larger one
 		if (sz[i] < sz[j])	{ //eq class j larger than eq class i
-			id[i] = j; 
+			id[i] = j;
 			sz[j] += sz[i];
 			return j;
 		}
 		else { //eq class j smaller or equal to eq class i
-			id[j] = i; 
+			id[j] = i;
 			sz[i] += sz[j];
 			return i;
 		}
@@ -221,7 +179,7 @@ class percAnalyzer
 	struct percAnalysis results;
 	vector<unsigned int>* cnt;
 
-public:	
+public:
 	//class timer horatiocaine;
 
 	void initialize( vector<bool>* threshold, unsigned int cube_edge_length );

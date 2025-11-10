@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GNU General Public License v3.0 or later
+
 import numpy as np
 from score_config_utils import ureg
 from typing import List, Tuple, Dict, Any
@@ -10,14 +12,21 @@ from typing import List, Tuple, Dict, Any
 #### !!! AS SHOWN BY NXmicrostructure_score_config.ipynb !!!
 
 DF_MATERIAL: List[Tuple[str, Any]] = [
-    ("shear_modulus", ureg.Quantity(np.float64(9.5e9), ureg.pascal)),
-    ("burgers_vector", ureg.Quantity(np.float64(0.286), ureg.nanometer)),
     (
         "melting_temperature",
-        ureg.Quantity(np.float64(800.0), ureg.degC).to(
-            ureg.kelvin
-        ),  # + CELSIUS_TO_KELVIN_OFFSET ), ureg.kelvin).to,
+        ureg.Quantity(np.float64(650.0), ureg.degC).to(ureg.kelvin),
     ),
+    (
+        "shear_modulus_zero",
+        ureg.Quantity(np.float64(26.0), ureg.gigapascal).to(ureg.pascal),
+    ),
+    ("nadal_lepoac_a", ureg.Quantity(np.float64(0.469))),
+    ("nadal_lepoac_zeta", ureg.Quantity(np.float64(0.04))),
+    ("burgers_vector_zero", ureg.Quantity(np.float64(0.286), ureg.nanometer)),
+    # shown here how to consider a constant Burgers vector
+    ("lattice_expansion_second", ureg.Quantity(0.0, (ureg.kelvin**-2))),
+    ("lattice_expansion_first", ureg.Quantity(0.0, (ureg.kelvin**-1))),
+    ("lattice_expansion_null", ureg.Quantity(0.0, ureg.nanometer)),
 ]
 
 DF_INIT_CUBOIDAL: Dict[str, Any] = {

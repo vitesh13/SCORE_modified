@@ -1,46 +1,4 @@
-/* 
-*	Copyright Markus Kuehbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. Kuehbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kuehbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Juelich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GNU General Public License v3.0 or later
 
 #ifndef __SCORE_KERNEL_H_INCLUDED__
 //#define __SCORE_KERNEL_H_INCLUDED__
@@ -105,12 +63,13 @@ ensembleHdl::ensembleHdl()
 
 	ensPhysData.G = DEFAULT_SHEARMODULUS;
 	ensPhysData.b = DEFAULT_BURGERSVECTOR;
-	ensPhysData.G0 = DEFAULT_SHEARMODULUS;
-	ensPhysData.bZeroCelsius = DEFAULT_BURGERSVECTOR;
-	ensPhysData.dGdt = 0.0;
-	ensPhysData.thermexp_C = DEFAULT_PUREALU_C;
-	ensPhysData.thermexp_a = 0.0;
-	ensPhysData.thermexp_b = 0.0;
+	ensPhysData.Gzero = DEFAULT_SHEARMODULUS;
+	ensPhysData.bzero = DEFAULT_BURGERSVECTOR;
+	ensPhysData.nadal_lepoac_a = 0.469;
+	ensPhysData.nadal_lepoac_zeta = 0.04;
+	ensPhysData.thermexp_second = 0.0;
+	ensPhysData.thermexp_first = 0.0;
+	ensPhysData.thermexp_null = 0.0;
 	ensPhysData.Tmelt = DEFAULT_PUREALU_TMELT;
 
 	ensPhysData.LAGBm0 = 1.0;
@@ -220,11 +179,11 @@ ensembleHdl::~ensembleHdl()
 
 void ensembleHdl::init_ensprng( bool SetDissimilarSeedsForAll )
 {
-	if ( myRank == MASTER ) 
+	if ( myRank == MASTER )
 		cout << "Initializing PRNG..." << endl;
 
 	//Initialize random number generators for the individual MPI processes
-	//true - seed is (-1*myRank)-1, 
+	//true - seed is (-1*myRank)-1,
 	if ( SetDissimilarSeedsForAll == true) {
 		long newseed = (long) (-1 * myRank);
 		newseed = newseed - 1; //avoid seed 0
@@ -267,7 +226,7 @@ void ensembleHdl::init_ensprng( int targetseed )
 
 void ensembleHdl::init_mpidatatypes()
 {
-	if ( myRank == MASTER ) 
+	if ( myRank == MASTER )
 		cout << "Initializing MPI I/O Datatypes..." << endl;
 
 	//MPI_IO_CAProfilingData
@@ -293,7 +252,7 @@ void ensembleHdl::init_mpidatatypes()
 	MPI_Aint displacements4[2] = { 0, 2*8};
 	MPI_Datatype oldTypes4[2] = {MPI_DOUBLE, MPI_INT };
 	MPI_Type_create_struct(2, elementCounts4, displacements4, oldTypes4, &MPI_IO_FGSDComplete_Type);
-	
+
 	//commit types
 	MPI_Type_commit(&MPI_IO_CAProfilingInfoData_Type);
 	MPI_Type_commit(&MPI_IO_CAPhysicsInfoData_Type);
@@ -308,7 +267,7 @@ bool ensembleHdl::init_parameter_from_hdf_runtime() {
 	string grpnm = "/entry1/numerics/";
 
 	if ( h5r.nexus_read( grpnm + "max_x", XMAX ) != MYHDF5_SUCCESS ) {
-		status = false; cerr << grpnm << "max_x" << endl; 
+		status = false; cerr << grpnm << "max_x" << endl;
 	}
 	if ( (XMAX < 0.0 || XMAX > 1.0) && myRank == MASTER ) {
 		status = false; cerr << grpnm << "max_x" << endl;
@@ -349,7 +308,7 @@ bool ensembleHdl::init_parameter_from_hdf_runtime() {
 
 	grpnm = "/entry1/numerics/cell_cache/";
 	if ( h5r.nexus_read( grpnm + "initial", initialRelCellCaching ) != MYHDF5_SUCCESS ) {
-		status = false; cerr << grpnm << "initial" << endl; 
+		status = false; cerr << grpnm << "initial" << endl;
 	}
 	if ( (initialRelCellCaching < DEFAULT_MINRELCELL || initialRelCellCaching > DEFAULT_MAXRELCELL) && myRank == MASTER ) {
 		initialRelCellCaching = DEFAULT_RELCELLCACHING; cerr << "WARNING::InitialCacheSizeRXCells was chosen unwise, it is reset to = " << initialRelCellCaching << endl;
@@ -436,7 +395,7 @@ bool ensembleHdl::init_parameter_from_hdf_deformation() {
 		status = false; cerr << "/entry1/grid/extent" << endl;
 		return status;
 	}
-	
+
 	ensCAGeometry.nboxedge_rd = extent.at(0);
 	//if ( (ensCAGeometry.nboxedge_rd < CA_DIMENSIONS_MINIMUM || ensCAGeometry.nboxedge_rd > CA_DIMENSIONS_MAXIMUM) && myRank == MASTER ) { status = false; cerr << "Invalid argument for automaton size RD." << endl; }
 	if ( ensCAGeometry.nboxedge_rd < CA_DIMENSIONS_MINIMUM && myRank == MASTER ) { status = false; cerr << "Invalid argument for automaton size RD." << endl; }
@@ -620,7 +579,7 @@ bool ensembleHdl::init_parameter_from_hdf_nucleation() {
 		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PHYS_LAGBHAGB;
 	if ( geTInt("GBNucleation", nucleationmodeling) == 2 )
 		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PHYS_ONLYHAGB;
-	if ( geTInt("GBNucleation", nucleationmodeling) == 3 ) 
+	if ( geTInt("GBNucleation", nucleationmodeling) == 3 )
 		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PICKRND;
 	ensNucleationModel.gbnucleation_dens2num = geTReal("GBNucDensity2Number", nucleationmodeling);
 	ensNucleationModel.gbnucleation_drho2dens = geTReal("GBNucRhoDiff2Density", nucleationmodeling);
@@ -650,24 +609,32 @@ bool ensembleHdl::init_parameter_from_hdf_material() {
 	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( nexus_config_file_name );
 	string grpnm = "/entry1/material/";
 
-	if ( h5r.nexus_read( grpnm + "shear_modulus", ensPhysData.G0 ) != MYHDF5_SUCCESS ) {
-		status = false; cerr << grpnm << "shear_modulus" << endl;
-	}
-	if ( h5r.nexus_read( grpnm + "burgers_vector", ensPhysData.bZeroCelsius ) != MYHDF5_SUCCESS ) {
+	if ( h5r.nexus_read( grpnm + "burgers_vector_zero", ensPhysData.bzero ) != MYHDF5_SUCCESS ) {
 		status = false; cerr << grpnm << "burgers_vector" << endl;
 	}
-	/*
-	//##TODO::
-	ensPhysData.dGdt = geTReal("FirstOrderdG0dT", matpara);
-	ensPhysData.thermexp_C = geTReal("AlloyConstantThermalExpCoeff", matpara); //thermal lattice expansion model
-	ensPhysData.thermexp_a = geTReal("FirstOrderThermalExpCoeff", matpara);
-	ensPhysData.thermexp_b = geTReal("SecondOrderThermalExpCoeff", matpara);
-	*/
-	//##TODO::check if not already in Kelvin?
+	if ( h5r.nexus_read( grpnm + "lattice_expansion_second", ensPhysData.thermexp_second ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "lattice_expansion_second" << endl;
+	}
+	if ( h5r.nexus_read( grpnm + "lattice_expansion_first", ensPhysData.thermexp_first ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "lattice_expansion_first" << endl;
+	}
+	if ( h5r.nexus_read( grpnm + "lattice_expansion_null", ensPhysData.thermexp_null ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "lattice_expansion_null" << endl;
+	}
 	if ( h5r.nexus_read( grpnm + "melting_temperature", ensPhysData.Tmelt ) != MYHDF5_SUCCESS ) {
 		status = false; cerr << grpnm << "melting_temperature" << endl;
 	}
-	if ( ensPhysData.G0 <= MYZERO || ensPhysData.bZeroCelsius <= MYZERO || ensPhysData.Tmelt <= MYZERO ) {
+	if ( h5r.nexus_read( grpnm + "shear_modulus_zero", ensPhysData.Gzero ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "shear_modulus_zero" << endl;
+	}
+	if ( h5r.nexus_read( grpnm + "nadal_lepoac_a", ensPhysData.nadal_lepoac_a ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "nadal_lepoac_a" << endl;
+	}
+	if ( h5r.nexus_read( grpnm + "nadal_lepoac_zeta", ensPhysData.nadal_lepoac_zeta ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "nadal_lepoac_zeta" << endl;
+	}
+
+	if ( ensPhysData.Gzero <= MYZERO || ensPhysData.bzero <= MYZERO ) {
 		status = false; cerr << "Unrealistic material parameter!" << endl;
 	}
 	return status;
@@ -740,10 +707,10 @@ bool ensembleHdl::init_parameter_from_hdf_mobilities() {
 		status = false; cerr << "/entry1/grain_boundary_mobility/model" << endl;
 	}
 
-	//on the other hand Rollett and Holm inspired by Humphreys for instance often consider the LAGB_TO_HAGB transition not as sharp and despite the possibility of 
+	//on the other hand Rollett and Holm inspired by Humphreys for instance often consider the LAGB_TO_HAGB transition not as sharp and despite the possibility of
 	//close to 40deg111 boundaries modelled additionally more mobile than random high-angle grain boundaries (HAGB). They consider a sigmoidal function of the form
 	//m = 1.0 - cut*exp(-trans * (disori/LAGB_TO_HAGB_TRANSITION)^exponent) also inspired by exp. results on tilt boundaries in Al performed by Winning and Molodov
-	//MK::however often the parameter RHModelLAGBHAGBExponent is set to 4, this is physically unrealistic because then LAGB are sufficiently 
+	//MK::however often the parameter RHModelLAGBHAGBExponent is set to 4, this is physically unrealistic because then LAGB are sufficiently
 	//mobile against aforementioned experimental observations
 
 	return status;
@@ -930,7 +897,7 @@ bool ensembleHdl::init_parameter_from_hdf_defgpool() {
 			}
 			if ( f64_rho.size() > 0 && f64_rho.size() * 3 == f64_bunge.size() ) {
 				size_t ndefgpool = f64_rho.size();
-				if ( ndefgpool > DEFAULT_MAX_DEFORMEDGRAINS ) { 
+				if ( ndefgpool > DEFAULT_MAX_DEFORMEDGRAINS ) {
 					cerr << "WARNING::The pool of deformed grains is too large, only the first " << DEFAULT_MAX_DEFORMEDGRAINS << " are read." << endl;
 					ndefgpool = DEFAULT_MAX_DEFORMEDGRAINS;
 				}
@@ -957,7 +924,7 @@ bool ensembleHdl::init_parameter_from_hdf_defgpool() {
 						status = false; cerr << "Unphysical low dislocation density for deformed material!" << endl;
 						break;
 					}
-					
+
 					worlddefgpool.push_back(agrain);
 					//cout << "dg;ori;e1;e2;e3;q0;q1;q2;q3;rho0;rho " << dg << ";" << worlddefgpool[dg].ori << ";" << worldoripool[id].bunge1 << ";" << worldoripool[id].bunge2 << ";" << worldoripool[id].bunge3 << ";" << worldoripool[id].q0 << ";" << worldoripool[id].q1 << ";" << worldoripool[id].q2 << ";" << worldoripool[id].q3 << ";" << worlddefgpool[dg].rho0 << ";" << worlddefgpool[dg].rho << endl;
 				} // for all grains in the pool
@@ -1030,7 +997,7 @@ bool ensembleHdl::init_parameter_from_hdf_additional() {
 	bool status = true;
 	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( nexus_config_file_name );
 	string grpnm = "/entry1/numerics/";
-	
+
 	vector<double> f64;
 	if ( h5r.nexus_read( grpnm + "x_set", f64 ) != MYHDF5_SUCCESS ) {
 		status = false; cerr << grpnm << "x_set" << endl;
@@ -1158,7 +1125,7 @@ bool ensembleHdl::init_parameter_from_yml_ensemble() {
 	//##TODO::only when not EBSD
 	vector<uint32_t> extent = ryml_wrapper_read_array<uint32_t>(root, grpnm + "grid/extent");
 	if ( extent.size() != 3) { status = false; cout << "Invalid extent" << endl; }
-	
+
 	ensCAGeometry.nboxedge_rd = extent.at(0);
 	//if ( (ensCAGeometry.nboxedge_rd < CA_DIMENSIONS_MINIMUM || ensCAGeometry.nboxedge_rd > CA_DIMENSIONS_MAXIMUM) && myRank == MASTER ) { status = false; cerr << "Invalid argument for automaton size RD." << endl; }
 	if ( ensCAGeometry.nboxedge_rd < CA_DIMENSIONS_MINIMUM && myRank == MASTER ) { status = false; cerr << "Invalid argument for automaton size RD." << endl; }
@@ -1306,7 +1273,7 @@ bool ensembleHdl::init_parameter_from_yml_nucleation() {
 		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PHYS_LAGBHAGB;
 	if ( geTInt("GBNucleation", nucleationmodeling) == 2 )
 		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PHYS_ONLYHAGB;
-	if ( geTInt("GBNucleation", nucleationmodeling) == 3 ) 
+	if ( geTInt("GBNucleation", nucleationmodeling) == 3 )
 		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PICKRND;
 	ensNucleationModel.gbnucleation_dens2num = geTReal("GBNucDensity2Number", nucleationmodeling);
 	ensNucleationModel.gbnucleation_drho2dens = geTReal("GBNucRhoDiff2Density", nucleationmodeling);
@@ -1317,7 +1284,7 @@ bool ensembleHdl::init_parameter_from_yml_nucleation() {
 	string incubation_time_model = ryml_wrapper_read_value<string>(root, grpnm + "nucleation/incubation_time");
 	if ( incubation_time_model.compare("site_saturation") != 0 ) {
 		status = false; cerr << "Only site-saturated nucleation implemented in the MPI/OpenMP model!" << endl;
-	
+
 		/*
 		if ( geTInt("IncubationTimeModel", nucleationmodeling) == 2 ) {
 			ensNucleationModel.tincubmodel = TINCUB_TIMEDEPENDENT;
@@ -1338,20 +1305,18 @@ bool ensembleHdl::init_parameter_from_yml_material() {
 	ryml::ConstNodeRef root = tree.rootref();
 	string grpnm = "entry1/material_properties";
 
-	ensPhysData.G0 = ryml_wrapper_read_value<double>(root, grpnm + "reference_shear_modulus/value");
-	ensPhysData.bZeroCelsius = ryml_wrapper_read_value<double>(root, grpnm + "reference_burgers_magnitude/value");
+	ensPhysData.Gzero = ryml_wrapper_read_value<double>(root, grpnm + "reference_shear_modulus/value");
+	ensPhysData.bzero = ryml_wrapper_read_value<double>(root, grpnm + "reference_burgers_magnitude/value");
 	/*
-	//##TODO::
-	ensPhysData.dGdt = geTReal("FirstOrderdG0dT", matpara);
+	ensPhysData.nadal_lepoac_a = geTReal("FirstOrderdG0dT", matpara);
 	ensPhysData.thermexp_C = geTReal("AlloyConstantThermalExpCoeff", matpara); //thermal lattice expansion model
 	ensPhysData.thermexp_a = geTReal("FirstOrderThermalExpCoeff", matpara);
 	ensPhysData.thermexp_b = geTReal("SecondOrderThermalExpCoeff", matpara);
-	*/
-	//##TODO::check if not already in Kelvin?
 	ensPhysData.Tmelt = ryml_wrapper_read_value<double>(root, grpnm + "melting_temperature/value") + TOFFSET;
-	if ( ensPhysData.G0 <= 0.0 || ensPhysData.bZeroCelsius <= 0.0 || ensPhysData.Tmelt <= 0.0 ) {
+	if ( ensPhysData.Gzero <= 0.0 || ensPhysData.bzero <= 0.0 || ensPhysData.Tmelt <= 0.0 ) {
 		status = false; cerr << "Inrealistic material parameter!" << endl;
 	}
+	*/
 	return status;
 }
 
@@ -1379,10 +1344,10 @@ bool ensembleHdl::init_parameter_from_yml_mobilities() {
 			status = false; cerr << "Unrealistic mobility model parameterization!" << endl;
 		}
 	}
-	//on the other hand Rollett and Holm inspired by Humphreys for instance often consider the LAGB_TO_HAGB transition not as sharp and despite the possibility of 
+	//on the other hand Rollett and Holm inspired by Humphreys for instance often consider the LAGB_TO_HAGB transition not as sharp and despite the possibility of
 	//close to 40deg111 boundaries modelled additionally more mobile than random high-angle grain boundaries (HAGB). They consider a sigmoidal function of the form
 	//m = 1.0 - cut*exp(-trans * (disori/LAGB_TO_HAGB_TRANSITION)^exponent) also inspired by exp. results on tilt boundaries in Al performed by Winning and Molodov
-	//MK::however often the parameter RHModelLAGBHAGBExponent is set to 4, this is physically unrealistic because then LAGB are sufficiently 
+	//MK::however often the parameter RHModelLAGBHAGBExponent is set to 4, this is physically unrealistic because then LAGB are sufficiently
 	//mobile against aforementioned experimental observations
 	if ( mobilitymodel == MOBILITYMODEL_ROLLETTHOLM ) {
 		ensPhysData.RH_HAGBm0 = ryml_wrapper_read_value<double>(root, grpnm + "rollett_holm/m_null");
@@ -1562,7 +1527,7 @@ bool ensembleHdl::init_parameter_from_uds_output() {
 		renderwindow.ymax = geTReal( "RenderingSectionYMAX", outputopts );
 		renderwindow.zmin = geTReal( "RenderingSectionZMIN", outputopts );
 		renderwindow.zmax = geTReal( "RenderingSectionZMAX", outputopts );
-		bool modified = false; 
+		bool modified = false;
 		if ( renderwindow.xmin < 0.0 ) { renderwindow.xmin = 0.0; modified = true; }
 		if ( renderwindow.ymin < 0.0 ) { renderwindow.ymin = 0.0; modified = true; }
 		if ( renderwindow.zmin < 0.0 ) { renderwindow.zmin = 0.0; modified = true; }
@@ -1587,7 +1552,7 @@ bool ensembleHdl::init_parameter_from_uds_output() {
 		outopt_renderfileformat = RENDERING_FILEFORMAT_HDF5;
 
 	outopt_localrenderboundaries = RENDERING_BOUNDARIES_NO;
-	if ( geTInt("RenderingBoundaries", outputopts) == 1 ) 
+	if ( geTInt("RenderingBoundaries", outputopts) == 1 )
 		outopt_localrenderboundaries = RENDERING_BOUNDARIES_YES;
 
 	outopt_logboundaries = OUTPUT_LOGBND_NO;
@@ -1689,7 +1654,7 @@ bool ensembleHdl::init_parameter_from_uds_ensemble() {
 
         if (val == 3 ){
             damaskInput = true;
-        } 
+        }
 
 	ensPhysData.defgmean_poisson = geTReal("MeanDefSizePoissonDiameter", ensembledef) * MICRON2METER;
 	if ( (ensPhysData.defgmean_poisson < mindiscretization && myRank == MASTER ) ) { status = false; cerr << "Invalid argument for the average size of deformed grain for method poisson." << endl; }
@@ -1739,7 +1704,7 @@ bool ensembleHdl::init_parameter_from_uds_nucleation() {
 		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PHYS_LAGBHAGB;
 	if ( geTInt("GBNucleation", nucleationmodeling) == 2 )
 		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PHYS_ONLYHAGB;
-	if ( geTInt("GBNucleation", nucleationmodeling) == 3 ) 
+	if ( geTInt("GBNucleation", nucleationmodeling) == 3 )
 		ensNucleationModel.gbnucleation = GBNUCLEATION_YES_PICKRND;
 
 	ensNucleationModel.gbnucleation_dens2num = geTReal("GBNucDensity2Number", nucleationmodeling);
@@ -1772,14 +1737,14 @@ bool ensembleHdl::init_parameter_from_uds_material() {
 
 	dataBlockP matpara = readDataBlock("MaterialProperties", score_input);
 
-	ensPhysData.G0 = geTReal("ZeroKelvinShearModulusG0", matpara);
-	ensPhysData.dGdt = geTReal("FirstOrderdG0dT", matpara);
-	ensPhysData.bZeroCelsius = geTReal("ZeroCelsiusBurgersVector", matpara);
+	ensPhysData.Gzero = geTReal("ZeroKelvinShearModulusG0", matpara);
+	ensPhysData.nadal_lepoac_a = geTReal("FirstOrderdG0dT", matpara);
+	ensPhysData.bzero = geTReal("ZeroCelsiusBurgersVector", matpara);
 	ensPhysData.thermexp_C = geTReal("AlloyConstantThermalExpCoeff", matpara); //thermal lattice expansion model
 	ensPhysData.thermexp_a = geTReal("FirstOrderThermalExpCoeff", matpara);
 	ensPhysData.thermexp_b = geTReal("SecondOrderThermalExpCoeff", matpara);
 	ensPhysData.Tmelt = geTReal("MeltingTemperature", matpara) + TOFFSET;
-	if ( ensPhysData.G0 <= 0.0 || ensPhysData.bZeroCelsius <= 0.0 || ensPhysData.Tmelt <= 0.0 ) { status = false; cerr << "Inrealistic material parameter!" << endl; }
+	if ( ensPhysData.Gzero <= 0.0 || ensPhysData.bzero <= 0.0 || ensPhysData.Tmelt <= 0.0 ) { status = false; cerr << "Inrealistic material parameter!" << endl; }
 
 	delete matpara;
 
@@ -1805,10 +1770,10 @@ bool ensembleHdl::init_parameter_from_uds_mobilities() {
 	ensPhysData.GSm0 = geTReal("GSm0", mobilitymodeling);
 	ensPhysData.GSHact = geTReal("GSHact", mobilitymodeling) * echarge;
 
-	//on the other hand Rollett and Holm inspired by Humphreys for instance often consider the LAGB_TO_HAGB transition not as sharp and despite the possibility of 
+	//on the other hand Rollett and Holm inspired by Humphreys for instance often consider the LAGB_TO_HAGB transition not as sharp and despite the possibility of
 	//close to 40deg111 boundaries modelled additionally more mobile than random high-angle grain boundaries (HAGB). They consider a sigmoidal function of the form
 	//m = 1.0 - cut*exp(-trans * (disori/LAGB_TO_HAGB_TRANSITION)^exponent) also inspired by exp. results on tilt boundaries in Al performed by Winning and Molodov
-	//MK::however often the parameter RHModelLAGBHAGBExponent is set to 4, this is physically unrealistic because then LAGB are sufficiently 
+	//MK::however often the parameter RHModelLAGBHAGBExponent is set to 4, this is physically unrealistic because then LAGB are sufficiently
 	//mobile against aforementioned experimental observations
 	ensPhysData.RH_HAGBm0 = geTReal("RHModelHAGBm0", mobilitymodeling );
 	ensPhysData.RH_HAGBHact = geTReal("RHModelHAGBHact", mobilitymodeling ) * echarge;
@@ -1920,7 +1885,7 @@ bool ensembleHdl::init_parameter_from_uds_idealtexture() {
 		bunge_ori[2] = DEG2RAD(getReal( iline, 4 ));
 		scatt  = DEG2RAD(getReal( iline, 5 ));
 
-		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in ideal orientation defintion!" << endl; break; } 
+		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in ideal orientation defintion!" << endl; break; }
 
 		ensmath.euler2quat( bunge_ori, quaternion_ori ); //interally everything with quaternions
 
@@ -1994,7 +1959,7 @@ bool ensembleHdl::init_parameter_from_uds_defgpool() {
 	dataLineP dline = defgpara->first;
 	long ndefgpool = defgpara->lineCount;
 
-	if ( ndefgpool > DEFAULT_MAX_DEFORMEDGRAINS ) { 
+	if ( ndefgpool > DEFAULT_MAX_DEFORMEDGRAINS ) {
 		cerr << "WARNING::The pool of deformed grains is too large, only the first " << DEFAULT_MAX_DEFORMEDGRAINS << " are read." << endl;
 		ndefgpool = DEFAULT_MAX_DEFORMEDGRAINS;
 	}
@@ -2012,7 +1977,7 @@ bool ensembleHdl::init_parameter_from_uds_defgpool() {
 		bunge_ori[1] = DEG2RAD(getReal(dline, 2));
 		bunge_ori[2] = DEG2RAD(getReal(dline, 3));
 
-		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in deformed grain orientation defintion!" << endl; break; } 
+		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in deformed grain orientation defintion!" << endl; break; }
 
 		id = ens_check_disjunctness_io( bunge_ori );
 
@@ -2058,7 +2023,7 @@ bool ensembleHdl::init_parameter_from_uds_rxgpool() {
 		bunge_ori[1] = DEG2RAD(getReal(rline, 2));
 		bunge_ori[2] = DEG2RAD(getReal(rline, 3));
 
-		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in recrystallized orientation defintion!" << endl; break; } 
+		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in recrystallized orientation defintion!" << endl; break; }
 
 		id = ens_check_disjunctness_io( bunge_ori );
 
@@ -2091,7 +2056,7 @@ bool ensembleHdl::init_parameter_from_uds_additional() {
 		QUICKASSERT( nrlines < DEFAULT_MAX_INPUTDATALEN );
 
 		double Xri = 0.0;
-		for ( long r = 0; r < nrlines; r++ ) { 
+		for ( long r = 0; r < nrlines; r++ ) {
 			Xri = getReal( rline, 2 );
 			if ( Xri < 0.0 || Xri > 1.0 ) { status = false; cerr << "Invalid recrystallized volume fraction X in RenderMicrostructure!" << endl; break; }
 
@@ -2112,7 +2077,7 @@ bool ensembleHdl::init_parameter_from_uds_additional() {
 		int id = 0;
 
 //cout << myRank << "Render only these regions = " << nclines << ";" << cline << ";" << id << endl;
-		for ( long r = 0; r < nclines; r++ ) { 
+		for ( long r = 0; r < nclines; r++ ) {
 			id = getInt ( cline, 1 );
 			if ( id < 0 || id >= nworldCAs ) { status = false; cerr << "Invalid simulation index listed that should become rendered!" << endl; break; }
 //cout << "\t\t" << r << ";" <<  myRank << "Render only these regions = " << nclines << ";" << cline << ";" << id << endl;
@@ -2157,7 +2122,7 @@ bool ensembleHdl::init_parameter_from_uds_additional() {
 	QUICKASSERT( ndlines < DEFAULT_MAX_INPUTDATALEN );
 
 	double Xdi = 0.0;
-	for ( long d = 0; d < ndlines; d++ ) { 
+	for ( long d = 0; d < ndlines; d++ ) {
 		Xdi = getReal( dline, 2 );
 		if ( Xdi < 0.0 || Xdi > 1.0 ) { status = false; cerr << "Invalid recrystallized volume fraction X at which to defragment list!" << endl; break; }
 
@@ -2178,7 +2143,7 @@ bool ensembleHdl::init_parameter_from_uds_additional() {
 	QUICKASSERT( nplines < DEFAULT_MAX_INPUTDATALEN );
 
 	double Xi = 0.0;
-	for ( long pp = 0; pp < nplines; pp++ ) { 
+	for ( long pp = 0; pp < nplines; pp++ ) {
 		Xi = getReal( pline, 2 );
 		if ( Xi < 0.0 || Xi > 1.0 ) { status = false; cerr << "Invalid recrystallized volume fraction X at which to log locally all grains!" << endl; break; }
 
@@ -2349,7 +2314,7 @@ bool ensembleHdl::init_parameter_defgpool_exp()
 			return false;
 		}
 		/*for ( size_t i = 0; i < expGrainIDs.size(); i++ ) {
-			if ( expGrainIDs[i] != old_id ) 
+			if ( expGrainIDs[i] != old_id )
 				continue;
 			//else
 			pos = i; break;
@@ -2394,7 +2359,7 @@ bool ensembleHdl::init_parameter_defgpool_exp()
 	//for ( size_t hk = 0; hk < (1+largestid); hk++ )
 	//	qori->push_back(aq);
 	//qsum->reserve(1+largestid);
-	//for ( size_t hk = 0; hk < (1+largestid); hk++ ) 
+	//for ( size_t hk = 0; hk < (1+largestid); hk++ )
 	//	qsum->push_back( NULL );
 	//kamsum->reserve(1+largestid);
 	//std::fill (kamsum->begin(), kamsum->end(), 0.0 );
@@ -2440,8 +2405,8 @@ bool ensembleHdl::init_parameter_defgpool_exp()
 			delete kamsum;
 			delete qb;
 			//delete qori;
-			//for ( size_t hk = 0; hk < (1+largestid); hk++ ) 
-			//	if ( qsum->at(hk) != NULL ) 
+			//for ( size_t hk = 0; hk < (1+largestid); hk++ )
+			//	if ( qsum->at(hk) != NULL )
 			//		delete qsum->at(hk);
 			//delete qsum;
 			return false;
@@ -2491,8 +2456,8 @@ bool ensembleHdl::init_parameter_defgpool_exp()
 	delete xyzsum;
 	delete kamsum;
 	delete qb;
-	//for ( size_t hk = 0; hk < (1+largestid); hk++ ) 
-	//	if ( qsum->at(hk) != NULL ) 
+	//for ( size_t hk = 0; hk < (1+largestid); hk++ )
+	//	if ( qsum->at(hk) != NULL )
 	//		delete qsum->at(hk);
 	//delete qsum;
 
@@ -2531,14 +2496,14 @@ void ensembleHdl::report_successful_setup()
 	//cout << XMAX << ", is the upper limit for RXFRACTION numerical integration scheme." << endl;
 	//cout << TMAX << ", is the upper limit for REALTIME numerical integration scheme." << endl;
 	//cout << initialRelCellCaching << ", is the initial recaching value." << endl;
-	//cout << ensPhysData.G0 << "," << ensPhysData.bZeroCelsius << ", ShearModulus/Burgersvector." << endl;
+	//cout << ensPhysData.Gzero << "," << ensPhysData.bzero << ", ShearModulus/Burgersvector." << endl;
 	//cout << ensPhysData.LAGBm0 << "," << ensPhysData.HAGBm0 << "," << ensPhysData.GSm0 << ",  LAGB/HAGB/GS m0." << endl;
 	//cout << ensPhysData.LAGBHact << "," << ensPhysData.HAGBHact << "," << ensPhysData.GSHact << ", LAGB/HAGB/GS Hact=" << endl;
 }
 
-void ensembleHdl::report_datastructures() 
+void ensembleHdl::report_datastructures()
 {
-	if ( myRank == MASTER ) { 
+	if ( myRank == MASTER ) {
 		cout << "The size of the SCORE datastructures is as follows..." << endl;
 		cout << "\t\tdefcell=" << sizeof(defcell) << endl;
 		cout << "\t\tcell=" << sizeof(cell) << endl;
@@ -2575,7 +2540,7 @@ void ensembleHdl::compare_two_ang_files( const char* inputang, const char* snpan
 	if ( scoreangfile.is_open() == true && snpangfile.is_open() == true ) {
 		for ( unsigned int h1 = 0; h1 < 3; h1++ ) //kick three header lines from inputang
 			getline( scoreangfile, scoreangline );
-		for ( unsigned int h2 = 0; h2 < 6; h2++ ) 
+		for ( unsigned int h2 = 0; h2 < 6; h2++ )
 			getline ( snpangfile, snpangline );
 
 		double bunge1[3] = {0.0, 0.0, 0.0};
@@ -2616,7 +2581,7 @@ void ensembleHdl::compare_two_ang_files( const char* inputang, const char* snpan
 			//compare
 			/*double mis12 = (this->disori_angle_oriquat_cubic( quat1, quat2 ) * 180.0 / _PI_);
 			double mis21 = (this->disori_angle_oriquat_cubic( quat2, quat1 ) * 180.0 / _PI_);
-			//if ( mis12 < 1.0e-5 ) 
+			//if ( mis12 < 1.0e-5 )
 			//	continue;
 
 			//compare consistence of back-conversion
@@ -2764,11 +2729,11 @@ void ensembleHdl::ipf_colormap( double ipf_stretch_r, double ipf_stretch_g, doub
 			img_rgba[c + BLUECHAN ] = BLACK;
 			img_rgba[c + ALPHACHAN ] = UCHAR_RANGE_MAX;
 
-			if ( yy > xx ) 
+			if ( yy > xx )
 				continue; //upper triangle is not inside, remains black
 
 			//beyond projected great circle segment, boundary between (011) and (111) is segment of a circle radius sqrt(2) with center xc,yc = -1,0
-			if ( (SQR(xx + 1.0) + SQR(yy)) > SQRR ) 
+			if ( (SQR(xx + 1.0) + SQR(yy)) > SQRR )
 				continue;
 
 			unsigned char rgb[3] = { UCHAR_RANGE_MIN, UCHAR_RANGE_MIN, UCHAR_RANGE_MIN };
@@ -2846,7 +2811,7 @@ bool ensembleHdl::init_parameter()
 		good = init_parameter_from_hdf_material();
 #else
 		good = init_parameter_from_uds_material();
-#endif		
+#endif
 		if ( myRank == MASTER ) {
 			cout << "Initialized material status " << (int) good << "\n";
 		}
@@ -3125,7 +3090,7 @@ void ensembleHdl::SIMULATE_myCAs()
 	}
 }
 
-void ensembleHdl::PERFORM_SOLITARYUNIT_MODELING_ANALYSIS() 
+void ensembleHdl::PERFORM_SOLITARYUNIT_MODELING_ANALYSIS()
 {
 	if ( postProcessing == true ) {
 		if ( myRank == MASTER ) {
@@ -3183,7 +3148,7 @@ void ensembleHdl::init_nexus_results_file()
 	anno = ioAttributes();
 	anno.add( "HDF5_version", string("1.14.2") );
 	anno.add( "NX_class", string("NXroot") );
-	anno.add( "NeXus_repository", 
+	anno.add( "NeXus_repository",
 		string("https://github.com/FAIRmat-NFDI/nexus_definitions/blob/36ba122a" ));
 	//anno.add( "NeXus_version", string("")); //##TODO::add complete commit
 	if ( h5w.nexus_write_attributes( grpnm, anno ) != MYHDF5_SUCCESS ) {
@@ -3195,6 +3160,7 @@ void ensembleHdl::init_nexus_results_file()
 	grpnm = "/entry1";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXentry") );
+	anno.add( "default", string("spatiotemporal1") );
 	//"https://github.com/FAIRmat-NFDI/nexus_definitions/commit/
 	//anno.add( "version", string("36ba122a7646638951602275cde8f151ef1ff471") );
 	//https://fairmat-experimental.github.io/nexus-fairmat-proposal/9636feecb79bb32b828b1a9804269573256d7696/classes/contributed_definitions/NXms_score_results.html#nxms-score-results") );
@@ -3510,14 +3476,7 @@ void ensembleHdl::init_nexus_results_file()
 	grpnm = "/entry1/spatiotemporal1"; //##TODO::make adaptive
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXprocess") );
-	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
-
-	grpnm = "/entry1/spatiotemporal1/summary_statistics";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXprocess") );
+	anno.add( "default", string("summary_statistics") );
 	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << grpnm << " failed !" << "\n";
 		return;
@@ -3848,7 +3807,7 @@ uint32_t caregionMemHdl::get_nbortid( int regid, short dx, short dy, short dz, i
 void caregionMemHdl::ompshar_init_neighbortopology( uint32_t party, uint32_t partz )
 {
 	//CALLED FROM WITHIN PARALLEL REGION
-	//determines ID field of neighbors in an implicitly linearly stored but explicitly defined 3D topology 
+	//determines ID field of neighbors in an implicitly linearly stored but explicitly defined 3D topology
 	//of camemoryregions identified from 0, 1, 2, omp_get_num_threads() - 1
 	//these regions are arranged on a party * partz region grid with party <= partz
 	//addressing is first in y at fixed z then in z+1 along +y, z+2 along +y and so forth...
@@ -4058,7 +4017,7 @@ void caregionMemHdl::ompshar_init_haloregions( uint32_t party, uint32_t partz )
 
 	//halo regions with extend 0 are dummies!, ##MK::one could safe such tiny memory consumption of a few KB but...
 	//only dummy halo interface not required because periodic boundary conditions map back infections in border
-	
+
 	uint32_t o[3] = {INVALID_COORDINATE, INVALID_COORDINATE, INVALID_COORDINATE};
 	//myself is the first entry //extend, origin
 	ompshar_initialize_halo(0,      0, 0, 0,        0, 0, 0);
@@ -4272,7 +4231,7 @@ void caregionMemHdl::ompshar_init_haloregions( uint32_t party, uint32_t partz )
 			ompshar_initialize_halo(26,  0,0,0,          0,0,0);
 		} else {
 			o[0] = INVALID_COORDINATE; o[1] = INVALID_COORDINATE; o[2] = INVALID_COORDINATE;
-			determine_origins( mythrid, +1, +1, +1,	1, party, partz, o ); 
+			determine_origins( mythrid, +1, +1, +1,	1, party, partz, o );
 			ompshar_initialize_halo(26, 1,1,1,          o[0],o[1],o[2]);
 		}
 }
@@ -4328,7 +4287,7 @@ double caregionMemHdl::reg_calc_mobilityweight( uint32_t rgpoolid, uint32_t dgpo
 
 	double maxDev40_111 = MAXDISORI_TO_40DEG111;
 	double _sqrt3 = 1 / sqrt( 3.0 );
-	double oneNinth = 1.0 / 9.0; 
+	double oneNinth = 1.0 / 9.0;
 	//the quaternion that describes a 40deg<111> misorientation ##MK::we have to test against all possible ones...
 	double qdis[4] = {1.0, 0.0, 0.0, 0.0};
 	this->mycaHdl->localmath.disori_fromoriquat_cubic_imm( q1, q2, qdis );
@@ -4382,7 +4341,7 @@ void caregionMemHdl::ompshar_init_mySeedFrontInside()
 	regMemGuard = regMemGuard + ( ninitialRecyclingList * sizeof(uint32_t) );
 
 	ntotalRecyclingSeedInside = ninitialRecyclingList;
-	nextToRecycleSeedInside = NOTHING_TO_RECYCLE; //not assigned as there is no cell at all yet  that can be recycled 
+	nextToRecycleSeedInside = NOTHING_TO_RECYCLE; //not assigned as there is no cell at all yet  that can be recycled
 	firstNotRecycleSeedInside = NOTHING_TO_RECYCLE;
 
 	//myRecyclingSeedInside needs no initialization because it is assured to have no gaps and only read [0;nextToRecycleSeedInside)
@@ -4411,7 +4370,7 @@ void caregionMemHdl::ompshar_init_mySeedFrontBorder()
 	//thus memory in the mySeedFrontBorder of thread B is required to store the cell, however that array might not have been allocated large enough
 	//then thread A would be required to issue or request at least a reallocation such that thread B enlarges its mySeedFrontBorder array
 	//to avoid this we preallocate in advance already for all possible cells in the outer shell and as such the list of border cells does not require a reallocation
-	//this comes at the cost of more main memory utilization but potentially better cache linearity..., however, for large SUs, i.e. where this may be of relevance, 
+	//this comes at the cost of more main memory utilization but potentially better cache linearity..., however, for large SUs, i.e. where this may be of relevance,
 	//the interface area to volume is low consult PhD thesis by M. K\"uhbach for finding substantiated arguments as to why this allocation is not of a significant problem!
 
 	uint32_t nSeedFront = 2*( (myGeom.nreg_rd * myGeom.nreg_td) + (myGeom.nreg_rd * myGeom.nreg_nd) + (myGeom.nreg_td * myGeom.nreg_nd) ); //##MK::an exact calculation could save a few cells here...
@@ -4446,7 +4405,7 @@ void caregionMemHdl::ompshar_init_mySeedFrontBorder()
 	regMemGuard = regMemGuard + ( nRecyclingList * sizeof(uint32_t) );
 
 	ntotalRecyclingSeedBorder = nRecyclingList;
-	nextToRecycleSeedBorder = NOTHING_TO_RECYCLE; //not assigned as there is no cell at all yet  that can be recycled 
+	nextToRecycleSeedBorder = NOTHING_TO_RECYCLE; //not assigned as there is no cell at all yet  that can be recycled
 	firstNotRecycleSeedBorder = NOTHING_TO_RECYCLE;
 
 	//myRecyclingSeedBorder needs no initialization because it is assured to have no gaps and only read [0;nextToRecycleSeedBorder)
@@ -4577,8 +4536,8 @@ uint32_t caregionMemHdl::omp_getNextFreeSlotInSeedFrontBorder( bool how )
 void caregionMemHdl::ompshar_voxelize_growthStepInside()
 {
 	double tprof = omp_get_wtime();
-	double shapefactors[27] = { FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG, 
-						FGEOEDGE, FGEOFACE, FGEOEDGE, FGEOFACE,      FGEOFACE, FGEOEDGE, FGEOFACE, FGEOEDGE,	
+	double shapefactors[27] = { FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG,
+						FGEOEDGE, FGEOFACE, FGEOEDGE, FGEOFACE,      FGEOFACE, FGEOEDGE, FGEOFACE, FGEOEDGE,
 						FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG, (1.0) }; //layers xz stacked in positive y direction...
 
 	uint32_t IdentifiedAsActive = 0;
@@ -4590,7 +4549,7 @@ void caregionMemHdl::ompshar_voxelize_growthStepInside()
 	nextToRecycleSeedInside = 0;
 	firstNotRecycleSeedInside = 0;
 
-	//scan entire mySeedFrontInside on [0;nextSlotNeverActiveSeedInside) to 
+	//scan entire mySeedFrontInside on [0;nextSlotNeverActiveSeedInside) to
 	//	a) to find ACTIVE cells that require simulation of migration increment
 	//	b) to find INACTIVE cells which we can recycle
 
@@ -4631,8 +4590,8 @@ void caregionMemHdl::ompshar_voxelize_growthStepInside()
 void caregionMemHdl::ompshar_voxelize_growthStepBorder()
 {
 	double tprof = omp_get_wtime();
-	double shapefactors[27] = { FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG, 
-						FGEOEDGE, FGEOFACE, FGEOEDGE, FGEOFACE,      FGEOFACE, FGEOEDGE, FGEOFACE, FGEOEDGE,	
+	double shapefactors[27] = { FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG,
+						FGEOEDGE, FGEOFACE, FGEOEDGE, FGEOFACE,      FGEOFACE, FGEOEDGE, FGEOFACE, FGEOEDGE,
 						FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG, (1.0) }; //layers xz stacked in positive y direction...
 
 	uint32_t IdentifiedAsActive = 0;
@@ -4657,7 +4616,7 @@ void caregionMemHdl::ompshar_voxelize_growthStepBorder()
 				this->append_to_fullseed_border_list ( c );
 			}
 			continue;
-		} 
+		}
 		//else cell == INACTIVE
 		this->append_to_recycseed_border_list ( c );
 
@@ -4674,7 +4633,7 @@ void caregionMemHdl::ompshar_voxelize_updateFullInside()
 {
 	double tprof = omp_get_wtime();
 	//CALLED FROM WITHIN PARALLEL REGION
-	//myFullSeedInside in the interval [0;nextSlotToFullSeedInside) is a compact list of entries 
+	//myFullSeedInside in the interval [0;nextSlotToFullSeedInside) is a compact list of entries
 	//dereferencing cells from mySeedFrontInside that in this time step have completely transformed, can infect and be INACTIVED thereafter
 	//but it is required their categorization if the infected cell is still in the inside of a region or now handled by the border
 
@@ -4752,7 +4711,7 @@ void caregionMemHdl::ompshar_voxelize_updateFullInside()
 		this->omp_infect_OutOfSeedFrontInside ( rgpid, crxfrontid, InfectIntoBorder, +1, +1, +1, 0, carryOver3 );
 		//MK::following code NEEDS to be executed AFTER all these infection attempts
 
-		//deactivate cell 
+		//deactivate cell
 		cxyz = (mySeedFrontInside[crxfrontid].ix - xmi) + ((mySeedFrontInside[crxfrontid].iy - ymi) * xx) + ((mySeedFrontInside[crxfrontid].iz - zmi) * xxyy);
 
 		//mark representor in the cellgrid as FULLY_RECRYSTALLIZED by assigning id of the recrystallizing
@@ -4780,7 +4739,7 @@ void caregionMemHdl::ompshar_voxelize_updateFullBorder()
 {
 	double tprof = omp_get_wtime();
 	//CALLED FROM WITHIN PARALLEL REGION
-	//MK::it is principal design the same as the updateFullRXInside, however now we must potentially direct infections 
+	//MK::it is principal design the same as the updateFullRXInside, however now we must potentially direct infections
 	//out of our own memory region by offloading them into our halo such that the neighboring threads can take care about them
 
 	double overFac1 = 0.0682;
@@ -4917,7 +4876,7 @@ void caregionMemHdl::ompshar_synchronize_haloregions_def()
 			//oox = apartreg->myhalos[hal].originx;
 			//ooy = apartreg->myhalos[hal].originy;
 			//ooz = apartreg->myhalos[hal].originz;
- 
+
 			uint32_t target;
 			for ( uint32_t s = 0; s < HowManyToSynchronize; s++ ) {
 				target = apartreg->myhalos[hal].theHaloRefs[s];
@@ -5075,7 +5034,7 @@ void caregionMemHdl::omp_infect_OutOfSeedFrontBorder( uint32_t seedid, uint32_t 
 			return;
 		}
 
-		this->mycellgrid[cxyz] = CURRENTLY_INFECTED; 
+		this->mycellgrid[cxyz] = CURRENTLY_INFECTED;
 		//MK::thread-safe because non-overlapping regions plus sequential processing of border cells, for
 		//##MK::these cases in an even more elaborated preprocessing the sequential OpenMP overhead could be reduced further...
 
@@ -5090,7 +5049,7 @@ void caregionMemHdl::omp_infect_OutOfSeedFrontBorder( uint32_t seedid, uint32_t 
 		mySeedFrontInside[freeplace].mydefgseedid = seedid;
 //##DEBUG#pragma omp critical{ cout << "\t\t\t" << omp_get_thread_num() << ";" << "SAMEREGION-BORDER success" << endl; }
 		return;
-	} 
+	}
 
 	//infection directed NOT INSIDE SO NOW NECESSARY TO CHECK AGAINST LIMITS OF ALL POSSIBLE NEIGHBORS, still however it could be an infection that stays within the border layer
 	//THIS REGION encloses all infections that direct not out of the shell, i.e. 8 of 26 directions
@@ -5142,7 +5101,7 @@ void caregionMemHdl::omp_infect_OutOfSeedFrontBorder( uint32_t seedid, uint32_t 
 	}
 
 
-	//not returned yet, so the infection directs into a halo check in which and whether the corresponding location is 
+	//not returned yet, so the infection directs into a halo check in which and whether the corresponding location is
 	//free nborpos must not be utilized! because multiple halos can lay in different domains!
 	//find which halo of mine to place the infection
 	uint32_t whichhalo = UNKNOWN_HALO;
@@ -5171,7 +5130,7 @@ void caregionMemHdl::omp_infect_OutOfSeedFrontBorder( uint32_t seedid, uint32_t 
 	short hx = x - myhalos[whichhalo].originx;
 	short hy = y - myhalos[whichhalo].originy;
 	short hz = z - myhalos[whichhalo].originz;
- 
+
 //#pragma omp critical
 //{ cout << "issuing from my/nbtid/nbpos = " << this->mythreadid << "--" << nbortid << "--" << whichhalo << "==" << x << ";" << y << ";"<< z << "\t\t" << myhalos[whichhalo].originx << ";" << myhalos[whichhalo].originy << ";" << myhalos[whichhalo].originz << "\t\t" << myhalos[whichhalo].extendx << ";" << myhalos[whichhalo].extendy << ";" << myhalos[whichhalo].extendz << "\t\t" << hx << ";" << hy << ";" << hz << endl; }
 
@@ -5319,7 +5278,7 @@ void caregionMemHdl::omp_resetHaloRegions()
 			myhalos[h].theHaloCells[i].rxFrac = NO_INFECTION;
 			myhalos[h].theHaloCells[i].myrxgid = NO_GRAIN_ASSIGNED;
 		}
-		//resetting of theHaloRefs not necessary, the array myhalos[h].theHaloRefs and myhalos[h].theHaloCells ONE MUST NOT DELETE! but as they are 
+		//resetting of theHaloRefs not necessary, the array myhalos[h].theHaloRefs and myhalos[h].theHaloCells ONE MUST NOT DELETE! but as they are
 		myhalos[h].nextFreeHaloRefs = 0;
 		//ONE MUST NOT OVERWRITE THE VALUES FOR extend.. AND origin.. OR inregion AS THE PARTITIONING in solve_RXGROWTH remains the same!
 	}
@@ -5353,7 +5312,7 @@ void caregionMemHdl::omp_resetInternalCounters()
 }
 
 
-void caregionMemHdl::omp_voxelize_memoryCleanup() 
+void caregionMemHdl::omp_voxelize_memoryCleanup()
 {
 	if ( mySeedFrontInside != NULL ) {
 		delete [] mySeedFrontInside;
@@ -5442,7 +5401,7 @@ void caregionMemHdl::ompshar_init_myRXFrontInside()
 
 
 	ntotalRecyclingListInside = ninitialRecyclingList;
-	nextSlotThatBecomesRecycledInside = NOTHING_TO_RECYCLE; //not assigned as there is no cell at all yet  that can be recycled 
+	nextSlotThatBecomesRecycledInside = NOTHING_TO_RECYCLE; //not assigned as there is no cell at all yet  that can be recycled
 	firstNotRecycledYetInside = NOTHING_TO_RECYCLE;
 
 	//myRecyclingListInside needs no initialization because it is assured to have no gaps and only read [0;nextSlotThatBecomesRecycledInside)
@@ -5471,7 +5430,7 @@ void caregionMemHdl::ompshar_init_myRXFrontBorder()
 	//thus memory in the myRXFrontBorder of thread B is required to store the cell, however that array might not have been allocated large enough
 	//then thread A would be required to issue or request at least a reallocation such that thread B enlarges its myRXFrontBorder array
 	//to avoid this we preallocate in advance already for all possible cells in the outer shell and as such the list of border cells does not require a reallocation
-	//this comes at the cost of more main memory utilization but potentially better cache linearity..., however, for large SUs, i.e. where this may be of relevance, 
+	//this comes at the cost of more main memory utilization but potentially better cache linearity..., however, for large SUs, i.e. where this may be of relevance,
 	//the interface area to volume is low consult PhD thesis by M. K\"uhbach for finding substantiated arguments as to why this allocation is not of a significant problem!
 
 	uint32_t nRXFront = 2*( (myGeom.nreg_rd * myGeom.nreg_td) + (myGeom.nreg_rd * myGeom.nreg_nd) + (myGeom.nreg_td * myGeom.nreg_nd) ); //##MK::an exact calculation could save a few cells here...
@@ -5508,7 +5467,7 @@ void caregionMemHdl::ompshar_init_myRXFrontBorder()
 	regMemGuard = regMemGuard + ( nRecyclingList * sizeof(uint32_t) );
 
 	ntotalRecyclingListBorder = nRecyclingList;
-	nextSlotThatBecomesRecycledBorder = NOTHING_TO_RECYCLE; //not assigned as there is no cell at all yet  that can be recycled 
+	nextSlotThatBecomesRecycledBorder = NOTHING_TO_RECYCLE; //not assigned as there is no cell at all yet  that can be recycled
 	firstNotRecycledYetBorder = NOTHING_TO_RECYCLE;
 
 	//myRecyclingListBorder needs no initialization because it is assured to have no gaps and only read [0;nextSlotThatBecomesRecycledBorder)
@@ -5574,7 +5533,7 @@ uint32_t caregionMemHdl::omp_getNextFreeSlotInRXFrontInside( bool how ) //MK::ho
 	//1::always get more memory (almost no additional scans for places but increasingly costly cache hit during calcGrowthStep owing to accumulation of INACTIVE cells along the list of cells)
 	//2::recycle as best as possible (reduced total amount of memory surplus less scans on average: very likely improved cache performance than strategy 1)
 	//optimal would be to maintain a compact cell list (meaning no cell in the bucket is INACTIVE), however this will incurr overhead to ensure this or
-	//or require to utilize a linked list structures which to iterate over --- however --- is orders of magnitude slower for millions of entries if naive or slower at least if smartly 
+	//or require to utilize a linked list structures which to iterate over --- however --- is orders of magnitude slower for millions of entries if naive or slower at least if smartly
 	//implemented as there will be pointer overhead
 
 	//MK::the present implement selects most beneficial compromise strategy automatically
@@ -5618,7 +5577,7 @@ uint32_t caregionMemHdl::omp_getNextFreeSlotInRXFrontInside( bool how ) //MK::ho
 	QUICKASSERT( new_myRXFrontInside != NULL );
 	regMemGuard = regMemGuard + (newSize * sizeof(cell));
 
-	//potentially unsafe to use memcpy because of overlapping issues memcpy( new_myRXFront, myRXFront, oldSize * sizeof(cell) ); 
+	//potentially unsafe to use memcpy because of overlapping issues memcpy( new_myRXFront, myRXFront, oldSize * sizeof(cell) );
 	//MK::all indices in FullRX and Recycling list stay valid as they are referencing relative to first array position
 	for ( uint32_t i = 0; i < oldSize; ++i ) {
 		new_myRXFrontInside[i].activity = myRXFrontInside[i].activity;
@@ -5687,7 +5646,7 @@ uint32_t caregionMemHdl::omp_getNextFreeSlotInRXFrontBorder( bool how )
 }
 
 
-void caregionMemHdl::ompshar_defragmentation() 
+void caregionMemHdl::ompshar_defragmentation()
 {
 	//CALLED FROM WITHIN PARALLEL REGION!
 	//MK::usually the function is kicked in shortly after the peak of the Sv(X) function
@@ -5726,7 +5685,7 @@ void caregionMemHdl::ompshar_defragmentation()
 	firstinactive = 0;
 	while ( myRXFrontBorder[firstinactive].activity == ACTIVE ) {
 		firstinactive++;
-	}	
+	}
 	contiguous = firstinactive;
 	for ( uint32_t c = (firstinactive + 1); c < nextSlotNeverActiveRXFrontBorder; c++ ) {
 		if ( myRXFrontBorder[c].activity == ACTIVE ) {
@@ -5767,7 +5726,7 @@ void caregionMemHdl::ompshar_defragmentation()
 
 			//##MK::however the algorithm is still provoking almost ever a cache miss for the access to the moved-th element
 			//therefore work through moved' = moved - L1_CACHE_LENGTH and increment moved'++ and a toggle++ if toggle == L1_CACHE_LENGTH...
-			//thereby the first access to moved' after a toggle operation is more likely to hit only a cold-miss but then advancing linearly 
+			//thereby the first access to moved' after a toggle operation is more likely to hit only a cold-miss but then advancing linearly
 			//through one cache block while the which-th element is in another cache block, clearly
 			//MK::the details are expected strongly dependent on the set associativity and other cache characteristics
 		}
@@ -5861,8 +5820,8 @@ void caregionMemHdl::ompshar_sim_myCA_calcGrowthStepInside()
 	double tprof = omp_get_wtime();
 
 	//##consider to mount them fixed in the classHdl
-	double shapefactors[27] = { FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG, 
-						FGEOEDGE, FGEOFACE, FGEOEDGE, FGEOFACE,      FGEOFACE, FGEOEDGE, FGEOFACE, FGEOEDGE,	
+	double shapefactors[27] = { FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG,
+						FGEOEDGE, FGEOFACE, FGEOEDGE, FGEOFACE,      FGEOFACE, FGEOEDGE, FGEOFACE, FGEOEDGE,
 						FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG, (1.0) }; //layers xz stacked in positive y direction...
 
 	uint32_t IdentifiedAsActive = 0;
@@ -5874,7 +5833,7 @@ void caregionMemHdl::ompshar_sim_myCA_calcGrowthStepInside()
 	nextSlotThatBecomesRecycledInside = 0;
 	firstNotRecycledYetInside = 0;
 
-	//scan the whole myRXFront on the interval [0;nextSlotNeverActiveRXFront) to 
+	//scan the whole myRXFront on the interval [0;nextSlotNeverActiveRXFront) to
 	//	a) to find ACTIVE cells that require simulation of boundary migration increments during annealing real time step dt
 	//	b) to find INACTIVE cells that can be recycled
 //##DEBUG#pragma omp critical { cout << "\t\tEntering calcGrowthStepInside;step;nextSlotNeverActiveRXFront;myca->dt;myca->cellsize\t" << mycaHdl->step << "\t" << nextSlotNeverActiveRXFrontInside << "\t" << mycaHdl->dt << "\t" << mycaHdl->_cellsize << endl; }
@@ -5920,7 +5879,7 @@ void caregionMemHdl::ompshar_sim_myCA_calcGrowthStepInside()
 			// p almost zero
 			//cerr << "WARNING::Migration speed is almost zero\n" << endl;
 			continue;
-		} 
+		}
 		//else {
 			//else cell seems inactive, okay remember index c in RecyclingList
 
@@ -5998,8 +5957,8 @@ void caregionMemHdl::ompshar_sim_myCA_calcGrowthStepBorder()
 	double tprof = omp_get_wtime();
 
 	//##consider to mount them fixed in the classHdl
-	double shapefactors[27] = { FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG, 
-						FGEOEDGE, FGEOFACE, FGEOEDGE, FGEOFACE,      FGEOFACE, FGEOEDGE, FGEOFACE, FGEOEDGE,	
+	double shapefactors[27] = { FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG,
+						FGEOEDGE, FGEOFACE, FGEOEDGE, FGEOFACE,      FGEOFACE, FGEOEDGE, FGEOFACE, FGEOEDGE,
 						FGEODIAG, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEOFACE, FGEOEDGE, FGEODIAG, FGEOEDGE, FGEODIAG, (1.0) }; //layers xz stacked in positive y direction...
 
 	uint32_t IdentifiedAsActive = 0;
@@ -6012,7 +5971,7 @@ void caregionMemHdl::ompshar_sim_myCA_calcGrowthStepBorder()
 	firstNotRecycledYetBorder = 0;
 
 
-	//scan the whole myRXFront on the interval [0;nextSlotNeverActiveRXFront) to 
+	//scan the whole myRXFront on the interval [0;nextSlotNeverActiveRXFront) to
 	//	a) to find ACTIVE cells for which boundary migration is simulated during dt
 	//	b) to find INACTIVE cells
 	//all comments from caHdl::ompshar_sim_myCA_calcGrowthStepInside() apply as well
@@ -6067,7 +6026,7 @@ void caregionMemHdl::omp_infect_OutOfRXFrontInside (
 		short dx, short dy, short dz, unsigned char direction, double carryOver )
 {
 	//CALLED FROM WITHIN PARALLEL REGION BUT OPERATING ON caregionMemHdl class object's local cellgrid
-	
+
 	short x = myRXFrontInside[rxfrontid].ix;
 	short y = myRXFrontInside[rxfrontid].iy;
 	short z = myRXFrontInside[rxfrontid].iz;
@@ -6217,7 +6176,7 @@ void caregionMemHdl::omp_infect_OutOfRXFrontBorder (
 			return;
 		}
 
-		this->mycellgrid[cxyz] = CURRENTLY_INFECTED; 
+		this->mycellgrid[cxyz] = CURRENTLY_INFECTED;
 		//MK::thread-safe because non-overlapping regions plus sequential processing of border cells, for
 		//##MK::these cases in an even more elaborated preprocessing the sequential OpenMP overhead could be reduced further...
 
@@ -6242,7 +6201,7 @@ void caregionMemHdl::omp_infect_OutOfRXFrontBorder (
 		myRXFrontInside[freeplace].mydefgid = cxyz_deformedstate;
 //##DEBUG#pragma omp critical{ cout << "\t\t\t" << omp_get_thread_num() << ";" << "SAMEREGION-BORDER success" << endl; }
 		return;
-	} 
+	}
 
 	//infection directed NOT INSIDE SO NOW NECESSARY TO CHECK AGAINST LIMITS OF ALL POSSIBLE NEIGHBORS, still however it could be an infection that stays within the border layer
 	//THIS REGION encloses all infections that direct not out of the shell, i.e. 8 of 26 directions
@@ -6309,7 +6268,7 @@ void caregionMemHdl::omp_infect_OutOfRXFrontBorder (
 	}
 
 
-	//not returned yet, so the infection directs into a halo check in which and whether the corresponding location is 
+	//not returned yet, so the infection directs into a halo check in which and whether the corresponding location is
 	//free nborpos must not be utilized because multiple halos can lay in different domains!
 	//find which halo of mine to place the infection
 	uint32_t whichhalo = UNKNOWN_HALO;
@@ -6338,7 +6297,7 @@ void caregionMemHdl::omp_infect_OutOfRXFrontBorder (
 	short hx = x - myhalos[whichhalo].originx;
 	short hy = y - myhalos[whichhalo].originy;
 	short hz = z - myhalos[whichhalo].originz;
- 
+
 //#pragma omp critical
 //{ cout << "issuing from my/nbtid/nbpos = " << this->mythreadid << "--" << nbortid << "--" << whichhalo << "==" << x << ";" << y << ";"<< z << "\t\t" << myhalos[whichhalo].originx << ";" << myhalos[whichhalo].originy << ";" << myhalos[whichhalo].originz << "\t\t" << myhalos[whichhalo].extendx << ";" << myhalos[whichhalo].extendy << ";" << myhalos[whichhalo].extendz << "\t\t" << hx << ";" << hy << ";" << hz << endl; }
 
@@ -6378,7 +6337,7 @@ void caregionMemHdl::ompshar_sim_myCA_updateFullRXInside()
 {
 	double tprof = omp_get_wtime();
 	//CALLED FROM WITHIN PARALLEL REGION
-	//myFullRXListInside in the interval [0;nextSlotToFullRXInside) is a compact list of entries 
+	//myFullRXListInside in the interval [0;nextSlotToFullRXInside) is a compact list of entries
 	//dereferencing cells from myRXFrontInside that in this time step have completely recrystallized, can infect and be INACTIVED thereafter
 	//but it is required their categorization if the infected cell is still in the inside of a region or now handled by the border
 
@@ -6456,7 +6415,7 @@ void caregionMemHdl::ompshar_sim_myCA_updateFullRXInside()
 		this->omp_infect_OutOfRXFrontInside ( rgpid, crxfrontid, InfectIntoBorder, +1, +1, +1, 0, carryOver3 );
 		//MK::following code NEEDS to be executed AFTER all these infection attempts
 
-		//deactivate cell 
+		//deactivate cell
 		cxyz = (myRXFrontInside[crxfrontid].ix - xmi) + ((myRXFrontInside[crxfrontid].iy - ymi) * xx) + ((myRXFrontInside[crxfrontid].iz - zmi) * xxyy);
 
 		//mark representor in the cellgrid as FULLY_RECRYSTALLIZED by assigning id of the recrystallizing
@@ -6497,7 +6456,7 @@ void caregionMemHdl::ompshar_sim_myCA_updateFullRXBorder()
 {
 	double tprof = omp_get_wtime();
 	//CALLED FROM WITHIN PARALLEL REGION
-	//MK::it is principal design the same as the updateFullRXInside, however now we must potentially direct infections 
+	//MK::it is principal design the same as the updateFullRXInside, however now we must potentially direct infections
 	//out of our own memory region by offloading them into our halos
 
 	double overFac1 = 0.0682;
@@ -6638,7 +6597,7 @@ void caregionMemHdl::ompshar_synchronize_haloregions_rx()
 			//oox = apartreg->myhalos[hal].originx;
 			//ooy = apartreg->myhalos[hal].originy;
 			//ooz = apartreg->myhalos[hal].originz;
- 
+
 			uint32_t target;
 			for ( uint32_t s = 0; s < HowManyToSynchronize; s++ ) {
 				target = apartreg->myhalos[hal].theHaloRefs[s];
@@ -6648,7 +6607,7 @@ void caregionMemHdl::ompshar_synchronize_haloregions_rx()
 				gy = apartreg->myhalos[hal].theHaloCells[target].iy;
 				gz = apartreg->myhalos[hal].theHaloCells[target].iz;
 
-				
+
 				QUICKASSERT( gx >= xmi && gx <= xmx);//##DEBUG
 				QUICKASSERT( gy >= ymi && gy <= ymx);
 				QUICKASSERT( gz >= zmi && gz <= zmx);
@@ -6861,7 +6820,7 @@ void caregionMemHdl::omp_cleanupMemoryUsedForManagement()
 
 void caregionMemHdl::omp_cleanupMemoryUsedForGrowthMachine()
 {
-	//MK::when the solve_RXGROWTH has been executed the mygrainevolution contains the intermediate stage of all grains but 
+	//MK::when the solve_RXGROWTH has been executed the mygrainevolution contains the intermediate stage of all grains but
 	//the memory for the cellgrid and the dynamic memory allocated for managing cells in no longer necessary so delete it
 
 	delete [] mycellgrid;
@@ -6939,12 +6898,12 @@ caHdl::caHdl()
 
 	myPhysData.G = DEFAULT_SHEARMODULUS;
 	myPhysData.b = DEFAULT_BURGERSVECTOR;
-	myPhysData.G0 = DEFAULT_SHEARMODULUS;
-	myPhysData.dGdt = 0.0;
-	myPhysData.bZeroCelsius = DEFAULT_BURGERSVECTOR;
-	myPhysData.thermexp_C = DEFAULT_PUREALU_C;
-	myPhysData.thermexp_a = 0.0;
-	myPhysData.thermexp_b = 0.0;
+	myPhysData.Gzero = DEFAULT_SHEARMODULUS;
+	myPhysData.nadal_lepoac_a = 0.0;
+	myPhysData.bzero = DEFAULT_BURGERSVECTOR;
+	myPhysData.thermexp_second = 0.0;
+	myPhysData.thermexp_first = 0.0;
+	myPhysData.thermexp_null = 0.0;
 	myPhysData.Tmelt = DEFAULT_PUREALU_TMELT;
 
 	myPhysData.LAGBm0 = 1.0;
@@ -7037,7 +6996,7 @@ caHdl::caHdl()
 	mypzmin = 0.0;
 
 
-	Gbhalfsq = 0.5 * myPhysData.G0 * SQR(myPhysData.bZeroCelsius);
+	Gbhalfsq = 0.5 * myPhysData.Gzero * SQR(myPhysData.bzero);
 	//_kT = (1.0 / (kboltzman * CurrentTemperature));
 	mLAGB = myPhysData.LAGBm0 * exp( -1.0 *  DEFAULT_LAGB_HACT / (kboltzman * CurrentTemperature) );
 	mHAGB = myPhysData.HAGBm0 * exp( -1.0 *  DEFAULT_HAGB_HACT / (kboltzman * CurrentTemperature) );
@@ -7133,7 +7092,7 @@ void caHdl::update_atomisticproperties()
 
 	//cache Gbhalfsq
 	Gbhalfsq = 0.5 * myPhysData.G * SQR( myPhysData.b );
-        
+
 }
 
 
@@ -7199,7 +7158,7 @@ void caHdl::update_deformedsubstructure()
 	//evolution of the statistical dislocation density affecting mydefgpool[i].rho
 	unsigned char recoverymodel = myRecoveryModel.RecoveryConsider;
 
-	if ( recoverymodel == RECOVERY_NO ) 
+	if ( recoverymodel == RECOVERY_NO )
 		return;
 
 	if ( recoverymodel == RECOVERY_NES_VACCOREDIFF ) {
@@ -7234,7 +7193,7 @@ double caHdl::get_rho ( uint32_t mydefgpoolid )
 
 double caHdl::get_zener()
 {
-	if ( myDragData.ZenerConsider == DISPERSOIDDRAG_NO ) 
+	if ( myDragData.ZenerConsider == DISPERSOIDDRAG_NO )
 		return 0.0;
 
 	//DISPERSOIDDRAG_CONSTANT || DISPERSOIDDRAG_TIMEDEP
@@ -7358,7 +7317,7 @@ double caHdl::get_dtmax_instantslope_temp()
 	}
 
 	if (i < ttime.size() ) {
-		double dTdt = ( fabs(ttemperature[i] - ttemperature[i-1]) / (ttime[i] - ttime[i-1]) ); 
+		double dTdt = ( fabs(ttemperature[i] - ttemperature[i-1]) / (ttime[i] - ttime[i-1]) );
 
 		if (dTdt <= SMALL_HEATRATE) dTdt = SMALL_HEATRATE; //avoid division by zero error
 
@@ -7478,15 +7437,15 @@ double caHdl::get_dtmax_minimum()
 
 	//analyze all physical mechanisms that need proper time discretization during the integration scheme
 	dtmax_model = get_dtmax_instantslope_temp();
-	if ( dtmax_model < min_dtmax ) 
+	if ( dtmax_model < min_dtmax )
 		min_dtmax = dtmax_model;
 
 	dtmax_model = get_dtmax_instantslope_rho();
-	if ( dtmax_model < min_dtmax ) 
+	if ( dtmax_model < min_dtmax )
 		min_dtmax = dtmax_model;
 
 	dtmax_model = get_dtmax_instantslope_zener();
-	if ( dtmax_model < min_dtmax ) 
+	if ( dtmax_model < min_dtmax )
 		min_dtmax = dtmax_model;
 
 	double dtmax_migr_discr = get_dtmax_instantslope_cells();
@@ -7497,8 +7456,8 @@ double caHdl::get_dtmax_minimum()
 	double dtmax_nucrate_discr = get_dtmax_instantslope_nucleation();
 
 	//initially min_dtmax was scaled such that not more than one nucleus
-	//difference per integration step was seeded, however, this voted for orders of 
-	//magnitude shorter time steps for timedependent nucleation, however, if the migration distance of a cell is limited, one could also 
+	//difference per integration step was seeded, however, this voted for orders of
+	//magnitude shorter time steps for timedependent nucleation, however, if the migration distance of a cell is limited, one could also
 	//without significant effect on the simulation results seed all nuclei at once, as they cannot migrate more than a partial step of a cell
 	if ( dtmax_nucrate_discr >=  dtmax_migr_discr ) {
 		if ( dtmax_migr_discr < min_dtmax )
@@ -7557,12 +7516,13 @@ void caHdl::init_parameter()
 
 	myPhysData.G = myens->ensPhysData.G;
 	myPhysData.b = myens->ensPhysData.b;
-	myPhysData.G0 = myens->ensPhysData.G0;
-	myPhysData.dGdt = myens->ensPhysData.dGdt;
-	myPhysData.bZeroCelsius = myens->ensPhysData.bZeroCelsius;
-	myPhysData.thermexp_C = myens->ensPhysData.thermexp_C;
-	myPhysData.thermexp_a = myens->ensPhysData.thermexp_a;
-	myPhysData.thermexp_b = myens->ensPhysData.thermexp_b;
+	myPhysData.Gzero = myens->ensPhysData.Gzero;
+	myPhysData.nadal_lepoac_a = myens->ensPhysData.nadal_lepoac_a;
+	myPhysData.nadal_lepoac_zeta = myens->ensPhysData.nadal_lepoac_zeta;	
+	myPhysData.bzero = myens->ensPhysData.bzero;
+	myPhysData.thermexp_second = myens->ensPhysData.thermexp_second;
+	myPhysData.thermexp_first = myens->ensPhysData.thermexp_first;
+	myPhysData.thermexp_null = myens->ensPhysData.thermexp_null;
 	myPhysData.Tmelt = myens->ensPhysData.Tmelt;
 
 	myPhysData.LAGBm0 =	myens->ensPhysData.LAGBm0;
@@ -7700,7 +7660,7 @@ void caHdl::init_processing()
 }
 
 
-void caHdl::init_zenerdrag() 
+void caHdl::init_zenerdrag()
 {
 	ensembleHdlP myens = this->myensHdl;
 	for ( uint32_t t = 0; t < myens->dispersoidtime.size(); t++) {
@@ -7723,7 +7683,7 @@ void caHdl::solve_INITIALIZATION()
 void caHdl::ompshar_initialize_region_myrxgpools( int regionid )
 {
 	//CALLED FROM WITHIN PARALLEL REGION
-	//only call once for each region! from disjoint threadids regionid, 
+	//only call once for each region! from disjoint threadids regionid,
 	//such that memory for bookkeeping array is local
 	uint32_t nrxg = myrxgpool.size();
 	caregionMemHdlP theregion = regions[regionid];
@@ -7965,7 +7925,7 @@ void caHdl::solve_SYNTHESIZE_DEFORMATIONSTRUCTURE()
 }
 
 
-void caHdl::solve_DETECT_GRAINBOUNDARIES() 
+void caHdl::solve_DETECT_GRAINBOUNDARIES()
 {
 	double timer = MPI_Wtime();
 	bool stillgood = true;
@@ -8062,10 +8022,10 @@ void caHdl::solve_DETECT_GRAINBOUNDARIES()
 
 void caHdl::solve_GRAINBOUNDARYNUCLEATION()
 {
-	//##MK in M. Kuehbach's Phd thesis the specific implementation of grain boundary nucleated reactions which were exercised within 
+	//##MK in M. Kuehbach's Phd thesis the specific implementation of grain boundary nucleated reactions which were exercised within
 	//C. Haase's HighMn SFB761 Twip steel project aided to model site-saturated grain boundary nucleated RX processes
 	//so it sufficies to populate the myrxgpool vector with picking physically the desired per se disjoint boundary cells,
-	//at which nuclei should be generated, then solve_NUCLEATIONMODELING must not be executed 
+	//at which nuclei should be generated, then solve_NUCLEATIONMODELING must not be executed
 	//instead solve_RXGROWTH places the nuclei without prior knowledge that the mycellgrid assignment came from a DEFMS automaton
 
 	if( this->myNucleationModel.gbnucleation == GBNUCLEATION_YES_PICKRND ) {
@@ -8113,7 +8073,7 @@ uint32_t caHdl::getDeformedGrainID( uint32_t xglo, uint32_t yglo, uint32_t zglo 
 }
 
 
-void caHdl::solve_NUCLEATIONMODELING() 
+void caHdl::solve_NUCLEATIONMODELING()
 {
 	if ( myNucleationModel.gbnucleation != GBNUCLEATION_NO ) {
 		solve_GRAINBOUNDARYNUCLEATION();
@@ -8151,7 +8111,7 @@ void caHdl::solve_NUCLEATIONMODELING()
 }
 
 
-void caHdl::solve_REPLACE_CA_STRUCTURE() 
+void caHdl::solve_REPLACE_CA_STRUCTURE()
 {
 	//now we know all potential nuclei, so no new orientations are added further because only existing ones grow
 	nmyrxgpool = myrxgpool.size();
@@ -8171,7 +8131,7 @@ void caHdl::solve_REPLACE_CA_STRUCTURE()
 	{
 		threadid = omp_get_thread_num(); //MK::hereby it is dictacted that each thread works on disjoint data!
 		nxyz = regions[threadid]->myGeom.nregvol_rdtdnd;
-                
+
 
 		//threads initialize local copy of the myrxgpool and the mydefgpoolcell counters
 		//such that during updating the cells in the growth simulation, the bookkeeping is race free and thread-locality maximized
@@ -8184,7 +8144,7 @@ void caHdl::solve_REPLACE_CA_STRUCTURE()
 		reg_defmicrotexture = new uint32_t[ndefmicrotexture];
 		for (uint32_t i = 0; i < ndefmicrotexture; i++) { reg_defmicrotexture[i] = 0; }
 
-		//MK::still the mycellgrid is populated with seedids, additionally for the growth of the RX nuclei the boundaries among the deformed grains 
+		//MK::still the mycellgrid is populated with seedids, additionally for the growth of the RX nuclei the boundaries among the deformed grains
 		//are no longer of interest, so replace mycellgrid from indices referencing entries in tmpdefgseeds to indices referencing entries in mydefgpool
 		//first replace the CA structure, then bookkeep
 		for ( c = 0; c < nxyz; c++ ) {
@@ -8258,7 +8218,7 @@ void caHdl::cleanMyGrainEvolution()
 		myMemGuard = myMemGuard - ( (double) mygrainevolution[s].nlocaldata * sizeof(uint32_t) );
 	}
 	//vector vector does allocate self
-	
+
 	for ( uint32_t s = 0; s < myrxprofile.size(); s++ ) {
 		delete [] myrxprofile[s].localdatabucket;
 		myrxprofile[s].localdatabucket = NULL;
@@ -8274,7 +8234,7 @@ void caHdl::cleanBookkeeping()
 	delete [] NucleiMicrotexture;
 	NucleiMicrotexture = NULL;
 
-//#pragma omp parallel 
+//#pragma omp parallel
 //{
 	for ( uint32_t r = 0; r < regions.size(); r++ ) {
 		//if ( omp_get_thread_num() == r ) {
@@ -8326,7 +8286,7 @@ void caHdl::solve_RXGROWTH()
 	//update_deformedsubstructure();
 
 #ifdef REPORTSTYLE_USER
-	if ( this->myensRank == MASTER ) 
+	if ( this->myensRank == MASTER )
 		//cout << this->jobid << "\tstep;t;X;dt;CurrTemperature;Sv\t\t" << this->step << "\t\t" << this->t << "\t\t" << this->X  << "\t\t" << this->dt << "\t\t" << this->CurrentTemperature << "\t\t" << this->Sv << endl;
 #endif
 
@@ -8354,7 +8314,7 @@ void caHdl::solve_RXGROWTH()
 		{
 			ompcrit_clarify_status_infectedcells( RXFRACTION_THRESHOLD ); //caching of partially infected cells
 		}
-		//barrier necessary 
+		//barrier necessary
 		#pragma omp barrier
 
 		//initial output
@@ -8491,7 +8451,7 @@ void caHdl::solve_RXGROWTH()
 						}
 						dXstep = dXstep + ( regions[tid]->reg_dXstepInside + regions[tid]->reg_dXstepBorder );
 						Sv = Sv + (regions[tid]->reg_SvInside + regions[tid]->reg_SvBorder);
-						Xcells = Xcells + ( (double) (regions[tid]->reg_nUpdatedCellsInside + regions[tid]->reg_nUpdatedCellsBorder) ); 
+						Xcells = Xcells + ( (double) (regions[tid]->reg_nUpdatedCellsInside + regions[tid]->reg_nUpdatedCellsBorder) );
 					}
 					myMobilityWeightMax = mymobmax;
 					X = (Xcells / ((double) myCAGeometry.nboxvol_rdtdnd));
@@ -8520,11 +8480,11 @@ void caHdl::solve_RXGROWTH()
 
 					log_PERCOLATION();
 
-					//--> up to here it is possible to account always a new for the myMobMax in order to stretch the time towards the end of the simulation in a 
+					//--> up to here it is possible to account always a new for the myMobMax in order to stretch the time towards the end of the simulation in a
 					//scenario where only slowly migrating boundaries remain and the estimate of the maximum Pvalue that was EVER AT SOME POINT obtained is too conservative
 					//prepare for next timestep, same integration order than START1D/3DCA and COReV3
 
-					t += dt; 
+					t += dt;
 
 					update_temperature();
 					update_atomisticproperties();
@@ -8538,7 +8498,7 @@ void caHdl::solve_RXGROWTH()
 					step++;
 
 //#ifdef REPORTSTYLE_USER
-				        //	if ( this->myensRank == MASTER ) 
+				        //	if ( this->myensRank == MASTER )
 						//cout << "\tstep;t;X;dt;CurrTemperature;Sv\t\t" << this->step << "\t\t" << this->t << "\t\t" << this->X  << "\t\t" << this->dt << "\t\t" << this->CurrentTemperature << "\t\t" << this->Sv << endl;
 //#endif
 				}
@@ -8551,7 +8511,7 @@ void caHdl::solve_RXGROWTH()
 		}
 		//OMP_COMPLETED
 
-		#pragma omp master 
+		#pragma omp master
 		{
 			tsimend = t;
 			stepsimend = step;
@@ -8562,8 +8522,8 @@ void caHdl::solve_RXGROWTH()
 					cerr << "Output of final structure currently supported only with HDF5, chose instead 1.0 as an additional output log point in the input file!" << endl;
 				}
 				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ) { //final structure and finalize XDMF file
-				
-					if ( outopt_localrendercolor == RENDERING_COLOR_GRAINID ) 
+
+					if ( outopt_localrendercolor == RENDERING_COLOR_GRAINID )
 						ompcrit_write_voxeldata_h5( RENDERING_COLOR_GRAINID, "/GROWTH3DGrainID", true, "dummy", this->t, this->X, this->step );
 					else if ( outopt_localrendercolor == RENDERING_COLOR_IPFZ )
 						ompcrit_write_voxeldata_h5( RENDERING_COLOR_IPFZ, "/GROWTH3DGrainID", true, "dummy", this->t, this->X, this->step );
@@ -8572,11 +8532,14 @@ void caHdl::solve_RXGROWTH()
 					else
 						cerr << "HDF5 output desired but utilizing unspecified color model!" << endl;
 				}
+
+				nexus_write_summary_stats();
 			}
 
 			//##DEBUG::ompcrit_write_voxeldata_coloring_grainids( "GROWTH.3DGrainID" );
-			if ( this->outopt_localgenDAMASKgeom == OUTPUT_DAMASK_GEOMETRYFILE_YES ) 
+			if ( this->outopt_localgenDAMASKgeom == OUTPUT_DAMASK_GEOMETRYFILE_YES ) {
 				write_damask_geom_h5( "NetworkFinalState" );
+			}
 		}
 		#pragma omp barrier
 
@@ -8606,7 +8569,7 @@ void caHdl::solve_FINAL_IO()
 	}
 
 	if ( outopt_localsinglegrainevo != OUTPUT_SINGLEGRAIN_NO ) {
-		if ( outopt_localsinglegrainevo == OUTPUT_SINGLEGRAIN_ASCII ) 
+		if ( outopt_localsinglegrainevo == OUTPUT_SINGLEGRAIN_ASCII )
 			write_grainevolution_ascii();
 		if ( outopt_localsinglegrainevo == OUTPUT_SINGLEGRAIN_BINARY )
 			write_grainevolution_binary();

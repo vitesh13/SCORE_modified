@@ -1,46 +1,4 @@
-/* 
-*	Copyright Markus Kuehbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. Kuehbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kuehbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Juelich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GNU General Public License v3.0 or later
 
 #ifndef __SCORE_KERNEL_H_INCLUDED__
 #define __SCORE_KERNEL_H_INCLUDED__
@@ -317,12 +275,13 @@ struct physData
 {
 	double G;
 	double b;
-	double G0;													//0K Shear modulus
-	double dGdt;												//linear shear modulus temperature-dependence model
-	double bZeroCelsius;										//Zero Celsius Burgers vector
-	double thermexp_C;											//linear thermal expansion coefficient
-	double thermexp_a;											//first order value
-	double thermexp_b;											//second order
+	double Gzero;												//0K Shear modulus
+	double nadal_lepoac_a;										//Nadal LePoac G(T) temperature-dependent shear modulus, a constant
+	double nadal_lepoac_zeta;									//zeta constant
+	double bzero;												//0K Burgers vector
+	double thermexp_second;										//second order term in thermal lattice expansion coefficient
+	double thermexp_first;										//first-order term
+	double thermexp_null;										//constant term
 	double Tmelt;												//melting temperature
 
 	double LAGBm0;												//low-angle grain boundary preexponential factor intrinsic mobility
@@ -435,7 +394,7 @@ struct nucData
 	double cluster_b;
 	double cluster_c;
 	double gbnucleation_dens2num;
-	
+
 	double gbnucleation_drho2dens;
 	double gbnucleation_scatter;
 	double tincub_rayleigh_sigma;
@@ -647,6 +606,18 @@ struct rxgcommit
 };
 typedef struct rxgcommit * rxgcommitP;
 
+
+struct loginfo_nexus
+{
+	double localtime;
+	double localxcoarse;
+	double localxexact;
+	unsigned int localiteration;
+	unsigned int pad;
+	loginfo_nexus() : localtime(-1.0), localxcoarse(-1.0), localxexact(-1.0), localiteration(0), pad(0) {};
+	loginfo_nexus( const double t, const double xcoarse, const double xexact, unsigned int iteration ) :
+		localtime(t), localxcoarse(xcoarse), localxexact(xexact), localiteration(iteration), pad(0) {}
+};
 
 struct loginfo_grainevo_ca
 {
@@ -1123,7 +1094,7 @@ public:
 	void solve_nucmodeling_csr_pickrandomly();
 	uint32_t getDeformedGrainID( uint32_t xglo, uint32_t yglo, uint32_t zglo );
 	void solve_nucmodeling_csrdiehl();
-        void solve_nucmodelling_dislo_ori_based ();
+    void solve_nucmodelling_dislo_ori_based ();
 	void init_myMaternUniverse();
 	void pickrandomly_myMaternUniverse(void );
 	void solve_nucmodeling_ellipsoidalcluster_pickrandomly();
@@ -1196,8 +1167,8 @@ public:
 	double get_dtmax_instantslope_zener ();
 	double get_dtmax_instantslope_nucleation();
 	double get_dtmax_minimum ();
-	
-	
+
+
 	//on the fly microstructural state characterization
 	void log_initialization();
 	double log_rxareafraction( double zpos );
@@ -1216,6 +1187,7 @@ public:
 	void nexus_write_snapshot_front_based();
 	void nexus_write_snapshot_cell_based();
 	void nexus_write_snapshot();
+	void nexus_write_summary_stats();
 
 	void binarize_partiallyrxed_microstructure( vector<bool>* out );
 	void log_PERCOLATION();
@@ -1225,7 +1197,7 @@ public:
         void log_RX_frac( double t);
         void log_grain_rho_grain_based( double t );
         void log_grain_ori_grain_based( double t);
-        double calculate_RXfrac_total( std::vector<double> RXfrac ); 
+        double calculate_RXfrac_total( std::vector<double> RXfrac );
 
 	//post-processing solitary unit averaging
 	double get_interpCellCount( uint32_t localid, double when );
@@ -1284,7 +1256,7 @@ public:
         void HDF5_writeGroupAttribute_float( hid_t obj_id, string attribute_name, double value );
         void HDF5_write_float_attribute(string fname, string group_name, double frac_RX, string attribute_name);
 
-        hid_t HDF5_openFile( string fname );        
+        hid_t HDF5_openFile( string fname );
         hid_t HDF5_openGroup( hid_t loc_id, string groupname );
         hid_t HDF5_openAttribute( hid_t loc_id, string attribute_name );
         double* HDF5_read_attribute_float( hid_t attr_id );
@@ -1315,6 +1287,7 @@ public:
 	vector<double> rendering_atthisX;
 	vector<double> rendering_atthisZPos;
 	vector<double> mygrainevolutionlocaltime;
+	vector<loginfo_nexus> mynexusstats;
 	vector<loginfo_rxfrontstats_ca> myrxfrontstatus; //keeps track of the state of the myRXFront array counters fragmentation and occupancy
 	vector<loginfo_grainevo_ca> mygrainevolution;
 	vector<loginfo_rxareaprofile_ca> myrxprofile;
@@ -1407,7 +1380,7 @@ public:
 	double _cellsize;
 
 	//double _kT;
-	//double zenerfac;							//fgeo * gammaGB 
+	//double zenerfac;							//fgeo * gammaGB
 
 	//performance caching variables and things used to clarify the code
 	uint32_t nmydefgpool;
@@ -1639,7 +1612,7 @@ public:
 	void ompshar_voxelize_updateFullInside();
 	void ompshar_voxelize_updateFullBorder();
 	void ompshar_synchronize_haloregions_def();
-	void omp_infect_OutOfSeedFrontInside( uint32_t seedid, uint32_t seedfrontid, bool intoborder, short dx, short dy, short dz, unsigned char direction, double carryOver ); //###currently no overshoot! 
+	void omp_infect_OutOfSeedFrontInside( uint32_t seedid, uint32_t seedfrontid, bool intoborder, short dx, short dy, short dz, unsigned char direction, double carryOver ); //###currently no overshoot!
 	void omp_infect_OutOfSeedFrontBorder( uint32_t seedid, uint32_t seedfrontid, short dx, short dy, short dz, unsigned char direction, double carryOver ); //##currently no carryOver
 	void append_to_fullseed_inside_list( uint32_t cid );
 	void append_to_recycseed_inside_list( uint32_t cid );
@@ -1665,7 +1638,7 @@ public:
 	void ompshar_synchronize_haloregions_rx();
 	//void ompshar_sim_myCA_clarify_status( double threshold );
 	//void ompshar_sectioning_analysis_rx();
-	void omp_infect_OutOfRXFrontInside( uint32_t rxgpoolid, uint32_t rxfrontid, bool intoborder, short dx, short dy, short dz, unsigned char direction, double carryOver ); //###currently no overshoot! 
+	void omp_infect_OutOfRXFrontInside( uint32_t rxgpoolid, uint32_t rxfrontid, bool intoborder, short dx, short dy, short dz, unsigned char direction, double carryOver ); //###currently no overshoot!
 	void omp_infect_OutOfRXFrontBorder( uint32_t rxgpoolid, uint32_t rxfrontid, short dx, short dy, short dz, unsigned char direction, double carryOver ); //##currently no carryOver
 	void append_to_fullrx_inside_list( uint32_t cid );
 	void append_to_recycling_inside_list( uint32_t cid );
