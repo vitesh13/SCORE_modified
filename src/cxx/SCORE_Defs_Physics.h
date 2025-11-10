@@ -70,9 +70,8 @@
 //default values in the construction phase
 #define DEFAULT_SIMID						0
 #define DEFAULT_CELLSIZE					(1e-6)
-#define DEFAULT_SHEARMODULUS				(2.7e10)		//RT pure aluminium
-#define DEFAULT_BURGERSVECTOR				(2.86e-10)	//RT pure aluminium
-#define DEFAULT_PUREALU_C					(1.0)
+#define DEFAULT_SHEARMODULUS				(2.7e10) // pure aluminium
+#define DEFAULT_BURGERSVECTOR				(2.86e-10)	//pure aluminium
 #define DEFAULT_PUREALU_TMELT				(933.0)
 
 #define DEFAULT_SMALL_NUMBER				(1e-6)

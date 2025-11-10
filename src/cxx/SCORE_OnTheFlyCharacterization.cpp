@@ -841,10 +841,10 @@ void caHdl::nexus_write_snapshot_grain_based()
 	vector<double> f64 = vector<double>( ndisjoint_grains, 0. );
 	uint32_t ndefg = mydefgpool.size();
 	for ( uint32_t dg = 0; dg < ndefg; dg++ ) {
-		f64[dg] = (double) mydefgpool[dg].cellcount; // * cellvolume;
+		f64[dg] = (double) mydefgpool[dg].cellcount;
 	}
 	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
-		f64[rg] = (double) myrxgpool[rg-ndefg].cellcount; // * cellvolume;
+		f64[rg] = (double) myrxgpool[rg-ndefg].cellcount;
 	}
 
 	//then correct for partial recrystallized fraction via individual contributions from cells of the RX front
@@ -893,9 +893,31 @@ void caHdl::nexus_write_snapshot_grain_based()
 
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
 	ioAttributes anno = ioAttributes();
-	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/crystals";
-	string dsnm = "";
+	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1);
+	string dsnm = grpnm + "/x";
+	double Xexact = 0.;
+	//accumulate per grain RX volume fraction contribution considering fully and partially RX portions
+	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) { 
+		Xexact += f64[rg];
+	}
+	double XX = (Xexact / ((double) myCAGeometry.nboxvol_rdtdnd));
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, XX, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
 
+	mynexusstats.push_back( loginfo_nexus( this->t, this->X, XX, this->step ) );
+
+	dsnm = grpnm + "/x_set";
+	double XXset = output_atthisX[loginfo_grainevo_cnt] / ((double) myCAGeometry.nboxvol_rdtdnd);
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, XXset, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/crystals";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXmicrostructure_feature") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
@@ -939,8 +961,11 @@ void caHdl::nexus_write_snapshot_grain_based()
 	*/
 
 	dsnm = grpnm + "/volume";
+	for ( size_t i = 0; i < f64.size(); i++ ) {
+		f64[i] *= cellvolume;
+	}
 	anno = ioAttributes();
-	//anno.add( "units", string("micrometer ** 3") );
+	anno.add( "units", string("micrometer ** 3") );
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({f64.size()}, {f64.size()}),
@@ -949,32 +974,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
-
-	grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1);
-	dsnm = grpnm + "/x";
-	//is target because does not take into account the partially RXed active cells
-	//only fully transformed ones
-	double Xexact = 0.;
-	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
-		Xexact += f64[rg];
-	}
-	double XX = (Xexact / ((double) myCAGeometry.nboxvol_rdtdnd));
-	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, XX, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
 	f64 = vector<double>();
-
-	mynexusstats.push_back( loginfo_nexus( this->t, this->X, Xexact, this->step ) );
-
-	dsnm = grpnm + "/x_set";
-	double XXset = output_atthisX[loginfo_grainevo_cnt] / ((double) myCAGeometry.nboxvol_rdtdnd);
-	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, XXset, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
 
 	grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/crystals";
 	dsnm = grpnm + "/bunge_euler";
@@ -991,7 +991,6 @@ void caHdl::nexus_write_snapshot_grain_based()
 		f64.push_back( myoripool[ori_idx].bunge2 );
 		f64.push_back( myoripool[ori_idx].bunge3 );
 	}
-
 	anno = ioAttributes();
 	anno.add( "units", string("radian") );
 	if ( h5w.nexus_write(
@@ -1479,6 +1478,7 @@ void caHdl::nexus_write_summary_stats()
 	string grpnm = "/entry1/spatiotemporal1/summary_statistics";
 	ioAttributes anno = ioAttributes();
 	anno.add( "NX_class", string("NXprocess") );
+	anno.add( "default", string("kinetics") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << grpnm << " failed !" << "\n";
 		return;
@@ -1511,6 +1511,7 @@ void caHdl::nexus_write_summary_stats()
 		f64.push_back(mynexusstats[i].localtime );
 	}
 	anno = ioAttributes();
+	anno.add( "units", string("s") );
 	anno.add( "long_name", string("t(s)") );
 	if ( h5w.nexus_write(
 		dsnm,

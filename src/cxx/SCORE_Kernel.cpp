@@ -63,12 +63,13 @@ ensembleHdl::ensembleHdl()
 
 	ensPhysData.G = DEFAULT_SHEARMODULUS;
 	ensPhysData.b = DEFAULT_BURGERSVECTOR;
-	ensPhysData.G0 = DEFAULT_SHEARMODULUS;
-	ensPhysData.bZeroCelsius = DEFAULT_BURGERSVECTOR;
-	ensPhysData.dGdt = 0.0;
-	ensPhysData.thermexp_C = DEFAULT_PUREALU_C;
-	ensPhysData.thermexp_a = 0.0;
-	ensPhysData.thermexp_b = 0.0;
+	ensPhysData.Gzero = DEFAULT_SHEARMODULUS;
+	ensPhysData.bzero = DEFAULT_BURGERSVECTOR;
+	ensPhysData.nadal_lepoac_a = 0.469;
+	ensPhysData.nadal_lepoac_zeta = 0.04;
+	ensPhysData.thermexp_second = 0.0;
+	ensPhysData.thermexp_first = 0.0;
+	ensPhysData.thermexp_null = 0.0;
 	ensPhysData.Tmelt = DEFAULT_PUREALU_TMELT;
 
 	ensPhysData.LAGBm0 = 1.0;
@@ -608,23 +609,32 @@ bool ensembleHdl::init_parameter_from_hdf_material() {
 	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( nexus_config_file_name );
 	string grpnm = "/entry1/material/";
 
-	if ( h5r.nexus_read( grpnm + "shear_modulus", ensPhysData.G0 ) != MYHDF5_SUCCESS ) {
-		status = false; cerr << grpnm << "shear_modulus" << endl;
-	}
-	if ( h5r.nexus_read( grpnm + "burgers_vector", ensPhysData.bZeroCelsius ) != MYHDF5_SUCCESS ) {
+	if ( h5r.nexus_read( grpnm + "burgers_vector_zero", ensPhysData.bzero ) != MYHDF5_SUCCESS ) {
 		status = false; cerr << grpnm << "burgers_vector" << endl;
 	}
-	/*
-	//##TODO::
-	ensPhysData.dGdt = geTReal("FirstOrderdG0dT", matpara);
-	ensPhysData.thermexp_C = geTReal("AlloyConstantThermalExpCoeff", matpara); //thermal lattice expansion model
-	ensPhysData.thermexp_a = geTReal("FirstOrderThermalExpCoeff", matpara);
-	ensPhysData.thermexp_b = geTReal("SecondOrderThermalExpCoeff", matpara);
+	if ( h5r.nexus_read( grpnm + "lattice_expansion_second", ensPhysData.thermexp_second ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "lattice_expansion_second" << endl;
+	}
+	if ( h5r.nexus_read( grpnm + "lattice_expansion_first", ensPhysData.thermexp_first ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "lattice_expansion_first" << endl;
+	}
+	if ( h5r.nexus_read( grpnm + "lattice_expansion_null", ensPhysData.thermexp_null ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "lattice_expansion_null" << endl;
+	}
 	if ( h5r.nexus_read( grpnm + "melting_temperature", ensPhysData.Tmelt ) != MYHDF5_SUCCESS ) {
 		status = false; cerr << grpnm << "melting_temperature" << endl;
 	}
-	*/
-	if ( ensPhysData.G0 <= MYZERO || ensPhysData.bZeroCelsius <= MYZERO ) {
+	if ( h5r.nexus_read( grpnm + "shear_modulus_zero", ensPhysData.Gzero ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "shear_modulus_zero" << endl;
+	}
+	if ( h5r.nexus_read( grpnm + "nadal_lepoac_a", ensPhysData.nadal_lepoac_a ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "nadal_lepoac_a" << endl;
+	}
+	if ( h5r.nexus_read( grpnm + "nadal_lepoac_zeta", ensPhysData.nadal_lepoac_zeta ) != MYHDF5_SUCCESS ) {
+		status = false; cerr << grpnm << "nadal_lepoac_zeta" << endl;
+	}
+
+	if ( ensPhysData.Gzero <= MYZERO || ensPhysData.bzero <= MYZERO ) {
 		status = false; cerr << "Unrealistic material parameter!" << endl;
 	}
 	return status;
@@ -1295,15 +1305,15 @@ bool ensembleHdl::init_parameter_from_yml_material() {
 	ryml::ConstNodeRef root = tree.rootref();
 	string grpnm = "entry1/material_properties";
 
-	ensPhysData.G0 = ryml_wrapper_read_value<double>(root, grpnm + "reference_shear_modulus/value");
-	ensPhysData.bZeroCelsius = ryml_wrapper_read_value<double>(root, grpnm + "reference_burgers_magnitude/value");
+	ensPhysData.Gzero = ryml_wrapper_read_value<double>(root, grpnm + "reference_shear_modulus/value");
+	ensPhysData.bzero = ryml_wrapper_read_value<double>(root, grpnm + "reference_burgers_magnitude/value");
 	/*
-	ensPhysData.dGdt = geTReal("FirstOrderdG0dT", matpara);
+	ensPhysData.nadal_lepoac_a = geTReal("FirstOrderdG0dT", matpara);
 	ensPhysData.thermexp_C = geTReal("AlloyConstantThermalExpCoeff", matpara); //thermal lattice expansion model
 	ensPhysData.thermexp_a = geTReal("FirstOrderThermalExpCoeff", matpara);
 	ensPhysData.thermexp_b = geTReal("SecondOrderThermalExpCoeff", matpara);
 	ensPhysData.Tmelt = ryml_wrapper_read_value<double>(root, grpnm + "melting_temperature/value") + TOFFSET;
-	if ( ensPhysData.G0 <= 0.0 || ensPhysData.bZeroCelsius <= 0.0 || ensPhysData.Tmelt <= 0.0 ) {
+	if ( ensPhysData.Gzero <= 0.0 || ensPhysData.bzero <= 0.0 || ensPhysData.Tmelt <= 0.0 ) {
 		status = false; cerr << "Inrealistic material parameter!" << endl;
 	}
 	*/
@@ -1727,14 +1737,14 @@ bool ensembleHdl::init_parameter_from_uds_material() {
 
 	dataBlockP matpara = readDataBlock("MaterialProperties", score_input);
 
-	ensPhysData.G0 = geTReal("ZeroKelvinShearModulusG0", matpara);
-	ensPhysData.dGdt = geTReal("FirstOrderdG0dT", matpara);
-	ensPhysData.bZeroCelsius = geTReal("ZeroCelsiusBurgersVector", matpara);
+	ensPhysData.Gzero = geTReal("ZeroKelvinShearModulusG0", matpara);
+	ensPhysData.nadal_lepoac_a = geTReal("FirstOrderdG0dT", matpara);
+	ensPhysData.bzero = geTReal("ZeroCelsiusBurgersVector", matpara);
 	ensPhysData.thermexp_C = geTReal("AlloyConstantThermalExpCoeff", matpara); //thermal lattice expansion model
 	ensPhysData.thermexp_a = geTReal("FirstOrderThermalExpCoeff", matpara);
 	ensPhysData.thermexp_b = geTReal("SecondOrderThermalExpCoeff", matpara);
 	ensPhysData.Tmelt = geTReal("MeltingTemperature", matpara) + TOFFSET;
-	if ( ensPhysData.G0 <= 0.0 || ensPhysData.bZeroCelsius <= 0.0 || ensPhysData.Tmelt <= 0.0 ) { status = false; cerr << "Inrealistic material parameter!" << endl; }
+	if ( ensPhysData.Gzero <= 0.0 || ensPhysData.bzero <= 0.0 || ensPhysData.Tmelt <= 0.0 ) { status = false; cerr << "Inrealistic material parameter!" << endl; }
 
 	delete matpara;
 
@@ -2486,7 +2496,7 @@ void ensembleHdl::report_successful_setup()
 	//cout << XMAX << ", is the upper limit for RXFRACTION numerical integration scheme." << endl;
 	//cout << TMAX << ", is the upper limit for REALTIME numerical integration scheme." << endl;
 	//cout << initialRelCellCaching << ", is the initial recaching value." << endl;
-	//cout << ensPhysData.G0 << "," << ensPhysData.bZeroCelsius << ", ShearModulus/Burgersvector." << endl;
+	//cout << ensPhysData.Gzero << "," << ensPhysData.bzero << ", ShearModulus/Burgersvector." << endl;
 	//cout << ensPhysData.LAGBm0 << "," << ensPhysData.HAGBm0 << "," << ensPhysData.GSm0 << ",  LAGB/HAGB/GS m0." << endl;
 	//cout << ensPhysData.LAGBHact << "," << ensPhysData.HAGBHact << "," << ensPhysData.GSHact << ", LAGB/HAGB/GS Hact=" << endl;
 }
@@ -3150,6 +3160,7 @@ void ensembleHdl::init_nexus_results_file()
 	grpnm = "/entry1";
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXentry") );
+	anno.add( "default", string("spatiotemporal1") );
 	//"https://github.com/FAIRmat-NFDI/nexus_definitions/commit/
 	//anno.add( "version", string("36ba122a7646638951602275cde8f151ef1ff471") );
 	//https://fairmat-experimental.github.io/nexus-fairmat-proposal/9636feecb79bb32b828b1a9804269573256d7696/classes/contributed_definitions/NXms_score_results.html#nxms-score-results") );
@@ -3465,14 +3476,7 @@ void ensembleHdl::init_nexus_results_file()
 	grpnm = "/entry1/spatiotemporal1"; //##TODO::make adaptive
 	anno = ioAttributes();
 	anno.add( "NX_class", string("NXprocess") );
-	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
-
-	grpnm = "/entry1/spatiotemporal1/summary_statistics";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXprocess") );
+	anno.add( "default", string("summary_statistics") );
 	if ( h5w.nexus_write_group( grpnm, anno) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << grpnm << " failed !" << "\n";
 		return;
@@ -6894,12 +6898,12 @@ caHdl::caHdl()
 
 	myPhysData.G = DEFAULT_SHEARMODULUS;
 	myPhysData.b = DEFAULT_BURGERSVECTOR;
-	myPhysData.G0 = DEFAULT_SHEARMODULUS;
-	myPhysData.dGdt = 0.0;
-	myPhysData.bZeroCelsius = DEFAULT_BURGERSVECTOR;
-	myPhysData.thermexp_C = DEFAULT_PUREALU_C;
-	myPhysData.thermexp_a = 0.0;
-	myPhysData.thermexp_b = 0.0;
+	myPhysData.Gzero = DEFAULT_SHEARMODULUS;
+	myPhysData.nadal_lepoac_a = 0.0;
+	myPhysData.bzero = DEFAULT_BURGERSVECTOR;
+	myPhysData.thermexp_second = 0.0;
+	myPhysData.thermexp_first = 0.0;
+	myPhysData.thermexp_null = 0.0;
 	myPhysData.Tmelt = DEFAULT_PUREALU_TMELT;
 
 	myPhysData.LAGBm0 = 1.0;
@@ -6992,7 +6996,7 @@ caHdl::caHdl()
 	mypzmin = 0.0;
 
 
-	Gbhalfsq = 0.5 * myPhysData.G0 * SQR(myPhysData.bZeroCelsius);
+	Gbhalfsq = 0.5 * myPhysData.Gzero * SQR(myPhysData.bzero);
 	//_kT = (1.0 / (kboltzman * CurrentTemperature));
 	mLAGB = myPhysData.LAGBm0 * exp( -1.0 *  DEFAULT_LAGB_HACT / (kboltzman * CurrentTemperature) );
 	mHAGB = myPhysData.HAGBm0 * exp( -1.0 *  DEFAULT_HAGB_HACT / (kboltzman * CurrentTemperature) );
@@ -7512,12 +7516,13 @@ void caHdl::init_parameter()
 
 	myPhysData.G = myens->ensPhysData.G;
 	myPhysData.b = myens->ensPhysData.b;
-	myPhysData.G0 = myens->ensPhysData.G0;
-	myPhysData.dGdt = myens->ensPhysData.dGdt;
-	myPhysData.bZeroCelsius = myens->ensPhysData.bZeroCelsius;
-	myPhysData.thermexp_C = myens->ensPhysData.thermexp_C;
-	myPhysData.thermexp_a = myens->ensPhysData.thermexp_a;
-	myPhysData.thermexp_b = myens->ensPhysData.thermexp_b;
+	myPhysData.Gzero = myens->ensPhysData.Gzero;
+	myPhysData.nadal_lepoac_a = myens->ensPhysData.nadal_lepoac_a;
+	myPhysData.nadal_lepoac_zeta = myens->ensPhysData.nadal_lepoac_zeta;	
+	myPhysData.bzero = myens->ensPhysData.bzero;
+	myPhysData.thermexp_second = myens->ensPhysData.thermexp_second;
+	myPhysData.thermexp_first = myens->ensPhysData.thermexp_first;
+	myPhysData.thermexp_null = myens->ensPhysData.thermexp_null;
 	myPhysData.Tmelt = myens->ensPhysData.Tmelt;
 
 	myPhysData.LAGBm0 =	myens->ensPhysData.LAGBm0;

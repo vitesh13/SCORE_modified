@@ -275,12 +275,13 @@ struct physData
 {
 	double G;
 	double b;
-	double G0;													//0K Shear modulus
-	double dGdt;												//linear shear modulus temperature-dependence model
-	double bZeroCelsius;										//Zero Celsius Burgers vector
-	double thermexp_C;											//linear thermal expansion coefficient
-	double thermexp_a;											//first order value
-	double thermexp_b;											//second order
+	double Gzero;												//0K Shear modulus
+	double nadal_lepoac_a;										//Nadal LePoac G(T) temperature-dependent shear modulus, a constant
+	double nadal_lepoac_zeta;									//zeta constant
+	double bzero;												//0K Burgers vector
+	double thermexp_second;										//second order term in thermal lattice expansion coefficient
+	double thermexp_first;										//first-order term
+	double thermexp_null;										//constant term
 	double Tmelt;												//melting temperature
 
 	double LAGBm0;												//low-angle grain boundary preexponential factor intrinsic mobility
