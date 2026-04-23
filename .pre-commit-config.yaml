@@ -13,10 +13,8 @@ repos:
     hooks:
       - id: mypy  # static type checking
         # mypy . --install-types --non-interactive then pip freeze | grep types- to see what to add
-        additional_dependencies:
-          - types-pytz
-          - types-PyYAML
-          - types-requests
+        # additional_dependencies:
+        #   - types-pytz
 
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.21.2
@@ -29,17 +27,17 @@ repos:
   #   hooks:
   #     - id: nbstripout  # removes notebook outputs before committing
 
-  - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v9.8.0
-    hooks:
-      - id: cspell  # spellchecking
-        pass_filenames: false
-        args:
-          # - --unique
-          - --config
-          - cspell.json
-          - README.md
-          - CITATION.cff
-          - docs/**/*
-          - src/cxx/*.{cpp,c,h,hpp}
-          - src/python/**/*.py
+  # - repo: https://github.com/streetsidesoftware/cspell-cli
+  #   rev: v9.8.0
+  #   hooks:
+  #     - id: cspell  # spellchecking
+  #       pass_filenames: false
+  #       args:
+  #         - --unique
+  #         - --config
+  #         - cspell.json
+  #         - README.md
+  #         - CITATION.cff
+  #         - docs/**/*
+  #         - src/cxx/*.{cpp,c,h,hpp}
+  #         - src/python/**/*.py

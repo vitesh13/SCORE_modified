@@ -26,7 +26,9 @@ dependencies = [
     "jupyterlab",
     "jupyterlab_h5web",
 ]
-
+validation = [
+    "pynxtools>=0.13.2",
+]
 
 [project.optional-dependencies]
 dev = [
