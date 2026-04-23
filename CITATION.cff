@@ -1,0 +1,46 @@
+cff-version: 1.2.0
+title: 'SCORE, an MPI-parallelized cellular automata ensemble model for the simulation of static recrystallization in 3D'
+message:
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+version: 1.3.0
+authors:
+  - given-names: Markus
+    family-names: Kühbach
+    orcid: 'https://orcid.org/0000-0002-7117-5196'
+  - given-names: Vitesh
+    family-names: Shah
+    orcid: 'https://orcid.org/0000-0002-6267-4225'
+  - given-names: Luis Antonio
+    family-names: Barrales Mora
+    orcid: 'https://orcid.org/0000-0002-7998-6815'
+  - given-names: Günter
+    family-names: Gottstein    
+repository-code: 'https://github.com/mkuehbach/SCORE'
+keywords:
+  - Cellular automata
+  - Microstructure evolution modeling
+  - Static recrystallization
+  - Simulation
+  - NeXus
+  - NOMAD
+  - Materials engineering
+abstract:
+  The Statistical Cellular Operator for Recrystallization (SCORE) is a cellular automata
+  simulation model and code to investigate static recrystallization in three dimensions.
+  
+  The authors of SCORE gratefully acknowledge the financial support from the Deutsche
+  Forschungsgemeinschaft (DFG)within the "Reinhart Koselleck-Project" (GO 335/44-1)
+  and the granting of computing time which was provided by the RWTH Aachen University
+  JARAHPC research alliance (JARA0076).
+  
+  The authors of SCORE gratefully acknowledge the financial support from the
+  Max-Planck-Gesellschaft through the provisioning of computing time grants in
+  the frame of the BiGmax, the Max-Planck-Society's Research Network on
+  Big-Data-Driven Materials Science.
+  
+  The authors of SCORE gratefully acknowledge the financial support from the
+  FAIRmat project (project ID 460197019), funded by the Deutsche
+  Forschungsgemeinschaft (DFG, German Research Foundation).
+license: GPL-3.0-or-later
