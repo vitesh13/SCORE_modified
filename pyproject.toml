@@ -23,6 +23,8 @@ classifiers = [
 ]
 dependencies = [
     "h5py",
+    "numpy",
+    "pint",
     "jupyter",
     "jupyterlab",
     "jupyterlab_h5web"
@@ -64,7 +66,11 @@ version_scheme = "no-guess-dev"
 local_scheme = "node-and-date"
 
 [tool.ruff]
-include = ["src/python/**/*.py", "tests/**/*.py"]
+include = [
+   "src/python/**/*.py",
+   "src/python/**/*.ipynb",
+   "tests/**/*.py"
+]
 line-length = 88
 indent-width = 4
 
