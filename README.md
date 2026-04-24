@@ -1,4 +1,5 @@
 ## Getting started
+
 SCORE targets computers running a Unix operating system. Windows11/WSL2 is also possible.
 
 0. Assure you have a working C++ compiler e.g., GNU or Intel installed, alongside
@@ -86,6 +87,7 @@ uv pip install pynxtools
 ```
 
 ## Run the most basic example:
+
 A single crystal growing into a homogeneously deformed continuum.
 ```
 cd examples/verification
@@ -94,6 +96,7 @@ mpirun -n 1 ./../../build/score 0 SCORE.Config.SimID.0.nxs
 ```
 
 ## Run a more specific example:
+
 A deformed microstructure from a DAMASK simulation coupled to SCORE.
 The DAMASK simulation was post-processed with DREAM.3D. Specifically,
 which specific locations in the RVE were flagged with a marker using
@@ -107,6 +110,7 @@ mpirun -n 1 ./../../build/score 1 SCORE.Config.SimID.1.nxs
 ```
 
 ## How to run your own simulations:
+
 There is a simple JupyterNotebook with which you can create own SCORE.Config configuration
 files. The details how to instantiate or change the parameterization of the settings for the
 two above-mentioned examples can serve as an example how to proceed with your own studies
@@ -135,6 +139,7 @@ is referred to in the configuration file including a SHA256 hashes to assure inp
 output are always well defined and reproducible.
 
 ## Work with JupyterNotebook
+
 We can then start jupyterlab to display the NeXus/HDF5 files that were generated
 by SCORE.
 ```
@@ -143,6 +148,7 @@ jupyter-lab
 ```
 
 ## Numerical details
+
 SCORE uses a deterministic algorithm.
 A pseudo-random number generator is used
 that is seeded deterministically.

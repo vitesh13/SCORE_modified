@@ -5,4 +5,3 @@
 [submodule "src/cxx/thirdparty/mandatory/nexus_definitions"]
 	path = src/cxx/thirdparty/mandatory/nexus_definitions
 	url = https://github.com/FAIRmat-NFDI/nexus_definitions.git
-	branch = main
