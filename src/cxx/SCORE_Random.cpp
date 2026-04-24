@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GNU General Public License v3.0 or later
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 //PRNG as detailed in Numerical Recipes in C 2nd version and implemented by L. A. Barrales-Mora, some explicit 32-bit datatypes where necessary
 //credit to the authors of the additional PRNGs is given in the appropriate code sections

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GNU General Public License v3.0 or later
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #ifndef __SCORE_KERNEL_H_INCLUDED__
 //#define __SCORE_KERNEL_H_INCLUDED__

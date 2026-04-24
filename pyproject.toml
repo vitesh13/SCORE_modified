@@ -25,6 +25,7 @@ dependencies = [
     "h5py",
     "numpy",
     "pint",
+    "flatdict>=4.1.0",
     "jupyter",
     "jupyterlab",
     "jupyterlab_h5web"

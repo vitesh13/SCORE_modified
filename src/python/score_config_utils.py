@@ -1,11 +1,11 @@
-# SPDX-License-Identifier: GNU General Public License v3.0 or later
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 import hashlib
 
 import numpy as np
 from pint import UnitRegistry
 
-ureg = UnitRegistry()
+ureg: UnitRegistry = UnitRegistry()
 DEGREE_TO_RADIAN = np.pi / 180
 # ureg.formatter.default_format = "D"
 # https://pint.readthedocs.io/en/stable/user/formatting.html
@@ -74,6 +74,7 @@ def get_nexus_version() -> str:
             return f"{fp.read()}"
     except FileNotFoundError:
         return "0"
+
 
 def get_file_size(file_name):
     print(f"{np.around(os.path.getsize(file_name) / 1024 / 1024, decimals=3)} MiB")

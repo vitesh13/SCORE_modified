@@ -19,5 +19,6 @@ src/cxx/thirdparty/optional/trng4
 src/python/.*
 src/python/__pycache__/*
 src/python/score_recrystallization.egg-info/
+src/python/*.nxs
 deleteme
 .virtual*
