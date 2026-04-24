@@ -2,36 +2,34 @@
 
 """Default parameterization of the SCORE model."""
 
+from typing import Any
+
 import numpy as np
 from score_config_base import ConfigBase
-from score_config_utils import get_nexus_version, get_sha256_of_file_content, ureg
-from typing import Any, Dict, List, Tuple
 from score_config_default_parameter import (
-    DF_MATERIAL,
+    DF_GRID_CUBOIDAL,
     DF_INIT_CUBOIDAL,
-    DF_INIT_DAMASK,
-    DF_NUCLEATION_CSR,
+    DF_MATERIAL,
     DF_MOBILITY_RH,
-    DF_MOBILITY_SG,
+    DF_NUCLEATION_CSR,
+    DF_SIM_CONTROL,
     DF_TEXTURE,
     DF_TIME_TEMPERATURE,
-    DF_GRID_CUBOIDAL,
-    DF_GRID_DAMASK,
-    DF_SIM_CONTROL,
 )
+from score_config_utils import get_nexus_version, get_sha256_of_file_content, ureg
 
 
 class ScoreConfig(ConfigBase):
     # attributes use @ as a marker/escape character
     # groups are all those concepts which have an attribute @NX_class
     # fields are all those other concepts with an attribute %value
-    def __init__(self, simid: int):
+    def __init__(self, simid: int = 0):
         self.deg2kelvin = 273.15
         self.sim_id = simid
         self.entry_id = 1
         self.yaml_file_name = f"NXmicrostructure_score_config.SimID.{self.sim_id}.yaml"
         self.hdf5_file_name = f"SCORE.Config.SimID.{self.sim_id}.nxs"
-        self.cfg: Dict[str, Any] = {}
+        self.cfg: dict[str, Any] = {}
         self.cfg["@NX_class"] = "NXroot"
         self.cfg["@default"] = f"entry{self.entry_id}"
         self.cfg[f"entry{self.entry_id}/@NX_class"] = "NXentry"
@@ -67,7 +65,7 @@ class ScoreConfig(ConfigBase):
             ""
         )
 
-    def user(self, user_names: List[str] = ["SCORE User"]):
+    def user(self, user_names: list[str] = ["SCORE User"]):
         """Configure the user."""
         idx = 0
         for user_name in user_names:
@@ -85,14 +83,16 @@ class ScoreConfig(ConfigBase):
         self.cfg[f"{trg}is_simulation"] = "simulation"
         self.cfg[f"{trg}atom_types"] = atom_types
 
-    def material(self, parms: List[Tuple] = DF_MATERIAL):
+    def material(self, parameters: list[tuple] = DF_MATERIAL):
         """Configure material model single-phase only."""
         trg = f"entry{self.entry_id}/material/"
         self.cfg[f"{trg}@NX_class"] = "NXparameters"
-        for parm, qnt in parms:
-            self.cfg[f"{trg}{parm}"] = qnt
+        for key, quantity in parameters:
+            self.cfg[f"{trg}{key}"] = quantity
 
-    def deformation(self, model: str = "cuboidal", parms: Tuple = DF_INIT_CUBOIDAL):
+    def deformation(
+        self, model: str = "cuboidal", parameters: dict[str, Any] = DF_INIT_CUBOIDAL
+    ):
         """Configure deformed (initial) microstructure."""
         if model not in ("cuboidal", "damask"):
             return
@@ -100,19 +100,19 @@ class ScoreConfig(ConfigBase):
         self.cfg[f"{trg}@NX_class"] = "NXparameters"
         self.cfg[f"{trg}model"] = model
         if model == "cuboidal":
-            if "extent" in parms:
-                self.cfg[f"{trg}extent"] = parms["extent"]
-            if all(val in parms for val in ("bunge_euler", "stored_energy")):
+            if "extent" in parameters:
+                self.cfg[f"{trg}extent"] = parameters["extent"]
+            if all(val in parameters for val in ("bunge_euler", "stored_energy")):
                 if (
-                    np.shape(parms["bunge_euler"].magnitude)[0]
-                    == np.shape(parms["stored_energy"])[0]
+                    np.shape(parameters["bunge_euler"].magnitude)[0]
+                    == np.shape(parameters["stored_energy"])[0]
                 ):
                     self.cfg[f"{trg}ensemble/@NX_class"] = "NXparameters"
-                    for parm in ("bunge_euler", "stored_energy"):
-                        self.cfg[f"{trg}ensemble/{parm}"] = parms[parm]
+                    for key in ("bunge_euler", "stored_energy"):
+                        self.cfg[f"{trg}ensemble/{key}"] = parameters[key]
         elif model == "damask":
-            if "file_path" in parms:
-                abs_file_path = parms["file_path"]
+            if "file_path" in parameters:
+                abs_file_path = parameters["file_path"]
                 if abs_file_path:
                     self.cfg[f"{trg}damask/@NX_class"] = "NXnote"
                     self.cfg[f"{trg}damask/file_name"] = f"{abs_file_path}"
@@ -121,7 +121,7 @@ class ScoreConfig(ConfigBase):
                         abs_file_path
                     )
 
-    def nucleation(self, model="csr", parms=DF_NUCLEATION_CSR):
+    def nucleation(self, model="csr", parameters: dict[str, Any] = DF_NUCLEATION_CSR):
         """Configure nucleation model."""
         if model not in ("csr", "damask"):
             return
@@ -135,16 +135,18 @@ class ScoreConfig(ConfigBase):
             self.cfg[f"{trg}orientation"] = "damask"
         else:  # "csr":
             self.cfg[f"{trg}orientation"] = "ensemble"  # "random"
-            if "bunge_euler" in parms and "incubation_time" in parms:
+            if "bunge_euler" in parameters and "incubation_time" in parameters:
                 if (
-                    np.shape(parms["bunge_euler"])[0]
-                    == np.shape(parms["incubation_time"])[0]
+                    np.shape(parameters["bunge_euler"])[0]
+                    == np.shape(parameters["incubation_time"])[0]
                 ):
                     self.cfg[f"{trg}ensemble/@NX_class"] = "NXparameters"
-                    for parm in ("bunge_euler", "incubation_time"):
-                        self.cfg[f"{trg}ensemble/{parm}"] = parms[parm]
+                    for key in ("bunge_euler", "incubation_time"):
+                        self.cfg[f"{trg}ensemble/{key}"] = parameters[key]
 
-    def mobility(self, model="rollett_holm", parms: List[Tuple] = DF_MOBILITY_RH):
+    def mobility(
+        self, model="rollett_holm", parameters: list[tuple[str, Any]] = DF_MOBILITY_RH
+    ):
         """Configure grain boundary mobility model."""
         if model not in ("sebald_gottstein", "rollett_holm"):
             return
@@ -154,8 +156,8 @@ class ScoreConfig(ConfigBase):
         self.cfg[f"{trg}model"] = model
         trg += f"{model}/"
         self.cfg[f"{trg}@NX_class"] = "NXparameters"
-        for parm, qnt in parms:
-            self.cfg[f"{trg}{parm}"] = qnt
+        for key, quantity in parameters:
+            self.cfg[f"{trg}{key}"] = quantity
 
     def recovery(self):
         """Configure stored elastic energy recovery model."""
@@ -182,17 +184,19 @@ class ScoreConfig(ConfigBase):
         # self.cfg[f"{trg}time"] = ureg.Quantity(np.asarray([0., 3600.], np.float64), ureg.second)
         # self.cfg[f"{trg}radius"] = ureg.Quantity(np.asarray([0., 0.], np.float64), ureg.nanometer)
 
-    def component_analysis(self, parms=DF_TEXTURE):
+    def component_analysis(self, parameters: dict[str, Any] = DF_TEXTURE):
         """Configure which macrotexture components the code should bookkeep for volume evolution."""
         trg = f"entry{self.entry_id}/component_analysis/"
         self.cfg[f"{trg}@NX_class"] = "NXparameters"
-        if all(val in parms for val in ("name", "bunge_euler", "theta")):
-            num = np.shape(parms["name"])[0]
-            if all(np.shape(parms[val])[0] == num for val in ("bunge_euler", "theta")):
-                for parm in parms:
-                    self.cfg[f"{trg}{parm}"] = parms[parm]
+        if all(val in parameters for val in ("name", "bunge_euler", "theta")):
+            num = np.shape(parameters["name"])[0]
+            if all(
+                np.shape(parameters[val])[0] == num for val in ("bunge_euler", "theta")
+            ):
+                for key, quantity in parameters.items():
+                    self.cfg[f"{trg}{key}"] = quantity
 
-    def time_temperature(self, parms: List[Tuple] = DF_TIME_TEMPERATURE):
+    def time_temperature(self, parameters: list[tuple] = DF_TIME_TEMPERATURE):
         """Configure the simulated annealing schedule."""
         trg = f"entry{self.entry_id}/time_temperature/"
         self.cfg[f"{trg}@NX_class"] = "NXdata"
@@ -204,24 +208,24 @@ class ScoreConfig(ConfigBase):
         self.cfg[f"{trg}title"] = "T(t)"
         self.cfg[f"{trg}time/@long_name"] = "t (s)"
         self.cfg[f"{trg}temperature/@long_name"] = "T (K)"
-        for parm, qnt in parms:
-            self.cfg[f"{trg}{parm}"] = qnt
+        for key, quantity in parameters:
+            self.cfg[f"{trg}{key}"] = quantity
 
-    def discretization(self, parms: List[Tuple] = DF_GRID_CUBOIDAL):
+    def discretization(self, parameters: list[tuple] = DF_GRID_CUBOIDAL):
         """Configure microstructure instantiation."""
         trg = f"entry{self.entry_id}/discretization/"
         self.cfg[f"{trg}@NX_class"] = "NXmicrostructure"
         trg += "grid/"
         self.cfg[f"{trg}@NX_class"] = "NXcg_grid"
-        for parm, qnt in parms:
-            self.cfg[f"{trg}{parm}"] = qnt
+        for key, quantity in parameters:
+            self.cfg[f"{trg}{key}"] = quantity
 
-    def numerics(self, parms: List[Tuple] = DF_SIM_CONTROL):
+    def numerics(self, parameters: list[tuple] = DF_SIM_CONTROL):
         """Configure stop criteria and numerics."""
         trg = f"entry{self.entry_id}/numerics/"
         self.cfg[f"{trg}@NX_class"] = "NXparameters"
-        for parm, qnt in parms:
-            self.cfg[f"{trg}{parm}"] = qnt
+        for key, quantity in parameters:
+            self.cfg[f"{trg}{key}"] = quantity
         # self.cfg[f"{trg}percolation"] = False
         # battle-proven default values follow, see Kuehbach2017 for description about cell defragmentation
         self.cfg[f"{trg}cell_cache/@NX_class"] = "NXparameters"

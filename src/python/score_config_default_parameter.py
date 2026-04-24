@@ -1,17 +1,15 @@
 # SPDX-License-Identifier: GNU General Public License v3.0 or later
 
+from typing import Any
+
 import numpy as np
 from score_config_utils import ureg
-from typing import List, Tuple, Dict, Any
 
+# !!! DO NOT OVERWRITE PARAMETER HERE BUT DO SO IN YOUR OWN SCRIPT !!!
+# !!! SEE THE EXAMPLE IN NXmicrostructure_score_config.ipynb !!!
 
-#### DF_ means DEFAULT PARAMETER VALUES
-#### meant to be overwritten by MY_ for specific scientific simulation
-
-#### !!! DO NOT OVERWRITE HERE BUT AS SHOWN BUT IN YOUR OWN SCRIPT !!!
-#### !!! AS SHOWN BY NXmicrostructure_score_config.ipynb !!!
-
-DF_MATERIAL: List[Tuple[str, Any]] = [
+# DF is an abbreviation for DEFAULT PARAMETER
+DF_MATERIAL: list[tuple[str, Any]] = [
     (
         "melting_temperature",
         ureg.Quantity(np.float64(650.0), ureg.degC).to(ureg.kelvin),
@@ -29,7 +27,7 @@ DF_MATERIAL: List[Tuple[str, Any]] = [
     ("lattice_expansion_null", ureg.Quantity(0.0, ureg.nanometer)),
 ]
 
-DF_INIT_CUBOIDAL: Dict[str, Any] = {
+DF_INIT_CUBOIDAL: dict[str, Any] = {
     "extent": ureg.Quantity(
         np.asarray([30.0, 30.0, 30.0], np.float64), ureg.micrometer
     ),
@@ -41,18 +39,18 @@ DF_INIT_CUBOIDAL: Dict[str, Any] = {
     ),
 }
 
-DF_INIT_DAMASK: Dict[str, Any] = {
+DF_INIT_DAMASK: dict[str, Any] = {
     "file_path": "Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D"
 }
 
-DF_NUCLEATION_CSR: Dict[str, Any] = {
+DF_NUCLEATION_CSR: dict[str, Any] = {
     "bunge_euler": ureg.Quantity(
         np.asarray([[0.0, 30.0, 45.0]], np.float64), ureg.degree
     ).to(ureg.radian),
     "incubation_time": ureg.Quantity(np.asarray([0.0], np.float64), ureg.second),
 }
 
-DF_MOBILITY_RH: List[Tuple[str, Any]] = [
+DF_MOBILITY_RH: list[tuple[str, Any]] = [
     (
         "m_null",
         ureg.Quantity(np.float64(300.0), ureg.meter**4 / (ureg.joule * ureg.second)),
@@ -63,7 +61,7 @@ DF_MOBILITY_RH: List[Tuple[str, Any]] = [
     ("c3", ureg.Quantity(np.float64(9.0))),
 ]
 
-DF_MOBILITY_SG: List[Tuple[str, Any]] = [
+DF_MOBILITY_SG: list[tuple[str, Any]] = [
     ("lagb_to_hagb_cut", ureg.Quantity(np.float64(15.0), ureg.degree).to(ureg.radian)),
     (
         "lagb_pre_factor",
@@ -86,7 +84,7 @@ DF_MOBILITY_SG: List[Tuple[str, Any]] = [
     ("special_enthalpy", ureg.Quantity(np.float64(2.45), ureg.eV)),
 ]
 
-DF_TEXTURE: Dict[str, Any] = {
+DF_TEXTURE: dict[str, Any] = {
     "name": ["Alpha001-110", "Alpha112-110"],
     "bunge_euler": ureg.Quantity(
         np.asarray([[0.0, 0.0, 0.0], [0.0, 35.0, 45.0]], np.float64), ureg.degree
@@ -96,7 +94,7 @@ DF_TEXTURE: Dict[str, Any] = {
     ),
 }
 
-DF_TIME_TEMPERATURE: List[Tuple[str, Any]] = [
+DF_TIME_TEMPERATURE: list[tuple[str, Any]] = [
     (
         "time",
         ureg.Quantity(
@@ -147,17 +145,17 @@ DF_TIME_TEMPERATURE: List[Tuple[str, Any]] = [
     ),
 ]
 
-DF_GRID_CUBOIDAL: List[Tuple[str, Any]] = [
+DF_GRID_CUBOIDAL: list[tuple[str, Any]] = [
     ("extent", ureg.Quantity(np.asarray([19, 15, 11], np.uint32))),
     ("cell_dimensions", ureg.Quantity(np.float64(0.5), ureg.micrometer)),
 ]
 
-DF_GRID_DAMASK: List[Tuple[str, Any]] = [
+DF_GRID_DAMASK: list[tuple[str, Any]] = [
     ("extent", ureg.Quantity(np.asarray([128, 52, 64], np.uint32))),
     ("cell_dimensions", ureg.Quantity(np.float64(0.4982421), ureg.micrometer)),
 ]
 
-DF_SIM_CONTROL: List[Tuple[str, Any]] = [
+DF_SIM_CONTROL: list[tuple[str, Any]] = [
     ("max_x", ureg.Quantity(np.float64(1.0))),
     ("max_time", ureg.Quantity(np.float64(3600.0), ureg.second)),
     ("max_iteration", ureg.Quantity(np.uint32(10000))),

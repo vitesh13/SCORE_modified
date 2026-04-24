@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GNU General Public License v3.0 or later
 
-import numpy as np
 import hashlib
+
+import numpy as np
 from pint import UnitRegistry
 
 ureg = UnitRegistry()

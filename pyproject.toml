@@ -8,7 +8,7 @@ dynamic = ["version"]
 authors = [
     { name = "Markus Kühbach", email = "markus.kuehbach@physik.hu-berlin.de" },
 ]
-description = "pynxtools-em is a pynxtools reader plugin for electron microscopy (EM) data."
+description = "SCORE"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
@@ -22,12 +22,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "h5py",
     "jupyter",
     "jupyterlab",
-    "jupyterlab_h5web",
-]
-validation = [
-    "pynxtools>=0.13.2",
+    "jupyterlab_h5web"
 ]
 
 [project.optional-dependencies]
@@ -38,7 +36,7 @@ dev = [
     "pytest-cov",
     "pytest-timeout",
     "structlog",
-    "pre-commit",
+    "pre-commit"
 ]
 docs = [
     "mkdocs",
@@ -47,6 +45,9 @@ docs = [
     "mkdocs-macros-plugin",
     "pymdown-extensions",
     "mkdocs-click"
+]
+quality = [
+    "pynxtools>=0.13.2"
 ]
 
 [project.urls]
@@ -107,3 +108,4 @@ ignore_missing_imports = true
 follow_imports = "silent"
 no_strict_optional = true
 disable_error_code = "import, annotation-unchecked"
+exclude = "^(src/cxx/)"

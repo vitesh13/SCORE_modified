@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: GNU General Public License v3.0 or later
 
+import datetime as dt
 import os
+from typing import Any
+
 import flatdict as fd
+import h5py
 import numpy as np
 import yaml
-import h5py
-import datetime as dt
-from score_config_utils import recursive_assign
-from typing import Any, Dict
-from score_config_utils import ureg
+from score_config_utils import recursive_assign, ureg
 
 
 class ConfigBase:
     def __init__(self):
-        self.cfg: Dict[str, Any] = {}
+        self.cfg: dict[str, Any] = {}
 
     def get_config(self):
         for key, qnt in sorted(self.cfg.items()):
@@ -33,7 +33,7 @@ class ConfigBase:
     def get_flat_list_of_hfive_concept_paths(self):
         """Write HDF5 file to be used in NOMAD."""
         if os.path.isfile(self.yaml_file_name):
-            with open(self.yaml_file_name, "r", encoding="utf-8") as stream:
+            with open(self.yaml_file_name, encoding="utf-8") as stream:
                 for key, val in fd.FlatDict(
                     yaml.safe_load(stream), delimiter="/"
                 ).items():
@@ -46,7 +46,7 @@ class ConfigBase:
     def write_config_hfive_file(self):
         with h5py.File(self.hdf5_file_name, "w") as h5w:
             for key, obj in self.cfg.items():
-                if key.endswith(("@NX_class")):  # "@default", "@version")):
+                if key.endswith("@NX_class"):  # "@default", "@version")):
                     hpath = f"/{key[0 : key.rfind('@')]}"
                     attr_name = f"{key[key.rfind('@') + 1 :]}"
                     # print(f"group >>>> {hpath}, {attr_name}")
