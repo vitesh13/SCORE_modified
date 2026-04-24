@@ -8519,7 +8519,7 @@ void caHdl::solve_RXGROWTH()
 			//final output
 			if ( this->renderingForThisCA == true ) {
 				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW ) { //final structure as raw
-					cerr << "Output of final structure currently supported only with HDF5, chose instead 1.0 as an additional output log point in the input file!" << endl;
+					//cerr << "Output of final structure currently supported only with HDF5, chose instead 1.0 as an additional output log point in the input file!" << endl;
 				}
 				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ) { //final structure and finalize XDMF file
 
