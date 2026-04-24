@@ -1,3 +1,5 @@
+.ipynb_checkpoints/
+scripts/.ipynb_checkpoints/
 .egg-info
 .vscode
 build
@@ -14,8 +16,8 @@ src/cxx/thirdparty/mandatory/zlib
 src/cxx/thirdparty/optional/lodepng
 src/cxx/thirdparty/optional/rapidyaml
 src/cxx/thirdparty/optional/trng4
-src/cxx/thirdparty/testing/pynxtools/
 src/python/.*
 src/python/__pycache__/*
+src/python/score_recrystallization.egg-info/
 deleteme
 .virtual*
