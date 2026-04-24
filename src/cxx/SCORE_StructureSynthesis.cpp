@@ -376,7 +376,7 @@ void caHdl::pick_deformedgrains()
 			double ensq[4] = { ens->worldoripool[ensoriid].q0, ens->worldoripool[ensoriid].q1, ens->worldoripool[ensoriid].q2, ens->worldoripool[ensoriid].q3 };
 			//orientation recategorization with known Bunge values in local caHdl to utilize that not all possible orientations are used in the local CA grid thus a more efficient hashtable can be generated however at additional memory costs...
 			dgr.worlddefgid = luckyGrain;
-			dgr.caori = ca_check_disjunctness_core( ensq, true, ens->worldoripool[ensoriid].bunge1, ens->worldoripool[ensoriid].bunge2, ens->worldoripool[ensoriid].bunge3 ); //checking against truely the closest avoids drifting orientation assignment
+			dgr.caori = ca_check_disjunctness_core( ensq, true, ens->worldoripool[ensoriid].bunge1, ens->worldoripool[ensoriid].bunge2, ens->worldoripool[ensoriid].bunge3 ); //checking against truly the closest avoids drifting orientation assignment
 			dgr.cellcount = 0;
 			dgr.rho0 = ens->worlddefgpool[luckyGrain].rho0;
 			dgr.rho = ens->worlddefgpool[luckyGrain].rho;

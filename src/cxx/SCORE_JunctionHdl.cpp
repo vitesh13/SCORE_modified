@@ -781,7 +781,7 @@ void juncHdl::ompshar_detect_junctions()
 							character++;
 						}
 					}
-					//categorize character of the voxel, mutally exclusive
+					//categorize character of the voxel, mutually exclusive
 					if ( character == 1 ) {
 						this->addVoxelGB( (x+y*gxmx+z*gxy), currseed, threeseeds[0] ); //we require a global coordinate for the boundary bucket!
 						continue;

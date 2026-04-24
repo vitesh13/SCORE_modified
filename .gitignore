@@ -14,6 +14,7 @@ src/cxx/thirdparty/mandatory/zlib
 src/cxx/thirdparty/optional/lodepng
 src/cxx/thirdparty/optional/rapidyaml
 src/cxx/thirdparty/optional/trng4
+src/cxx/thirdparty/testing/pynxtools/
 src/python/.*
 src/python/__pycache__/*
 deleteme

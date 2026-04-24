@@ -85,7 +85,7 @@ bool caHdl::ompshar_sim_myCA_infect_JuvenileNucleation( uint32_t rxgpoolid, uint
 	if ( (me->mycellgrid[infectWhereRegion] >= me->reg_nmydefgpool) || (me->mycellgrid[infectWhereRegion] == CURRENTLY_INFECTED) ) {
 		//##MK::synchronization like the following two lines violates thread-safety!
 		//##MK::myrxgpool[rxgpoolid].nucsite = SITE_ALREADY_CONSUMED;	//not critical as no thread accesses the same elements of myrxg than another do never overlap! but false sharing... flush not necessary!
-		//##MK::myrxgpool[rxgpoolid].tincub = NUCLEUS_NOT_PLACABLE; //MK::startingsite varible must not be changed!
+		//##MK::myrxgpool[rxgpoolid].tincub = NUCLEUS_NOT_PLACABLE; //MK::startingsite variable must not be changed!
 		return false;
 	}
 

@@ -62,7 +62,7 @@ void caHdl::solve_nucmodeling_gbnuc_pickrandomly()
 	uint32_t NucleiPlaced = 0;
 	uint32_t NucleiUnplaceable = 0;
 
-	//MK::it is errorneous to simply pick a grain and a boundary at random and place a nucleus at a cell because
+	//MK::it is erroneous to simply pick a grain and a boundary at random and place a nucleus at a cell because
 	//the individual boundary face cell counts are different, therefore first we have to find the size of the boundaries
 
 	//count boundary cell structure

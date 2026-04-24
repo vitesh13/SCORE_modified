@@ -865,7 +865,7 @@ void ensembleHdl::postprocess_rediscr_finalgrainsizedistribution()
 		ensMemGuard = ensMemGuard + (nRanks * sizeof(long));
 	}
 	//##MK::it is very likely that ens_nnuclei is populated but not assured so strictly speaking a barrier is necessary here
-	MPI_Barrier( MPI_COMM_WORLD ); //its wasnt before
+	MPI_Barrier( MPI_COMM_WORLD ); //its was not before
 
 	MPI_Gather( &ensemble_myCAs_nnuclei, 1, MPI_LONG, nnuclei_planned_world, 1, MPI_LONG, MASTER, MPI_COMM_WORLD );
 	MPI_Gather( &nid, 1, MPI_LONG, nnuclei_seeded_world, 1, MPI_LONG, MASTER, MPI_COMM_WORLD );
@@ -1293,7 +1293,7 @@ double caHdl::get_interpCellCount( uint32_t localid, double when )
 	if ( i > 0 && i < nmygrainevo ) {
 		//###disjunctness of rediscretization scheme has been assured by ensRediscretization
 		//only possible case left if (i < nmygrainevo ) {
-		//MK::here almost for sure cache-thrashing occuring as [i-1] and [i] are pointers to disjoint heap regions and localid on top of this is usually > L1 size
+		//MK::here almost for sure cache-thrashing occurring as [i-1] and [i] are pointers to disjoint heap regions and localid on top of this is usually > L1 size
 		double ti1 = mygrainevolution[i-1].localtime;
 		double cnti1 = mygrainevolution[i-1].localdatabucket[localid];
 

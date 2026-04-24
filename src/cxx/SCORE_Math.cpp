@@ -98,7 +98,7 @@ double mathMethods::poissondistribution( double lambda, long k )
 
 double mathMethods::RayleighDistrPDF( double x, double sigma )
 {
-	//evalutes PDF of a Rayleigh distribution with parameter sigma
+	//evaluates PDF of a Rayleigh distribution with parameter sigma
 	double res =  (x < 0.0) ? 0.0 : ( x/SQR(sigma) * exp(-0.5*SQR(x/sigma)) );
 	return res;
 }
@@ -994,7 +994,7 @@ void mathMethods::oriquat2sst_cubic_ipf_pos2rgb( double *pos, unsigned char *rgb
 	double absobbar = fabs(pow( (SQR(xo-xbbar) + SQR(yo-ybbar)) , 0.5));
 
 	double k1r = pow( (yo/xo), 2.0 );
-	//x0 == zero already excluded by R vertex proximity check and the coordiante system choice x>=y
+	//x0 == zero already excluded by R vertex proximity check and the coordinate system choice x>=y
 	double xrbar = pow( (2+k1r), 0.5);
 	xrbar = xrbar - 1;
 	xrbar /= (k1r + 1.0);
@@ -1068,7 +1068,7 @@ void mathMethods::disori_fromoriquat_cubic_imm( double* p, double* q, double* qu
 	int mi;
 	double max=0.0;
 
-	for( int i=0;i<6;i++ )						//Determing the quaternion with the maximal component and the component itself
+	for( int i=0;i<6;i++ )						//Determining the quaternion with the maximal component and the component itself
 		for( int j=0;j<4;j++ )
 		{
 			if( fabs(r0[i][j]) > max )

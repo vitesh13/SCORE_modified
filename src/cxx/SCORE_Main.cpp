@@ -154,7 +154,7 @@ int main(int argc, char** argv)
 		cout << "Loading initial microstructure from " << myensemble->damask_file_name << "\n";
 		if ( myensemble->init_ebsdmap_read( argv[EBSDMAPPING] ) == false ) {
 			die("EBSDMapping input desired but failed!", true ); delete myensemble; return 0;
-		} //if readmap didnt fail data are now loaded!
+		} //if readmap did not fail data are now loaded!
 		else {
 			cout << "SCORE loaded SEM/EBSD map " << argv[EBSDMAPPING] << " ..." << endl;
 		}

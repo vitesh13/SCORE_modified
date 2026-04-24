@@ -1048,7 +1048,7 @@ void caHdl::write_damask_geom_h5( string suffix )
 
 void caHdl::write_clustersizedistr_h5_create()
 {
-	//A HDF5 file must be created before one can sucessively add groups of data into it via reopening
+	//A HDF5 file must be created before one can successively add groups of data into it via reopening
 
 	//omp_set_lock(&h5lock);
 
@@ -1349,7 +1349,7 @@ std::vector<int> caHdl::HDF5_read_dataset_int_rank_4(hid_t loc_id, string datase
                    //printf("%d \n", rdata[i][j][k][0]);
                    //rdata_1D[i*dims[0] + j] = rdata[i][j];
                    index = k + j*dims[2] + i*dims[2]*dims[1];
-                   rdata_vec.at(index) = rdata[i][j][k][0];  //grain ID for CA starts from 0, DAMASK is flexible about this and doesnt care
+                   rdata_vec.at(index) = rdata[i][j][k][0];  //grain ID for CA starts from 0, DAMASK is flexible about this and does not care
                    //printf("%d \n", rdata_vec.at(i).at(j));
           }
        }

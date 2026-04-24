@@ -245,7 +245,7 @@ struct carxg
 	uint32_t caori;												//ori index in caHdl local myoripool
 	uint32_t cellcount;											//number of cells comprising this orientation
 	uint32_t nucsite;											//serves as a switch flag, initially the coordinate is placed, once placed or identified as an unoccupyable place marked with flag ,implicit 3D coordinate ix + iy*box + iz * boxxy
-	uint32_t startingsite;										//implicit 3D coordinate ix + iy*box + iz * boxxy persitent can be utilized to get the original location of the nucleus
+	uint32_t startingsite;										//implicit 3D coordinate ix + iy*box + iz * boxxy persistent can be utilized to get the original location of the nucleus
 	double tincub;
 	carxg() : caori(0), cellcount(0), nucsite(0), tincub(0.0) {}
 };
@@ -1220,7 +1220,7 @@ public:
 	void ompcrit_clarify_status_infectedcells( double rxthreshold );
 	//void test_lodepng();
 
-	//artifical SEM/EBSD output
+	//artificial SEM/EBSD output
 	void ompcrit_write_semebsd_core( double zpos, char mode );
 	void ompcrit_write_semebsd_core( double zpos, double xnow, uint32_t threshold, char mode );
 	double ompcrit_probe_semebsd_core( double zpos, uint32_t threshold );

@@ -722,7 +722,7 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 						//if ( gridvalue == CURRENTLY_INFECTED ) {
 						//	//read cellStatii and update later for now leave BLACK!
 						//}
-						//else leave definately BLACK
+						//else leave definitely BLACK
 					}
 					else if ( mode == COLORIZE_DEF_LEAVE_RX_BLACK ) {
 						if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //most likely
@@ -737,7 +737,7 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 						//if ( gridvalue == CURRENTLY_INFECTED ) {
 						//	//read cellStatii and update later for now leave BLACK!
 						//}
-						//else leave definately BLACK
+						//else leave definitely BLACK
 					}
 					else { //COLORIZE_RX_RHOGREYSCALE_DEFORMED
 						if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) {
@@ -1069,7 +1069,7 @@ void caHdl::ompcrit_write_semebsd_core( double zpos, char mode ) {
 
 					gridvalue = regions[r]->mycellgrid[region_corr];
 
-					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURENTLY_INFECTED most likely either rx or defg
+					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURRENTLY_INFECTED most likely either rx or defg
 						if ( gridvalue >= ndg ) {
 							oid = myrxgpool[gridvalue-ndg].caori;
 							iobuffer[4*su_corr+3] = +1.0 * (gridvalue - ndg + 1); //##MK::for MartinDiehl Fortran indexed ID of RX grain
@@ -1244,7 +1244,7 @@ void caHdl::ompcrit_write_semebsd_core( double zpos, double xnow, uint32_t thres
 
 					gridvalue = regions[r]->mycellgrid[region_corr];
 
-					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURENTLY_INFECTED most likely either rx or defg
+					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURRENTLY_INFECTED most likely either rx or defg
 						if ( gridvalue >= ndg ) {
 							uint32_t rxgid = gridvalue;
 							auto it = rxg_pixel_count.find( rxgid );
@@ -1305,7 +1305,7 @@ void caHdl::ompcrit_write_semebsd_core( double zpos, double xnow, uint32_t thres
 
 					gridvalue = regions[r]->mycellgrid[region_corr];
 
-					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURENTLY_INFECTED most likely either rx or defg
+					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURRENTLY_INFECTED most likely either rx or defg
 						if ( gridvalue >= ndg ) {
 							auto it = rxg_pixel_count.find( gridvalue );
 							if ( it->second >= threshold ) {
@@ -1470,7 +1470,7 @@ double caHdl::ompcrit_probe_semebsd_core( double zpos, uint32_t threshold ) {
 
 					gridvalue = regions[r]->mycellgrid[region_corr];
 
-					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURENTLY_INFECTED most likely either rx or defg
+					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURRENTLY_INFECTED most likely either rx or defg
 						if ( gridvalue >= ndg ) { //account for pixel count of recrystallized grain area section
 							/*uint32_t rxgid = gridvalue - ndg + 1;
 							auto it = rxg_pixel_count.find( rxgid );
@@ -1830,7 +1830,7 @@ void caHdl::write_junction_skeleton( unsigned char mode )
 					cellsBndFast* bucket = this->regions[tid]->myjunctions.fjuncSkeleton[pmax].thefaces[f].voxelizedface;
 					for ( uint32_t c = 0; c < flen; c++ ) {
 						if ( bucket[c].location >= nportionDone && bucket[c].location < (nportionDone + nportionNow) )
-							rawdata[bucket[c].location - nportionDone] = 1 + this->regions[tid]->myjunctions.fjuncSkeleton[pmax].thefaces[f].gbID; //##MK::colud be optimize to reduce lenght of necessary dereferencing
+							rawdata[bucket[c].location - nportionDone] = 1 + this->regions[tid]->myjunctions.fjuncSkeleton[pmax].thefaces[f].gbID; //##MK::cloud be optimize to reduce length of necessary dereferencing
 					}
 				}
 			}

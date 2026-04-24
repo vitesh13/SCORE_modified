@@ -3,7 +3,7 @@
 /*
 	Implements functionalities to detect whether the microstructure has a percolating network of RX grains
 	utilizes the Hoshen-Kopelman algorithm in 3D and implements a pathcompressed weighted union/find algorithm based
-	on Kartik Kukreja's implementation http://kartikkukreja.wordpress.com
+	on Kartik Kukreja implementation http://kartikkukreja.wordpress.com
 	Markus Kuehbach, m.kuehbach (at) mpie.de
 
 	This program is free software: you can redistribute it and/or modify

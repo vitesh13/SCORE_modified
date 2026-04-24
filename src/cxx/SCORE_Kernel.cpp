@@ -803,7 +803,7 @@ bool ensembleHdl::init_parameter_from_hdf_idealtexture() {
 					for ( size_t j = 0; j < 3; j++ ) {
 						bunge_ori[j] = f64_bunge.at(3*i+j);
 						if ( bunge_ori[j] < BUNGE_MIN || bunge_ori[j] > BUNGE_MAX ) {
-							status = false; cerr << "Invalid Euler angles in ideal orientation defintion!" << endl; break;
+							status = false; cerr << "Invalid Euler angles in ideal orientation definition!" << endl; break;
 						}
 					}
 					double scatt = f64_theta.at(i);
@@ -811,7 +811,7 @@ bool ensembleHdl::init_parameter_from_hdf_idealtexture() {
 						scatt = 0.;
 					}
 					double quaternion_ori[4];
-					ensmath.euler2quat( bunge_ori, quaternion_ori ); //interally everything with quaternions
+					ensmath.euler2quat( bunge_ori, quaternion_ori ); //internally everything with quaternions
 
 					icomp.bunge1 = bunge_ori[0];
 					icomp.bunge2 = bunge_ori[1];
@@ -911,7 +911,7 @@ bool ensembleHdl::init_parameter_from_hdf_defgpool() {
 					for ( size_t j = 0; j < 3; j++ ) {
 						bunge_ori[j] = f64_bunge[(dg*3)+j];  //radian already
 						if ( bunge_ori[j] < BUNGE_MIN || bunge_ori[j] > BUNGE_MAX ) {
-							status = false; cerr << "Invalid Euler angles in deformed grain orientation defintion!" << endl;
+							status = false; cerr << "Invalid Euler angles in deformed grain orientation definition!" << endl;
 							break;
 						}
 					}
@@ -969,7 +969,7 @@ bool ensembleHdl::init_parameter_from_hdf_rxgpool() {
 					for ( size_t j = 0; j < 3; j++ ) {
 						bunge_ori[j] = f64_bunge[(rg*3)+j];
 						if ( bunge_ori[j] < BUNGE_MIN || bunge_ori[j] > BUNGE_MAX ) {
-							status = false; cerr << "Invalid Euler angles in recrystallized orientation defintion!" << endl;
+							status = false; cerr << "Invalid Euler angles in recrystallized orientation definition!" << endl;
 							break;
 						}
 					}
@@ -1885,9 +1885,9 @@ bool ensembleHdl::init_parameter_from_uds_idealtexture() {
 		bunge_ori[2] = DEG2RAD(getReal( iline, 4 ));
 		scatt  = DEG2RAD(getReal( iline, 5 ));
 
-		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in ideal orientation defintion!" << endl; break; }
+		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in ideal orientation definition!" << endl; break; }
 
-		ensmath.euler2quat( bunge_ori, quaternion_ori ); //interally everything with quaternions
+		ensmath.euler2quat( bunge_ori, quaternion_ori ); //internally everything with quaternions
 
 		icomp.bunge1 = bunge_ori[0];
 		icomp.bunge2 = bunge_ori[1];
@@ -1977,7 +1977,7 @@ bool ensembleHdl::init_parameter_from_uds_defgpool() {
 		bunge_ori[1] = DEG2RAD(getReal(dline, 2));
 		bunge_ori[2] = DEG2RAD(getReal(dline, 3));
 
-		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in deformed grain orientation defintion!" << endl; break; }
+		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in deformed grain orientation definition!" << endl; break; }
 
 		id = ens_check_disjunctness_io( bunge_ori );
 
@@ -2023,7 +2023,7 @@ bool ensembleHdl::init_parameter_from_uds_rxgpool() {
 		bunge_ori[1] = DEG2RAD(getReal(rline, 2));
 		bunge_ori[2] = DEG2RAD(getReal(rline, 3));
 
-		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in recrystallized orientation defintion!" << endl; break; }
+		if ( bunge_ori[0] < BUNGE_MIN || bunge_ori[0] > BUNGE_MAX || bunge_ori[1] < BUNGE_MIN || bunge_ori[1] > BUNGE_MAX || bunge_ori[2] < BUNGE_MIN || bunge_ori[2] > BUNGE_MAX ) { status = false; cerr << "Invalid Euler angles in recrystallized orientation definition!" << endl; break; }
 
 		id = ens_check_disjunctness_io( bunge_ori );
 
@@ -2310,7 +2310,7 @@ bool ensembleHdl::init_parameter_defgpool_exp()
 		if ( it != expUniqueGrainIDs.end() )
 			expData[px].gid = it->second; //if assign the newlabel
 		else {
-			cerr << "Labeling inconsistence in init_parameter_from_uds_defgpool" << endl;
+			cerr << "Labeling inconsistency in init_parameter_from_uds_defgpool" << endl;
 			return false;
 		}
 		/*for ( size_t i = 0; i < expGrainIDs.size(); i++ ) {
@@ -4444,7 +4444,7 @@ uint32_t caregionMemHdl::omp_getNextFreeSlotInSeedFrontInside( bool how )
 			return place;
 		}
 
-		//hasnt returned yet, so recycling list should be utilized but was already exhausted so change the strategy to get memory
+		//has not returned yet, so recycling list should be utilized but was already exhausted so change the strategy to get memory
 		strategy = CELLAPPEND;
 	}
 
@@ -4518,7 +4518,7 @@ uint32_t caregionMemHdl::omp_getNextFreeSlotInSeedFrontBorder( bool how )
 			return place;
 		}
 
-		//hasnt returned yet, so recycling list should be utilized but was already exhausted so change the strategy to get memory
+		//has not returned yet, so recycling list should be utilized but was already exhausted so change the strategy to get memory
 		strategy = CELLAPPEND;
 	}
 
@@ -4913,7 +4913,7 @@ void caregionMemHdl::ompshar_synchronize_haloregions_def()
 				mySeedFrontBorder[freeplace].mydefgseedid = apartreg->myhalos[hal].theHaloCells[target].myrxgid;
 
 				//in the region where the halo was filled updateFullSeedBorder already marked the infecting cells as recrystallized
-				//MK::other bookkeep is not necessary --- in fact --- it were errornous
+				//MK::other bookkeep is not necessary --- in fact --- it were erroneous
 			} //next cell in the halo
 		} //halo handled
 	} //check whether next neighbor has a halo to sync for me
@@ -5510,7 +5510,7 @@ uint32_t caregionMemHdl::omp_getNextFreeSlotBorderAnotherRegion ( uint32_t nbort
 			return place;
 		}
 
-		//hasnt returned yet, so recycling list should be utilized but was already exhausted so change the strategy to get memory
+		//has not returned yet, so recycling list should be utilized but was already exhausted so change the strategy to get memory
 		strategy = CELLAPPEND;
 	}
 
@@ -5548,7 +5548,7 @@ uint32_t caregionMemHdl::omp_getNextFreeSlotInRXFrontInside( bool how ) //MK::ho
 			return place;
 		}
 
-		//hasnt returned yet, so recycling list should be utilized but was already exhausted so change the strategy to get memory
+		//has not returned yet, so recycling list should be utilized but was already exhausted so change the strategy to get memory
 		strategy = CELLAPPEND;
 	}
 
@@ -5631,7 +5631,7 @@ uint32_t caregionMemHdl::omp_getNextFreeSlotInRXFrontBorder( bool how )
 			return place;
 		}
 
-		//hasnt returned yet, so recycling list should be utilized but was already exhausted so change the strategy to get memory
+		//has not returned yet, so recycling list should be utilized but was already exhausted so change the strategy to get memory
 		strategy = CELLAPPEND;
 	}
 
@@ -6640,7 +6640,7 @@ void caregionMemHdl::ompshar_synchronize_haloregions_rx()
 				myRXFrontBorder[freeplace].mydefgid = cxyz_defstate;
 
 				//in the region where the halo was filled updateFullRXBorder already marked the infecting cells as recrystallized
-				//other bookkeep is not necessary --- in fact --- it were errornous
+				//other bookkeep is not necessary --- in fact --- it were erroneous
 			} //next cell in the halo
 		} //halo handled
 	} //check whether next neighbor has a halo to sync for me
@@ -7040,7 +7040,7 @@ caHdl::caHdl()
 
 caHdl::~caHdl()
 {
-	/* ##MK::check for deallocation of dynmaic memory to store status of the grains
+	/* ##MK::check for deallocation of dynamic memory to store status of the grains
 	//because caHdl does not know about dynamic allocation of memory from within the struct
 	for ( uint32_t s = 0; s < mygrainevolution.size(); s++) {
 		delete [] mygrainevolution[s].localdatabucket;
@@ -7795,7 +7795,7 @@ void caHdl::determine_initial_nucleitexture_myrxgpoolids()
 void caHdl::solve_INITIALIZATION_THREADED_DOMAIN_DECOMPOSITION()
 {
 	//MK::this function exemplifies how to initialize in parallel the CA region construct and an associated deformed microstructure representation
-	//MK::first threads need initalization and allocation and first-touch of NUMA-local memory, then critical functions can be executed after which
+	//MK::first threads need initialization and allocation and first-touch of NUMA-local memory, then critical functions can be executed after which
 	//start parallel use all OMP_NUM_THREADS, if work should only be done by one thread
 	//MK::the CONVENTION is this is the MASTER THREAD to keep compatibility with MPI libraries that require master threads for FUNNELED hybrid operation
 	#pragma omp parallel	//by default now all variables are shared among the threads in the team
@@ -8023,7 +8023,7 @@ void caHdl::solve_DETECT_GRAINBOUNDARIES()
 void caHdl::solve_GRAINBOUNDARYNUCLEATION()
 {
 	//##MK in M. Kuehbach's Phd thesis the specific implementation of grain boundary nucleated reactions which were exercised within
-	//C. Haase's HighMn SFB761 Twip steel project aided to model site-saturated grain boundary nucleated RX processes
+	//C. Haase HighMn SFB761 Twip steel project aided to model site-saturated grain boundary nucleated RX processes
 	//so it sufficies to populate the myrxgpool vector with picking physically the desired per se disjoint boundary cells,
 	//at which nuclei should be generated, then solve_NUCLEATIONMODELING must not be executed
 	//instead solve_RXGROWTH places the nuclei without prior knowledge that the mycellgrid assignment came from a DEFMS automaton
