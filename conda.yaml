@@ -1,0 +1,18 @@
+# https://www.dream3d.io/python_docs/Installation.html
+# conda env create -f environment.yaml --strict-channel-priority
+# conda activate amag
+name: amag
+channels:
+  - bluequartzsoftware
+  - conda-forge
+dependencies:
+  - python=3.11
+  - dream3dnx
+  - damask
+  - h5py
+  - numpy
+  - pint
+  - flatdict>=4.1.0
+  - jupyter
+  - jupyterlab
+  - jupyterlab-h5web
