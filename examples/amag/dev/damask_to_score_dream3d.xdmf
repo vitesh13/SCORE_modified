@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd"[]>
+<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">
+ <Domain>
+  <!-- *************** START OF SyntheticVolumeDataContainer *************** -->
+  <Grid Name="SyntheticVolumeDataContainer" GridType="Uniform">
+    <Topology TopologyType="3DCoRectMesh" Dimensions="16 20 24 "></Topology>
+    <Geometry Type="ORIGIN_DXDYDZ">
+      <!-- Origin  Z, Y, X -->
+      <DataItem Format="XML" Dimensions="3">0 0 0</DataItem>
+      <!-- DxDyDz (Spacing/Spacing) Z, Y, X -->
+      <DataItem Format="XML" Dimensions="3">6.31579e-07 6.31579e-07 6.31579e-07</DataItem>
+    </Geometry>
+    <Attribute Name="Eulers" AttributeType="Vector" Center="Cell">
+      <DataItem Format="HDF" Dimensions="23 19 15 3" NumberType="Float" Precision="4" >
+        damask_to_score_dream3d.dream3d:/DataStructure/SyntheticVolumeDataContainer/CellData/Eulers
+      </DataItem>
+    </Attribute>
+    <Attribute Name="Phases" AttributeType="Scalar" Center="Cell">
+      <DataItem Format="HDF" Dimensions="23 19 15 1" NumberType="Int" Precision="4" >
+        damask_to_score_dream3d.dream3d:/DataStructure/SyntheticVolumeDataContainer/CellData/Phases
+      </DataItem>
+    </Attribute>
+    <Attribute Name="nuc_flag" AttributeType="Scalar" Center="Cell">
+      <DataItem Format="HDF" Dimensions="23 19 15 1" NumberType="Int" Precision="4" >
+        damask_to_score_dream3d.dream3d:/DataStructure/SyntheticVolumeDataContainer/CellData/nuc_flag
+      </DataItem>
+    </Attribute>
+    <Attribute Name="tot_density" AttributeType="Scalar" Center="Cell">
+      <DataItem Format="HDF" Dimensions="23 19 15 1" NumberType="Float" Precision="4" >
+        damask_to_score_dream3d.dream3d:/DataStructure/SyntheticVolumeDataContainer/CellData/tot_density
+      </DataItem>
+    </Attribute>
+  </Grid>
+  <!-- *************** END OF SyntheticVolumeDataContainer *************** -->
+ </Domain>
+</Xdmf>

@@ -1,0 +1,17 @@
+## Install legacy DREAM3D for synthesizing microstructures
+
+This is a location where to store a version of legacy DREAM3D to synthesize microstructures.
+Legacy DREAM3D is currently required for running `examples/amag/workflow.ipynb`.
+
+We strongly suggest to install legacy DREAM3D [`v6.5.171`](https://github.com/BlueQuartzSoftware/DREAM3D/releases)
+into this directory so that after the installation `thirdparty/dream3d/DREAM3D-6.5.171-Linux-x86_64` exists
+within home directory of the `SCORE` installation, i.e. the directory in which there exists `docs`, `src`,
+`thirdparty`, `pyproject.toml`, etc.
+
+The `examples/amag/workflow.ipynb` is configured such that the installation writes the synthesized microstructure
+to `examples/amag` into a file named `Microstructure_for_paper.dream3d`. To achieve this the notebook is preconfigured
+to search legacy DREAM3D in the `thirdparty/dream3d/DREAM3D-6.5.171-Linux-x86_64` directory. Correspondingly,
+the pipeline instruction file `Microstructure_for_paper_pipeline.json` is configured to write into `examples/amag`.
+
+
+

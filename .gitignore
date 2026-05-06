@@ -8,6 +8,7 @@ examples/damask/SCORE*
 examples/.*
 examples/.ipynb_checkpoints
 
+thirdparty/dream3d/DREAM3D-*
 src/cxx/thirdparty/mandatory/hdf5-*
 src/cxx/thirdparty/mandatory/hdf5
 #src/cxx/thirdparty/mandatory/date
