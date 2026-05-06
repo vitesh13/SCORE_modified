@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import os
+
 import numpy as np
 from pint import Quantity
-from score_config_utils import recursive_assign, ureg
-
+from score_config_utils import ureg
 
 MY_MATERIAL: list[tuple[str, Quantity]] = [
     (
