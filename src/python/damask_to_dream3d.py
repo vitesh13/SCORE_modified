@@ -4,7 +4,7 @@ import os
 import damask
 import h5py
 import numpy as np
-from damask import Grid, Rotation
+from damask import GeomGrid, Rotation
 from scipy.spatial import cKDTree
 
 Crystal_structures = {"fcc": 1, "bcc": 1, "hcp": 0, "bct": 7, "ort": 6}
