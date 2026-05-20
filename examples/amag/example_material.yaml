@@ -7,7 +7,7 @@ homogenization:
 phase:
   Aluminum:
     lattice: cF
-    rho: 1
+    rho: 1                                              # for isothermal simulations, placeholder values need to be given
     mechanical:
       output: [F, P, F_e, F_p, L_p, O]
       elastic: {type: Hooke, C_11: 112900000000.0, C_12: 56500000000.0, C_44: 27830000000.0}
@@ -29,10 +29,10 @@ phase:
         rho_mob_0: [33536414522593.277]
         tau_0: [80271910.40369003]
         v_0: [1097.4439380937401]
-    thermal: {C_p: 1, K_11: 1.0, K_33: 1.0}
+    thermal: {C_p: 1, K_11: 1.0, K_33: 1.0}            # for isothermal simulations, placeholder values need to be given
   Second_phase:
-    lattice: cI
-    rho: 1
+    lattice: cI 
+    rho: 1                                             # for isothermal simulations, placeholder values need to be given
     mechanical:
       output: [F, P, F_e, F_p, L_p, O]
       elastic: {type: Hooke, C_11: 128100000000.0, C_12: 54300000000.0, C_44: 42850000000.0}
