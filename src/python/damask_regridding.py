@@ -14,7 +14,7 @@ from damask import LoadcaseGrid
 
 # -----------------------------------------------------------------------------------
 # -----------------------------------------------------------------------------------
-def regrid_geom(geom_name, load_name, increment="last"):
+def regrid_geom(geom_name, load_name, material_name, increment="last"):
     """
     Regridding the geometry as per the mesh replacement method.
 
@@ -24,13 +24,15 @@ def regrid_geom(geom_name, load_name, increment="last"):
       Name of the geom file
     load_name: str
       Name of the load file
+    material_name: str
+      Name of the material file
     increment: str or integer
       Increment at which regridding is done.
     """
     regriddingSeedScale = 1.0
 
     # We need to read geom and not using hdf5 file!
-    geom_0 = damask.Grid.load(f"{geom_name}.vti")
+    geom_0 = damask.GeomGrid.load(f"{geom_name}.vti")
     cells_0 = geom_0.cells
     size_0 = geom_0.size
     gridCoords_node_initial_matrix = damask.grid_filters.coordinates0_node(
@@ -46,7 +48,7 @@ def regrid_geom(geom_name, load_name, increment="last"):
         (-1, gridCoords_point_initial_matrix.shape[-1]), order="F"
     )
 
-    d5Out = damask.Result(f"{geom_name}_{load_name}.hdf5")
+    d5Out = damask.Result(f"{geom_name}_{load_name}_{material_name}.hdf5")
     if increment == "last":
         d5Out = d5Out.view("increments", d5Out.increments[-1])
         increment_title = d5Out.increments[-1]
@@ -89,9 +91,9 @@ def regrid_geom(geom_name, load_name, increment="last"):
 
 def write_geomRegridded(geom_name, increment_title, map_0to_rg, cells_rg, size_rg):
     """Write the regridded geom file to restart the simulation."""
-    grid_0 = damask.Grid.load(geom_name + ".vti")
+    grid_0 = damask.GeomGrid.load(geom_name + ".vti")
     material_rg = grid_0.material.flatten("F")[map_0to_rg].reshape(cells_rg, order="F")
-    damask.Grid(material_rg, size_rg, grid_0.origin, comments=grid_0.comments).save(
+    damask.GeomGrid(material_rg, size_rg, grid_0.origin, comments=grid_0.comments).save(
         f"{geom_name}_regridded_{increment_title}.vti"
     )
 
@@ -104,16 +106,16 @@ def write_geomRegridded(geom_name, increment_title, map_0to_rg, cells_rg, size_r
 # fRgHistory_0 = h5py.File(fName_rgHistory, 'r')
 # -----------------------------------------------------------------------------------
 def write_h5OutRestart(
-    geom_name, load_name, increment_title, map_0to_rg, cells_rg, isElastic=False
+    geom_name, load_name, material_name, increment_title, map_0to_rg, cells_rg, isElastic=False
 ):
     """Regrid a restart file."""
     if isElastic:
         print("The accuracy for keeping elastic deformation is not fully tested!")
 
-    fNameResults_0 = f"{geom_name}_{load_name}.hdf5"
-    fNameRestart_0 = f"{geom_name}_{load_name}_restart.hdf5"
+    fNameResults_0 = f"{geom_name}_{load_name}_{material_name}.hdf5"
+    fNameRestart_0 = f"{geom_name}_{load_name}_{material_name}_restart.hdf5"
     fNameRestart_rg = (
-        f"{geom_name}_{load_name}_restart_regridded_{increment_title}.hdf5"
+        f"{geom_name}_{load_name}_{material_name}_restart_regridded_{increment_title}.hdf5"
     )
     if os.path.exists(fNameRestart_rg):
         print("removing the existing restart file.")
@@ -191,7 +193,7 @@ def write_h5OutRestart(
                         np.einsum("lij,lkj->ik", F_e_0, F_e_0) / len(F_e_0)
                     )
                 )
-            elif dataset in ["T", "T_lastInc"]:
+            elif dataset in ["T", "T_lastInc","dotT_lastInc"]:
                 data_0 = fRestart_0[path][()]
                 data_rg = data_0[map_0to_rg, ...]
             elif dataset in ["F", "F_lastInc"]:
