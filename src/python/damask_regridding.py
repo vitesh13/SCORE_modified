@@ -50,10 +50,10 @@ def regrid_geom(geom_name, load_name, material_name, increment="last"):
 
     d5Out = damask.Result(f"{geom_name}_{load_name}_{material_name}.hdf5")
     if increment == "last":
-        d5Out = d5Out.view("increments", d5Out.increments[-1])
+        d5Out = d5Out.view(increments=d5Out.increments[-1])
         increment_title = d5Out.increments[-1]
     elif increment in d5Out.increments:
-        d5Out = d5Out.view("increments", increment)
+        d5Out = d5Out.view(increments=increment)
         increment_title = increment
     else:
         raise ValueError("The results for the increment is not available!")
@@ -233,10 +233,6 @@ def write_h5OutRestart(
         else:
             with h5py.File("regridding.hdf5", "a") as fRgHistory_0:
                 previousHistory = np.array(fRgHistory_0[f"/map/{historyRg_idx}"])
-                if np.all(previousHistory == map_0to_rg):
-                    print(
-                        "# WARNING: The regridding map is similar to the previous map!"
-                    )
                 path = f"/map/{historyRg_idx + 1}"
                 fRgHistory_0.create_dataset(path, data=map_0to_rg)
                 path = f"/phase/{historyRg_idx + 1}"
@@ -252,7 +248,7 @@ def write_h5OutRestart(
 
 def add_load_step(t, N, f_out, f_restart):
     """Adds a load step."""
-    load = Config.load(f"tensionX.yaml")
+    load = LoadcaseGrid.load(f"tensionX.yaml")
 
     L = [["x", 0, 0], [0, 0, 0], [0, 0, -13.8]]
 
