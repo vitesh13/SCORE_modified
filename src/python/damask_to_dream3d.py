@@ -116,7 +116,7 @@ class DAMASKtoDREAM3D:
         regridding_index = self.get_correct_regridding_index(inc)
 
         f = h5py.File(self.job_file, "r")
-        geom = Grid.load(
+        geom = GeomGrid.load(
             f"{self.geom_file}_regridded_increment_{self.regridded_inc_list[regridding_index]}.vti"
         )
         cells_rg = geom.cells
@@ -182,7 +182,7 @@ class DAMASKtoDREAM3D:
           increment of interest for DREAM3D processing.
         """
         regridding_index = self.get_correct_regridding_index(inc)
-        geom = Grid.load(
+        geom = GeomGrid.load(
             f"{self.geom_file}_regridded_increment_{self.regridded_inc_list[regridding_index]}.vti"
         )
 
@@ -233,7 +233,7 @@ class DAMASKtoDREAM3D:
         print(regridding_index)
 
         f = h5py.File(self.job_file, "r")
-        geom = Grid.load(
+        geom = GeomGrid.load(
             f"{self.geom_file}_regridded_increment_{self.regridded_inc_list[regridding_index]}.vti"
         )
         cells_rg = geom.cells
@@ -419,12 +419,12 @@ class DAMASKtoDREAM3D:
         regridding_index = self.get_correct_regridding_index(inc)
         if regridded:
             o = h5py.File(f"{job_file_no_ext}_regridded_increment{inc}.dream3D", "a")
-            geom = Grid.load(
+            geom = GeomGrid.load(
                 f"{self.geom_file}_regridded_increment_{self.regridded_inc_list[regridding_index]}.vti"
             )
         else:
             o = h5py.File(f"{job_file_no_ext}_increment{inc}.dream3D", "a")
-            geom = Grid.load(f"{self.geom_file}.vti")
+            geom = GeomGrid.load(f"{self.geom_file}.vti")
 
         cells_rg = geom.cells
         size_rg = geom.size
@@ -475,7 +475,7 @@ class DAMASKtoDREAM3D:
         job_file_no_ext = os.path.splitext(self.job_file)[0]
         o = h5py.File(f"{job_file_no_ext}_regridded_increment{inc}.dream3D", "r")
         regridding_index = self.get_correct_regridding_index(inc)
-        geom = Grid.load(
+        geom = GeomGrid.load(
             f"{self.geom_file}_regridded_increment_{self.regridded_inc_list[regridding_index]}.vti"
         )
 
