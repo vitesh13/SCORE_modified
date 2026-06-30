@@ -205,7 +205,7 @@ class DAMASKtoDREAM3D:
 
     def DAMASKtoDREAM3D_deformed(self, inc):
         """
-        Creates a dream3D file from DAMASK output.
+        Creates a dream3d file from DAMASK output.
         Here the grid deformation is taken into account through regridding.
 
         Parameters:
@@ -429,7 +429,7 @@ class DAMASKtoDREAM3D:
         cells_rg = geom.cells
         size_rg = geom.size
 
-        # data containers for dream3D
+        # data containers for dream3d
         data_container_label = "DataContainers/SyntheticVolumeDataContainer"
         cell_data_label = data_container_label + "/CellData"
         # Data rho
@@ -458,7 +458,7 @@ class DAMASKtoDREAM3D:
         """
         Creates a remeshed DREAM3D file.
         This is required by SCORE as it needs regularly spaced data.
-        Pre-requisite is to have an existing dream3D file with the regridded data.
+        Pre-requisite is to have an existing dream3d file with the regridded data.
         Following would be the workflow:
         DAMASKtoDREAM3D -> export_DREAM3D -> export_external_data -> remeshed
 
@@ -495,7 +495,7 @@ class DAMASKtoDREAM3D:
         for g in ["DataContainerBundles", "Pipeline"]:  # empty groups (needed)
             w.create_group(g)
 
-        # data containers for dream3D
+        # data containers for dream3d
         data_container_label = "DataContainers/SyntheticVolumeDataContainer"
         cell_data_label = data_container_label + "/CellData"
 
