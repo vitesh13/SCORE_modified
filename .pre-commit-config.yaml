@@ -22,10 +22,10 @@ repos:
       - id: pyupgrade
         args: [--py310-plus]  # modernizes syntax for Python 3.10+
 
-  # - repo: https://github.com/kynan/nbstripout
-  #   rev: 0.9.1
-  #   hooks:
-  #     - id: nbstripout
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.9.1
+    hooks:
+      - id: nbstripout
 
   - repo: https://github.com/streetsidesoftware/cspell-cli
     rev: v10.0.1
