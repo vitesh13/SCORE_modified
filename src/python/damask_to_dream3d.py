@@ -229,8 +229,8 @@ class DAMASKtoDREAM3D:
         self.get_regridded_inc_list()
         print(self.regridded_inc_list)
         regridding_index = self.get_correct_regridding_index(inc)
-        print(self.get_correct_regridding_index)
-        print(regridding_index)
+        # print(self.get_correct_regridding_index)
+        # print(regridding_index)
 
         f = h5py.File(self.job_file, "r")
         geom = GeomGrid.load(

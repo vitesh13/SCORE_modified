@@ -106,7 +106,13 @@ def write_geomRegridded(geom_name, increment_title, map_0to_rg, cells_rg, size_r
 # fRgHistory_0 = h5py.File(fName_rgHistory, 'r')
 # -----------------------------------------------------------------------------------
 def write_h5OutRestart(
-    geom_name, load_name, material_name, increment_title, map_0to_rg, cells_rg, isElastic=False
+    geom_name,
+    load_name,
+    material_name,
+    increment_title,
+    map_0to_rg,
+    cells_rg,
+    isElastic=False,
 ):
     """Regrid a restart file."""
     if isElastic:
@@ -114,9 +120,7 @@ def write_h5OutRestart(
 
     fNameResults_0 = f"{geom_name}_{load_name}_{material_name}.hdf5"
     fNameRestart_0 = f"{geom_name}_{load_name}_{material_name}_restart.hdf5"
-    fNameRestart_rg = (
-        f"{geom_name}_{load_name}_{material_name}_restart_regridded_{increment_title}.hdf5"
-    )
+    fNameRestart_rg = f"{geom_name}_{load_name}_{material_name}_restart_regridded_{increment_title}.hdf5"
     if os.path.exists(fNameRestart_rg):
         print("removing the existing restart file.")
         os.remove(fNameRestart_rg)
@@ -193,7 +197,7 @@ def write_h5OutRestart(
                         np.einsum("lij,lkj->ik", F_e_0, F_e_0) / len(F_e_0)
                     )
                 )
-            elif dataset in ["T", "T_lastInc","dotT_lastInc"]:
+            elif dataset in ["T", "T_lastInc", "dotT_lastInc"]:
                 data_0 = fRestart_0[path][()]
                 data_rg = data_0[map_0to_rg, ...]
             elif dataset in ["F", "F_lastInc"]:

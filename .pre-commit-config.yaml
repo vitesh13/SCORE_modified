@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.20
     hooks:
       - id: ruff-check
         files: ^(src/python|tests|examples/verification|examples/damask|examples/amag)/.*\.{py|ipynb}$
@@ -28,7 +28,7 @@ repos:
       - id: nbstripout
 
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v9.8.0
+    rev: v10.0.1
     hooks:
       - id: cspell  # spellchecking
         pass_filenames: false
