@@ -70,6 +70,9 @@ local_scheme = "node-and-date"
 include = [
    "src/python/**/*.py",
    "src/python/**/*.ipynb",
+   "examples/verification/*.ipynb",
+   "examples/damask/*.ipynb",
+   "examples/amag/*.ipynb",
    "tests/**/*.py"
 ]
 line-length = 88
