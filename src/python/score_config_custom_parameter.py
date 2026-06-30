@@ -33,7 +33,7 @@ MY_USER: list[str] = [
 ]
 
 MY_INIT_DAMASK: dict[str, str] = {
-    "file_path": f"{os.getcwd()}/../../examples/damask/Tphase_Vf_01_tensionX_remeshed_increment_19000_segmented.dream3D"
+    "file_path": f"{os.getcwd()}/../../examples/damask/Tphase_Vf_01_tensionX_remeshed_increment_19000_segmented.dream3d"
 }
 
 MY_MOBILITY_RH: list[tuple[str, Quantity]] = [

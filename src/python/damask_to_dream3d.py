@@ -284,7 +284,7 @@ class DAMASKtoDREAM3D:
 
         # --------------------------------------------------------------------------
         job_file_no_ext = os.path.splitext(self.job_file)[0]
-        o = h5py.File(f"{job_file_no_ext}_regridded_increment{inc}.dream3D", "w")
+        o = h5py.File(f"{job_file_no_ext}_regridded_increment{inc}.dream3d", "w")
         o.attrs["DADF5toDREAM3D"] = "1.0"
         o.attrs["FileVersion"] = "7.0"
 
@@ -418,12 +418,12 @@ class DAMASKtoDREAM3D:
         job_file_no_ext = os.path.splitext(self.job_file)[0]
         regridding_index = self.get_correct_regridding_index(inc)
         if regridded:
-            o = h5py.File(f"{job_file_no_ext}_regridded_increment{inc}.dream3D", "a")
+            o = h5py.File(f"{job_file_no_ext}_regridded_increment{inc}.dream3d", "a")
             geom = GeomGrid.load(
                 f"{self.geom_file}_regridded_increment_{self.regridded_inc_list[regridding_index]}.vti"
             )
         else:
-            o = h5py.File(f"{job_file_no_ext}_increment{inc}.dream3D", "a")
+            o = h5py.File(f"{job_file_no_ext}_increment{inc}.dream3d", "a")
             geom = GeomGrid.load(f"{self.geom_file}.vti")
 
         cells_rg = geom.cells
@@ -473,7 +473,7 @@ class DAMASKtoDREAM3D:
         d = damask.Result(self.job_file)
 
         job_file_no_ext = os.path.splitext(self.job_file)[0]
-        o = h5py.File(f"{job_file_no_ext}_regridded_increment{inc}.dream3D", "r")
+        o = h5py.File(f"{job_file_no_ext}_regridded_increment{inc}.dream3d", "r")
         regridding_index = self.get_correct_regridding_index(inc)
         geom = GeomGrid.load(
             f"{self.geom_file}_regridded_increment_{self.regridded_inc_list[regridding_index]}.vti"
@@ -488,7 +488,7 @@ class DAMASKtoDREAM3D:
 
         map_remesh = self.get_remesh_map(inc)
 
-        w = h5py.File(f"{job_file_no_ext}_remeshed_increment{inc}.dream3D", "w")
+        w = h5py.File(f"{job_file_no_ext}_remeshed_increment{inc}.dream3d", "w")
         w.attrs["DADF5toDREAM3D"] = "1.0"
         w.attrs["FileVersion"] = "7.0"
 
@@ -641,7 +641,7 @@ class DAMASKtoDREAM3D:
 
         job_file_no_ext = os.path.splitext(self.job_file)[0]
 
-        o = h5py.File(f"{job_file_no_ext}_remeshed_increment{inc}.dream3D", "a")
+        o = h5py.File(f"{job_file_no_ext}_remeshed_increment{inc}.dream3d", "a")
         cells_rg = np.array(
             o["DataContainers/SyntheticVolumeDataContainer/_SIMPL_GEOMETRY/DIMENSIONS"]
         )
