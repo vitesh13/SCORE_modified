@@ -17,6 +17,9 @@ examples/damask/*
 examples/amag/*
 !examples/amag/workflow.ipynb
 !examples/amag/Microstructure_for_DAMASK.json
+!examples/amag/example_material.yaml
+!examples/amag/tensionX.yaml
+!examples/amag/Microstructure_for_SCORE_template.json
 
 thirdparty/dream3d/DREAM3D-*
 src/cxx/thirdparty/mandatory/hdf5-*
