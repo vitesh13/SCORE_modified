@@ -22,8 +22,14 @@ examples/amag/*
 !examples/amag/Microstructure_for_SCORE_template.json
 
 thirdparty/dream3d/DREAM3D-*
-src/cxx/thirdparty/mandatory/hdf5-*
-src/cxx/thirdparty/mandatory/hdf5
+
+src/cxx/thirdparty/mandatory/hdf5/*
+!src/cxx/thirdparty/mandatory/hdf5/CTestScript.cmake
+!src/cxx/thirdparty/mandatory/hdf5/HDF5config.cmake
+!src/cxx/thirdparty/mandatory/hdf5/HDF5options.cmake
+!src/cxx/thirdparty/mandatory/hdf5/DownloadHdfFiveAndPlugins.sh
+!src/cxx/thirdparty/mandatory/hdf5/README.md
+
 # src/cxx/thirdparty/mandatory/date
 src/cxx/thirdparty/mandatory/szip
 src/cxx/thirdparty/mandatory/zlib

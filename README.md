@@ -34,7 +34,8 @@ git --version
 git clone https://www.github.com/vitesh13/SCORE_modified.git
 cd SCORE_modified
 git checkout master
-git submodule update --init --recursive
+git submodule sync ---recursive
+git submodule update --init --recursive --jobs==4
 echo $PWD
 ```
 
@@ -43,7 +44,7 @@ This directory is mentioned in the variable `MYPROJECTPATH` in the `CMakeLists.t
 file to assure the project directory is correctly configured for building, i.e.,
 compiling and linking of the C++ executable `score`.
 
-2. Compile the `HDF5` library from its source code `src/thirdparty/hdf5`
+2. Compile the `HDF5` library from its source code `src/cxx/thirdparty/hdf5`
 
 A few C/C++ libraries are required for `SCORE` to work correctly. While most of their source code
 is set by the `git submodule update` step, it remains to compile a version of the `HDF5` library.
