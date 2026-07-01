@@ -1,0 +1,22 @@
+# https://www.dream3d.io/python_docs/Installation.html
+# execute from within the project root! 
+# conda env create -f conda.yaml
+# conda activate amag-py3.12
+name: amag-py3.12
+channels:
+  - bluequartzsoftware
+  - conda-forge
+dependencies:
+  - python=3.12
+  - dream3dnx
+  - damask==3.0.2
+  - h5py
+  - numpy
+  - pint
+  - flatdict>=4.1.0
+  - jupyter
+  - jupyterlab
+  - jupyterlab-h5web
+  - pip
+  - pip:
+      - -e ".[dev,docs]"

@@ -22,19 +22,19 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "h5py",
+    "h5py>=3.6",
     "numpy",
     "pint",
     "flatdict>=4.1.0",
     "jupyter",
     "jupyterlab",
-    "jupyterlab_h5web"
+    "jupyterlab_h5web>=12.5.0"
 ]
 
 [project.optional-dependencies]
 dev = [
     "mypy",
-    "ruff>=0.15.0",
+    "ruff>=0.15",
     "pytest",
     "pytest-cov",
     "pytest-timeout",
@@ -42,7 +42,7 @@ dev = [
     "pre-commit"
 ]
 docs = [
-    "mkdocs",
+    "mkdocs<2",
     "mkdocs-material",
     "mkdocs-material-extensions",
     "mkdocs-macros-plugin",
@@ -50,7 +50,7 @@ docs = [
     "mkdocs-click"
 ]
 quality = [
-    "pynxtools>=0.13.2"
+    "pynxtools>=0.13.2,<=0.15.0"
 ]
 
 [project.urls]
@@ -70,6 +70,9 @@ local_scheme = "node-and-date"
 include = [
    "src/python/**/*.py",
    "src/python/**/*.ipynb",
+   "examples/verification/*.ipynb",
+   "examples/damask/*.ipynb",
+   "examples/amag/*.ipynb",
    "tests/**/*.py"
 ]
 line-length = 88

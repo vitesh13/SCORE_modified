@@ -188,8 +188,8 @@ class ScoreConfig(ConfigBase):
         """Configure which macrotexture components the code should bookkeep for volume evolution."""
         trg = f"entry{self.entry_id}/component_analysis/"
         self.cfg[f"{trg}@NX_class"] = "NXparameters"
-        if all(val in parameters for val in ("name", "bunge_euler", "theta")):
-            num = np.shape(parameters["name"])[0]
+        if all(val in parameters for val in ("names", "bunge_euler", "theta")):
+            num = np.shape(parameters["names"])[0]
             if all(
                 np.shape(parameters[val])[0] == num for val in ("bunge_euler", "theta")
             ):

@@ -20,10 +20,11 @@ fi
 
 echo "Running: $run_type"
 
-cd examples/verification
+cd examples/$run_type
+echo $pwd
 mpirun -n 1 ./../../build/score $mode SCORE.Config.SimID.$mode.nxs 1>SCORE.Results.SimID.$mode.nxs.STDOUT.txt 2>SCORE.Results.SimID.$mode.nxs.STDERR.txt
 cd ../../
 
-cd examples/damask
-mpirun -n 1 ./../../build/score $mode SCORE.Config.SimID.$mode.nxs 1>SCORE.Results.SimID.$mode.nxs.STDOUT.txt 2>SCORE.Results.SimID.$mode.nxs.STDERR.txt
-cd ../../
+# cd examples/damask
+# mpirun -n 1 ./../../build/score $mode SCORE.Config.SimID.$mode.nxs 1>SCORE.Results.SimID.$mode.nxs.STDOUT.txt 2>SCORE.Results.SimID.$mode.nxs.STDERR.txt
+# cd ../../

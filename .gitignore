@@ -3,14 +3,28 @@ scripts/.ipynb_checkpoints/
 .egg-info
 .vscode
 build
-examples/verification/SCORE*
-examples/damask/SCORE*
-examples/.*
-examples/.ipynb_checkpoints
 
+# tightly control input files for the examples, especially no committing of test run data, etc.
+examples/verification/*
+!examples/verification/workflow.ipynb
+!examples/deprecated/SCORE.Verification.uds
+
+examples/damask/*
+!examples/damask/workflow.ipynb
+!examples/damask/Tphase_Vf_01_tensionX_remeshed_increment_19000_segmented.dream3d
+!examples/deprecated/SCORE.Debug.MartinDiehl.64.SimID.6403_damask.uds
+
+examples/amag/*
+!examples/amag/workflow.ipynb
+!examples/amag/Microstructure_for_DAMASK.json
+!examples/amag/example_material.yaml
+!examples/amag/tensionX.yaml
+!examples/amag/Microstructure_for_SCORE_template.json
+
+thirdparty/dream3d/DREAM3D-*
 src/cxx/thirdparty/mandatory/hdf5-*
 src/cxx/thirdparty/mandatory/hdf5
-#src/cxx/thirdparty/mandatory/date
+# src/cxx/thirdparty/mandatory/date
 src/cxx/thirdparty/mandatory/szip
 src/cxx/thirdparty/mandatory/zlib
 src/cxx/thirdparty/optional/lodepng

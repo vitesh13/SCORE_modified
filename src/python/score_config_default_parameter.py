@@ -40,7 +40,7 @@ DF_INIT_CUBOIDAL: dict[str, Any] = {
 }
 
 DF_INIT_DAMASK: dict[str, Any] = {
-    "file_path": "Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D"
+    "file_path": "Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3d"
 }
 
 DF_NUCLEATION_CSR: dict[str, Any] = {
