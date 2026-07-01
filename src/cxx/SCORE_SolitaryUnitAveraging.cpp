@@ -1,46 +1,4 @@
-/* 
-*	Copyright Markus Kühbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #ifndef __SCORE_KERNEL_H_INCLUDED__
 //#define __SCORE_KERNEL_H_INCLUDED__
@@ -48,7 +6,7 @@
 #include "SCORE_Kernel.h"
 
 
-void ensembleHdl::postprocess_initrediscrtimes( void )
+void ensembleHdl::postprocess_initrediscrtimes()
 {
 	//acceptable time frame investigated
 	//double dtworld = ensRediscretization.tensmax - ensRediscretization.tensmin;
@@ -68,7 +26,7 @@ void ensembleHdl::postprocess_initrediscrtimes( void )
 
 		double dt = (ttmax - ttmin ) / ((double) (nmax - 1));
 		QUICKASSERT ( dt > REDISCR_DTMIN );
-		
+
 		for ( uint32_t n = 0; n < nmax; ++n ) { //points to end of the interval
 			ensRediscretization.ensRediscrTime[n] = ttmin + ((double) (n + 1) * dt);
 
@@ -91,7 +49,7 @@ void ensembleHdl::postprocess_initrediscrtimes( void )
 #define SENDRECRXTEX	69
 
 
-void ensembleHdl::postprocess_write_mycas_mpislow( void )
+void ensembleHdl::postprocess_write_mycas_mpislow()
 {
 	//collect from the workers the profiling information
 	MPI_IO_CAProfilingInfoData* bucket = NULL;
@@ -156,8 +114,8 @@ void ensembleHdl::postprocess_write_mycas_mpislow( void )
 			deftexture = new long[thisrank_nids*nidealcomponents];
 			QUICKASSERT ( deftexture != NULL );
 			nuctexture = new long[thisrank_nids*nidealcomponents];
-			for ( long k = 0; k < (thisrank_nids * nidealcomponents); ++k ) { 
-				deftexture[k] = 0; 
+			for ( long k = 0; k < (thisrank_nids * nidealcomponents); ++k ) {
+				deftexture[k] = 0;
 				nuctexture[k] = 0;
 			}
 
@@ -233,8 +191,8 @@ void ensembleHdl::postprocess_write_mycas_mpislow( void )
 			QUICKASSERT ( deftexture != NULL );
 			nuctexture = new long[thisrank_nids*nidealcomponents];
 			QUICKASSERT ( nuctexture != NULL );
-			for ( long k = 0; k < (thisrank_nids * nidealcomponents); ++k ) { 
-				deftexture[k] = 0; 
+			for ( long k = 0; k < (thisrank_nids * nidealcomponents); ++k ) {
+				deftexture[k] = 0;
 				nuctexture[k] = 0;
 			}
 
@@ -257,15 +215,15 @@ void ensembleHdl::postprocess_write_mycas_mpislow( void )
 				log_profiling_file << r << ";" << bucket[rca].JobID << ";" << bucket[rca].tend << ";" << bucket[rca].Iterations << ";" << setprecision(6) << bucket[rca].MPIWTimeInitialization << ";" << setprecision(6) << bucket[rca].MPIWTimeSpendDefMS << ";" << setprecision(6) << bucket[rca].MPIWTimeSpendGBDetection << ";" << setprecision(6) << bucket[rca].MPIWTimeSpendNucleation << ";" << setprecision(6) << bucket[rca].MPIWTimeSpendGrowthSim << ";" << setprecision(6) << bucket[rca].MPIWTimeSpendFinalIO;
 				log_profiling_file << ";" << setprecision(6) << (prof_tio - prof_t0) << ";" << physbucket[rca].nx << ";" << physbucket[rca].ny << ";" << physbucket[rca].nz << ";" << physbucket[rca].nxyz << ";" << physbucket[rca].regx << ";" << physbucket[rca].regy << ";" << physbucket[rca].regz << ";" << physbucket[rca].nboundarycells << ";" << physbucket[rca].storedenergy << ";" << physbucket[rca].ndgrseeds << ";" << physbucket[rca].nrxgrseeds << ";" << physbucket[rca].ndefmicrotexture;
 				//deftexture
-				for ( uint32_t oi = 0; oi < physbucket[rca].ndefmicrotexture; oi++ ) 
+				for ( uint32_t oi = 0; oi < physbucket[rca].ndefmicrotexture; oi++ )
 					log_profiling_file << ";" << deftexture[(rca*nidealcomponents)+oi];
 				for ( uint32_t oi = physbucket[rca].ndefmicrotexture; oi < nidealcomponents; oi++ )
 					log_profiling_file << ";";
 
 				//rxtexture
-				for ( uint32_t ni = 0; ni < physbucket[rca].nnucleimicrotexture; ni++ ) 
+				for ( uint32_t ni = 0; ni < physbucket[rca].nnucleimicrotexture; ni++ )
 					log_profiling_file << ";" << nuctexture[(rca*nidealcomponents)+ni];
-				for ( uint32_t ni = physbucket[rca].nnucleimicrotexture; ni < nidealcomponents; ni++ ) 
+				for ( uint32_t ni = physbucket[rca].nnucleimicrotexture; ni < nidealcomponents; ni++ )
 					log_profiling_file << ";";
 
 				log_profiling_file << "\n";
@@ -295,7 +253,7 @@ void ensembleHdl::postprocess_write_mycas_mpislow( void )
 }
 
 
-void ensembleHdl::postprocess_write_mycas_mpifast( void )
+void ensembleHdl::postprocess_write_mycas_mpifast()
 {
 	//collect from the workers the profiling information, worker can have different number of cellular automata domains!
 	double prof_tio = 0.0;
@@ -310,7 +268,7 @@ void ensembleHdl::postprocess_write_mycas_mpifast( void )
 	physbucket = new MPI_IO_CAPhysicsInfoData[thisrank_nids];
 	QUICKASSERT ( physbucket != NULL );
 	long* texbucket = NULL; //convention has a size of nidealcomponents*2*howmany CA per process, first all deformed grain components (left part), then all recrystallized (right part)
-	texbucket = new long[thisrank_nids*2*nidealcomponents]; 
+	texbucket = new long[thisrank_nids*2*nidealcomponents];
 	QUICKASSERT ( texbucket != NULL );
 	for ( long k = 0; k < (thisrank_nids * 2 * nidealcomponents); ++k ) { texbucket[k] = 0; }
 
@@ -465,13 +423,13 @@ void ensembleHdl::postprocess_write_mycas_mpifast( void )
 				log_profiling_file << ";" << setprecision(6) << (prof_tio - prof_t0) << ";" << physbucket_from_all[nids_per_rank_cumul[r]+rca].nx << ";" << physbucket_from_all[nids_per_rank_cumul[r]+rca].ny << ";" << physbucket_from_all[nids_per_rank_cumul[r]+rca].nz << ";" << physbucket_from_all[nids_per_rank_cumul[r]+rca].nxyz << ";" << physbucket_from_all[nids_per_rank_cumul[r]+rca].nboundarycells << ";" << physbucket_from_all[nids_per_rank_cumul[r]+rca].storedenergy << ";" << physbucket_from_all[nids_per_rank_cumul[r]+rca].ndgrseeds << ";" << physbucket_from_all[nids_per_rank_cumul[r]+rca].nrxgrseeds << ";" << physbucket_from_all[nids_per_rank_cumul[r]+rca].ndefmicrotexture;
 
 				//deftexture
-				for ( uint32_t oi = 0; oi < physbucket_from_all[nids_per_rank_cumul[r]+rca].ndefmicrotexture; oi++ ) 
+				for ( uint32_t oi = 0; oi < physbucket_from_all[nids_per_rank_cumul[r]+rca].ndefmicrotexture; oi++ )
 					log_profiling_file << ";" << texbucket_from_all[(nids_per_rank_cumul[r]*2*nidealcomponents)+(rca*2*nidealcomponents)+oi]; //left part are data for DEFORMED
 				for ( uint32_t oi = physbucket_from_all[nids_per_rank_cumul[r]+rca].ndefmicrotexture; oi < nidealcomponents; oi++ ) //add rest of fixed number of columns
 					log_profiling_file << ";";
 
 				//rxtexture
-				for ( uint32_t ni = 0; ni < physbucket_from_all[nids_per_rank_cumul[r]+rca].nnucleimicrotexture; ni++ ) 
+				for ( uint32_t ni = 0; ni < physbucket_from_all[nids_per_rank_cumul[r]+rca].nnucleimicrotexture; ni++ )
 					log_profiling_file << ";" << texbucket_from_all[(nids_per_rank_cumul[r]*2*nidealcomponents)+(rca*2*nidealcomponents)+(nidealcomponents+ni)]; //right part are data for RX
 				for ( uint32_t ni = physbucket_from_all[nids_per_rank_cumul[r]+rca].nnucleimicrotexture; ni < nidealcomponents; ni++ ) //add rest of fixed number of columns
 					log_profiling_file << ";";
@@ -506,7 +464,7 @@ void ensembleHdl::postprocess_write_mycas_mpifast( void )
 }
 
 
-void ensembleHdl::postprocess_init( void )
+void ensembleHdl::postprocess_init()
 {
 	//ensembleHdl first determines maximum local tsimend
 	double ensmin_tsimend = INFINITE;
@@ -543,7 +501,7 @@ void ensembleHdl::postprocess_init( void )
 
 
 //##MK::the postprocessing functions
-void ensembleHdl::postprocess_rediscr_kinetics( void )
+void ensembleHdl::postprocess_rediscr_kinetics()
 {
 	//thread based interpolation possible //##pragma but pending
 	//##MK::strategy cache-friendly when, as here, each grain is analyzed along all times
@@ -578,8 +536,8 @@ void ensembleHdl::postprocess_rediscr_kinetics( void )
 			ensemble_myCAs_nboxvol = ensemble_myCAs_nboxvol + theca_nboxvol;
 
 			//reset temporary collector for the theca to 0.0
-			for ( uint32_t n = 0; n < nmax; ++n ) { 
-				rediscr_myCA_allgrains_vol[n] = 0.0; 
+			for ( uint32_t n = 0; n < nmax; ++n ) {
+				rediscr_myCA_allgrains_vol[n] = 0.0;
 			}
 
 			//how much volume still left deformed?
@@ -670,7 +628,7 @@ void ensembleHdl::postprocess_rediscr_kinetics( void )
 }
 
 
-void ensembleHdl::postprocess_rediscr_macrotexture( void )
+void ensembleHdl::postprocess_rediscr_macrotexture()
 {
 	//thread based interpolation possible //##pragma but pending
 	//##MK::strategy cache-friendly if each grain is analyzed along all times
@@ -708,7 +666,7 @@ void ensembleHdl::postprocess_rediscr_macrotexture( void )
 			uint32_t nideal;
 			uint32_t idx;
 			//reset temporary collector for the theca to 0.0
-			for ( long n = 0; n < (nstandardlagen*nmax); ++n ) { 
+			for ( long n = 0; n < (nstandardlagen*nmax); ++n ) {
 				rediscr_myCA_allgrains_oridepvol[n] = 0.0;
 			}
 
@@ -778,8 +736,8 @@ void ensembleHdl::postprocess_rediscr_macrotexture( void )
 
 		//header
 		log_texture_file << "Step;RediscrTime/s;RANDOM-phi1-PHI-phi2";
-		
-		for ( uint32_t id = 0; id < standardlagen.size(); ++id) { 
+
+		for ( uint32_t id = 0; id < standardlagen.size(); ++id) {
 			log_texture_file << ";" << id << "-" << RAD2DEG(standardlagen[id].bunge1) << "-" << RAD2DEG(standardlagen[id].bunge2) << "-" << RAD2DEG(standardlagen[id].bunge3);
 		}
 		log_texture_file << ";SumRediscrVolume=" << (world_allCAs_nboxvol) << endl;
@@ -806,14 +764,14 @@ void ensembleHdl::postprocess_rediscr_macrotexture( void )
 
 #define SENDINGGSD		56
 
-void ensembleHdl::postprocess_rediscr_finalgrainsizedistribution( void )
+void ensembleHdl::postprocess_rediscr_finalgrainsizedistribution()
 {
 	if (myRank == MASTER ) { cout << "Sequential FinalGrainSizeDistribution collection." << endl; }
 	//uint32_t nmax = ensRediscretization.nslots;
 	double now = ensRediscretization.tensmax;
 
 	//each rank collects volume from all his nuclei at ensRediscretization.tensmax in all his automata,
-	//MK::if tsimend locally is < tensmax the final volume after completion of the local simulation is taken 
+	//MK::if tsimend locally is < tensmax the final volume after completion of the local simulation is taken
 	//MK::thus, assuming negligible volume change due to grain-growth
 	unsigned long ensemble_myCAs_nnuclei = 0;
 	if ( this->ensNucleationModel.tincubmodel == TINCUB_SITESATURATION ) {
@@ -907,7 +865,7 @@ void ensembleHdl::postprocess_rediscr_finalgrainsizedistribution( void )
 		ensMemGuard = ensMemGuard + (nRanks * sizeof(long));
 	}
 	//##MK::it is very likely that ens_nnuclei is populated but not assured so strictly speaking a barrier is necessary here
-	MPI_Barrier( MPI_COMM_WORLD ); //its wasnt before
+	MPI_Barrier( MPI_COMM_WORLD ); //its was not before
 
 	MPI_Gather( &ensemble_myCAs_nnuclei, 1, MPI_LONG, nnuclei_planned_world, 1, MPI_LONG, MASTER, MPI_COMM_WORLD );
 	MPI_Gather( &nid, 1, MPI_LONG, nnuclei_seeded_world, 1, MPI_LONG, MASTER, MPI_COMM_WORLD );
@@ -934,7 +892,7 @@ void ensembleHdl::postprocess_rediscr_finalgrainsizedistribution( void )
 cout << "Master outputs his own results nid=" << nid << endl;
 
 		//collect own results first
-		for ( long n = 0; n < nid; n++) { 
+		for ( long n = 0; n < nid; n++) {
 			finalgsdsum = finalgsdsum + rediscr_ens_allnuclei[n].finalvol;
 			struct agrain gr;
 			gr.vol = rediscr_ens_allnuclei[n].finalvol;
@@ -952,11 +910,11 @@ cout << "Master outputs his own results nid=" << nid << endl;
 	MPI_IO_FinalGSDInfoData* recvbuf = NULL;
 
 	for ( int r = 1; r < nRanks; r++ ) {
-		if (myRank == r ) { 
+		if (myRank == r ) {
 			MPI_Send( rediscr_ens_allnuclei, ensemble_myCAs_nnuclei, MPI_IO_FinalGSDInfoData_Type, MASTER, SENDINGGSD, MPI_COMM_WORLD );
 		}
 		//MASTER always collects
-		if (myRank == MASTER) { 
+		if (myRank == MASTER) {
 			nrecv = nnuclei_planned_world[r];
 			nrecvseeded = nnuclei_seeded_world[r];
 
@@ -999,7 +957,7 @@ cout << "Master outputs his own results nid=" << nid << endl;
 			//std::nth_element( finalgsd.begin(), finalgsd.begin()+nnn, finalgsd.end() ); not necessary because vector has already been strictly sorted
 			if (finalgsd.size() % 2 == 1) { //odd? -> take the center
 				finalgsdmedian = finalgsd[nnn].vol;
-			} 
+			}
 			else { //even --> take the linear average in the middle, //std::nth_element( vol2median.begin(), vol2median.begin()+nnn-1, vol2median.end() ); same story...
 				finalgsdmedian = 0.5*(finalgsd[nnn].vol + finalgsd[nnn-1].vol);
 			}
@@ -1034,7 +992,7 @@ cout << "Master outputs his own results nid=" << nid << endl;
 		double volnorm = 0.0;
 		double probability = 0.0;
 		//output probability plot raw data and final grain size distribution
-		for ( unsigned long n = 0; n < nnuclei_allranks_world; ++n ) { 
+		for ( unsigned long n = 0; n < nnuclei_allranks_world; ++n ) {
 			cumsum = cumsum + finalgsd[n].vol;
 			volnorm = finalgsd[n].vol / finalgsdmean;
 			probability = cumsum / finalgsdsum * 100.0;
@@ -1051,10 +1009,10 @@ cout << "Master outputs his own results nid=" << nid << endl;
 
 		delete [] nnuclei_planned_world;
 		nnuclei_planned_world = NULL;
-		ensMemGuard = ensMemGuard - (nRanks * sizeof(long)); 
+		ensMemGuard = ensMemGuard - (nRanks * sizeof(long));
 		delete [] nnuclei_seeded_world;
 		nnuclei_seeded_world = NULL;
-		ensMemGuard = ensMemGuard - (nRanks * sizeof(long)); 
+		ensMemGuard = ensMemGuard - (nRanks * sizeof(long));
 	}
 
 	delete [] rediscr_ens_allnuclei;
@@ -1063,7 +1021,7 @@ cout << "Master outputs his own results nid=" << nid << endl;
 }
 
 
-bool ensembleHdl::postprocess_rediscr_finalgrainsizedistribution_mpifast( void )
+bool ensembleHdl::postprocess_rediscr_finalgrainsizedistribution_mpifast()
 {
 	if (myRank == MASTER ) { cout << "Fast FinalGrainSizeDistribution collection." << endl; }
 	//IT IS NECESSARY A LARGE ENOUGH BUFFER IN THE MASTER TO COLLECT ALL GRAINS AT ONCE!
@@ -1071,7 +1029,7 @@ bool ensembleHdl::postprocess_rediscr_finalgrainsizedistribution_mpifast( void )
 	double now = ensRediscretization.tensmax;
 
 	//each rank collects volume from all his nuclei at ensRediscretization.tensmax in all his automata,
-	//MK::if tsimend locally is < tensmax the final volume after completion of the local simulation is taken 
+	//MK::if tsimend locally is < tensmax the final volume after completion of the local simulation is taken
 	//MK::thus, assuming negligible volume change due to grain-growth
 	int ensemble_myCAs_nnuclei = 0;
 	if ( this->ensNucleationModel.tincubmodel == TINCUB_SITESATURATION ) {
@@ -1198,8 +1156,8 @@ bool ensembleHdl::postprocess_rediscr_finalgrainsizedistribution_mpifast( void )
 		MPI_IO_FGSDComplete g;
 		g.finalvol = 0.0;		g.tincub = 0.0;		g.ideal = 0;	g.rank = 0;
 
-		for ( unsigned int k = 0; k < ensemble_all_nnuclei; ++k ) { 
-			finalgsd.push_back( g ); 
+		for ( unsigned int k = 0; k < ensemble_all_nnuclei; ++k ) {
+			finalgsd.push_back( g );
 		}
 	} //now finalgsd[] is safe to use to drop the grain by a MPI_Gatherv call
 
@@ -1246,7 +1204,7 @@ bool ensembleHdl::postprocess_rediscr_finalgrainsizedistribution_mpifast( void )
 			//std::nth_element( finalgsd.begin(), finalgsd.begin()+nnn, finalgsd.end() ); not necessary because vector has already been strictly sorted
 			if (nfgsd % 2 == 1) { //odd? -> take the center
 				finalgsdmedian = finalgsd[nnn].finalvol;
-			} 
+			}
 			else { //even --> take the linear average in the middle, //std::nth_element( vol2median.begin(), vol2median.begin()+nnn-1, vol2median.end() ); same story...
 				finalgsdmedian = 0.5*(finalgsd[nnn].finalvol + finalgsd[nnn-1].finalvol);
 			}
@@ -1273,7 +1231,7 @@ bool ensembleHdl::postprocess_rediscr_finalgrainsizedistribution_mpifast( void )
 		double volnorm = 0.0;
 		double probability = 0.0;
 		//output probability plot raw data and final grain size distribution
-		for ( unsigned long n = 0; n < nfgsd; ++n ) { 
+		for ( unsigned long n = 0; n < nfgsd; ++n ) {
 			cumsum = cumsum + finalgsd[n].finalvol;
 			volnorm = finalgsd[n].finalvol / finalgsdmean;
 			probability = cumsum / finalgsdsum * 100.0;
@@ -1311,7 +1269,7 @@ double caHdl::get_interpCellCount( uint32_t localid, double when )
 
 	if ( when >= this->tsimend ) { //MK::when RX was already complete local I the take final value stored in mydefgpool
 
-		if ( localid < mydefgpool.size() ) { 
+		if ( localid < mydefgpool.size() ) {
 			interpCellCount = mydefgpool[localid].cellcount;
 			return interpCellCount;
 		}
@@ -1335,7 +1293,7 @@ double caHdl::get_interpCellCount( uint32_t localid, double when )
 	if ( i > 0 && i < nmygrainevo ) {
 		//###disjunctness of rediscretization scheme has been assured by ensRediscretization
 		//only possible case left if (i < nmygrainevo ) {
-		//MK::here almost for sure cache-thrashing occuring as [i-1] and [i] are pointers to disjoint heap regions and localid on top of this is usually > L1 size
+		//MK::here almost for sure cache-thrashing occurring as [i-1] and [i] are pointers to disjoint heap regions and localid on top of this is usually > L1 size
 		double ti1 = mygrainevolution[i-1].localtime;
 		double cnti1 = mygrainevolution[i-1].localdatabucket[localid];
 

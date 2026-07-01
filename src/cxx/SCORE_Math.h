@@ -1,54 +1,9 @@
-/* 
-*	Copyright Markus K�hbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. K�hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. K�hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ J�lich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #ifndef __SCORE_MATH_H_INCLUDED__
 #define __SCORE_MATH_H_INCLUDED__
 
-//#include <stdlib.h>
 #include "SCORE_Random.h"
-//#include <vector> //#MK::?
 
 //pure nature
 #define _PI_					3.1415926535897932384626433832795
@@ -103,14 +58,17 @@
 //Quaternions i^2=j^2=k^2=-1, ij=-ji=k, jk = -kj=i, ki=-ik=j, q := (q_0, \textbf{q}) = (q_0, q_1, q_2, q_3)
 //all quaternions are meant as unit quaternions!
 
-#define P_EIJK					(+1.0) 		//MK::FOR USE_QUATLIB_DEGRAEF do not change, unless reading above reference! 
+#define P_EIJK					(+1.0) 		//MK::FOR USE_QUATLIB_DEGRAEF do not change, unless reading above reference!
 #define QUAT2EULER_EPSILON		(1.0e-14)
 
 //choose the respective quaternion library, because there are still differences in their definitions
 //YOU MAY DEFINE ONLY ONE OF THOSE AT A TIME!
-//#define USE_QUATLIB_DEGRAEF				//following Rowenhorst 2015
-#define USE_QUATLIB_DAMASK					//the implementations utilized in DAMASK v3.0.0
-//#define USE_QUATLIB_IMM					//utilized with the IMM
+//#define USE_QUATLIB_DEGRAEF
+//following Rowenhorst 2015
+#define USE_QUATLIB_DAMASK
+//the implementations utilized in DAMASK v3.0.0
+//#define USE_QUATLIB_IMM
+//utilized with the IMM
 
 //scattering modes
 #define REFERENCE_TO_ROTATED_REFERENCE			(0x01)
@@ -144,8 +102,8 @@ typedef struct euler313 * euler313P;
 class mathMethods
 {
 public:
-	mathMethods( void );
-	~mathMethods( void );
+	mathMethods();
+	~mathMethods();
 
 	void setprng( long s ); //MK::necessary so that the different ensembleHdl can set explicitly disjoint seeds so that not always the same nucleus orientations are being generated
 

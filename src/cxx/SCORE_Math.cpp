@@ -1,46 +1,4 @@
-/* 
-*	Copyright Markus K�hbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. K�hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. K�hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ J�lich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "SCORE_Math.h"
 //#include "SCORE_Random.h"
@@ -50,13 +8,13 @@
 //##MK: Quaternion algebra: q = -q define an equivalent rotation.
 
 
-mathMethods::mathMethods( void )
+mathMethods::mathMethods()
 {
 	r.init( MYMATH_STANDARD_SEED );
 }
 
 
-mathMethods::~mathMethods( void )
+mathMethods::~mathMethods()
 {
 }
 
@@ -69,15 +27,15 @@ void mathMethods::setprng( long s )
 
 void mathMethods::bubbleSort ( double arr [ ], int size ) // Sort components of a quaternion in ASCENDING order
 {
-	int last = size - 2; 
-	int isChanged = 1; 
+	int last = size - 2;
+	int isChanged = 1;
 
 	while ( last >= 0 && isChanged ) {
-		isChanged = 0; 
+		isChanged = 0;
 		for ( int k = 0; k <= last; k++ )
 			if ( arr[k] > arr[k+1] ) {
 				swap ( arr[k], arr[k+1] );
-				isChanged = 1; 
+				isChanged = 1;
 			}
 
 		last--;
@@ -140,7 +98,7 @@ double mathMethods::poissondistribution( double lambda, long k )
 
 double mathMethods::RayleighDistrPDF( double x, double sigma )
 {
-	//evalutes PDF of a Rayleigh distribution with parameter sigma
+	//evaluates PDF of a Rayleigh distribution with parameter sigma
 	double res =  (x < 0.0) ? 0.0 : ( x/SQR(sigma) * exp(-0.5*SQR(x/sigma)) );
 	return res;
 }
@@ -181,13 +139,13 @@ double mathMethods::sign(double A, double B) {
 
 double mathMethods::huge(double A) {
 	//C++ equivalent to fortran intrinsic sign(A,B)
-	//HUGE(X) returns the largest number that is not an infinity in the model of the type of X. 
+	//HUGE(X) returns the largest number that is not an infinity in the model of the type of X.
 	//cannot assumed to be equivalent to the DAMASK function if a is not pReal kind 8
 	//no type checking here ###
-	return 1.8e+308; //std::numeric_limits<double>:: max();
+	return numeric_limits<double>:: max();
 }
 
-//Select values from two arrays according to a logical mask. The result is equal to TSOURCE if MASK is .TRUE., or equal to FSOURCE if it is .FALSE.. 
+//Select values from two arrays according to a logical mask. The result is equal to TSOURCE if MASK is .TRUE., or equal to FSOURCE if it is .FALSE..
 bool mathMethods::is_DAMASK_NaN( double a, double left, double right ) {
 	if ( left > right ) return true;
 	else				return false;
@@ -195,7 +153,7 @@ bool mathMethods::is_DAMASK_NaN( double a, double left, double right ) {
 
 double mathMethods::math_limit(double a, double left, double right) {
 	//QUICKASSERT( left < right ); //see comment in quat2euler_damask in case of gimbal lock
-	//C++ equivalent to Fortran DAMASK math_limit(a, left, right) 
+	//C++ equivalent to Fortran DAMASK math_limit(a, left, right)
 	//when present(left) == true && present(right) == true
 	//will return NaN if left > right
 		/*use prec, only:  DAMASK_NaN
@@ -211,7 +169,7 @@ double mathMethods::math_limit(double a, double left, double right) {
 	double arg2 = right;
 	double math_limit = MIN( MAX(arg1, a), arg2 );
 	//merge( DAMASK_NaN, math_limit, because of left= -1 > right=1 --> false, implicit false, hence
-	return math_limit;	
+	return math_limit;
 }
 
 
@@ -230,7 +188,7 @@ void mathMethods::multiply_quat( double* q1, double* q2, double *q1q2 ) {
 void mathMethods::multiply_quat_degraef( double *p, double *q, double* pq ) {
 	//Hamilton product of two quaternions, Eq.5 in the Rowenhorst2015
 	pq[0] = p[0]*q[0] - p[1]*q[1] -   p[2]*q[2] - p[3]*q[3];
-	
+
 	pq[1] = q[0]*p[1] + p[0]*q[1] + (+P_EIJK*p[2]*q[3] - P_EIJK*p[3]*q[2]);
 	pq[2] = q[0]*p[2] + p[0]*q[2] + (-P_EIJK*p[1]*q[3] + P_EIJK*p[3]*q[1]);
 	pq[3] = q[0]*p[3] + p[0]*q[3] + (+P_EIJK*p[1]*q[2] - P_EIJK*p[2]*q[1]);
@@ -258,7 +216,7 @@ void mathMethods::quat_on_vec3d_degraef( double *p, double *r, double* rp ) {
 	double pre3 = 2.0*P_EIJK*p[0]; //2P*p0(p x r)
 	rp[0] = pre1*r[0] + pre2*p[1] + pre3*(+p[2]*r[3] - p[3]*r[2]);
 	rp[1] = pre1*r[1] + pre2*p[2] + pre3*(-p[1]*r[3] + p[3]*r[1]);
-	rp[2] = pre1*r[2] + pre2*p[3] + pre3*(+p[1]*r[2] - p[2]*r[1]);	
+	rp[2] = pre1*r[2] + pre2*p[3] + pre3*(+p[1]*r[2] - p[2]*r[1]);
 }
 
 void mathMethods::quat_on_vec3d_imm( double *p, double *r, double* rp ) {
@@ -279,7 +237,7 @@ void mathMethods::quat_on_vec3d_imm( double *p, double *r, double* rp ) {
 	//x,y,z vector3d v
 	rp[0] = (r11 * r[0]) + (r12 * r[1]) + (r13 * r[2]);
 	rp[1] = (r21 * r[0]) + (r22 * r[1]) + (r23 * r[2]);
-	rp[2] = (r31 * r[0]) + (r32 * r[1]) + (r33 * r[2]);	
+	rp[2] = (r31 * r[0]) + (r32 * r[1]) + (r33 * r[2]);
 }
 
 
@@ -301,19 +259,19 @@ void mathMethods::euler2quat_degraef( double *bunge, double* q ) {
 	double delta = 0.5*(bunge[0]-bunge[2]);
 	double c = cos(0.5*bunge[1]);
 	double s = sin(0.5*bunge[1]);
-	
+
 	q[0] = c*cos(sigma);
 	q[1] = -1.0*P_EIJK*s*cos(delta);
 	q[2] = -1.0*P_EIJK*s*sin(delta);
 	q[3] = -1.0*P_EIJK*c*sin(sigma);
-	
+
 	//up to this point consistent with DAMASK only for P_EIJK=+1, however in DAMASK no enforced flipping into upper hemisphere
-	
+
 	//sign reversal to flip to upper hemisphere if q[0] is negative
 	if ( q[0] < 0.0 )
 	    signreversal_quaternion( q );
-		
-	//MK::is not obviously consistent with DAMASK at least because upper hemisphere restriction is not considered	
+
+	//MK::is not obviously consistent with DAMASK at least because upper hemisphere restriction is not considered
 }
 
 void mathMethods::euler2quat_damask( double *bunge, double* q ) {
@@ -321,10 +279,10 @@ void mathMethods::euler2quat_damask( double *bunge, double* q ) {
 	//consistent with DAMASK v3.0.0-alpha6
 	double sigma = 0.5*(bunge[0]+bunge[2]);
 	double delta = 0.5*(bunge[0]-bunge[2]);
-	
+
 	double c = cos(0.5*bunge[1]);
 	double s = sin(0.5*bunge[1]);
-	
+
 	q[0] =        c * cos(sigma);
 	q[1] = -1.0 * s * cos(delta); //the -1.0 in the vector part convert to passive by implementing the conjugate
 	q[2] = -1.0 * s * sin(delta);
@@ -336,7 +294,7 @@ void mathMethods::euler2quat_damask( double *bunge, double* q ) {
 }
 
 void mathMethods::euler2quat_imm( double *bunge, double* q ) {
-	//OK, 20130326MK convention: Bunge ZXZ, which represents the (3,1,3) case analyzed in: Diebel 2006 
+	//OK, 20130326MK convention: Bunge ZXZ, which represents the (3,1,3) case analyzed in: Diebel 2006
 	//Representing Attitude: Euler Angles, Unit Quaternions, and Rotation Vectors, James Diebel, Stanford University, Stanford, California 94301-9010, Email: diebel@stanford.edu
 	//mind utilization of addition theorems as validated with www.wolframalpha.com
 	//cos(a+b) = c(a+b) = cacb-sasb
@@ -344,10 +302,10 @@ void mathMethods::euler2quat_imm( double *bunge, double* q ) {
 	//sin(a+b) = s(a+b) = sacb+casb
 	//sin(a-b) = s(a-b) = sacb-casb
 	//Diebel PSI<=>phi1, theta<=>Phi, PHI<=>phi2
-	
+
 	double sigma = (bunge[0]+bunge[2])/2;
 	double delta = (bunge[0]-bunge[2])/2;
-	
+
 	double c = cos(bunge[1]/2);
 	double s = sin(bunge[1]/2);
 
@@ -378,7 +336,7 @@ void mathMethods::quat2euler_degraef( double *q, double* bunge ) {
 	double q12 = SQR(q[1]) + SQR(q[2]);
 	double varkappa = sqrt(q03*q12);
 	//q03 and q12 positive so sqrt is positive, however sign bit for small number may be set therefore fabs
-	
+
 	if ( fabs(varkappa) > QUAT2EULER_EPSILON ) { //varkappa =/= most likely case, no gimbal lock
 		double _varkappa = 1.0/varkappa;
 		bunge[0] = atan2( (q[1]*q[3] - P_EIJK*q[0]*q[2]) * _varkappa, (-1.0*P_EIJK*q[0]*q[1] - q[2]*q[3]) * _varkappa );
@@ -409,15 +367,15 @@ void mathMethods::quat2euler_degraef( double *q, double* bunge ) {
 
 void mathMethods::quat2euler_damask( double *q, double* bunge ) {
 	//passive orientation unit quaternion in Bunge Euler orientation passive(radians), gimbal lock can occur if \Phi = 0 ...
-	
+
 	//passive-->active
 	q[1] *= -1.0;
 	q[2] *= -1.0;
 	q[3] *= -1.0;
-	
+
 	//since formulas are defined for active rotations
 	bunge[1] = acos( 1.0 - 2.0*( SQR(q[1])+SQR(q[2]) ) );
-	
+
 	if ( fabs(bunge[1]) < 1.0e-6 ) { //inefficient because least likely
 		//the math_limit call has argument left := -1.0 and right := 1.0 so left > right = false, therefore math_limit(q[0],-1.0,1.0) returns not DAMASK_NaN but q[0]
 		bunge[0] = sign( 2.0*acos(math_limit(q[0],-1.0,1.0)), q[3] ); //not a hemisphere flipping because angle is allowed in either +-
@@ -427,7 +385,7 @@ void mathMethods::quat2euler_damask( double *q, double* bunge ) {
 		bunge[0] = atan2( +1.0*q[0]*q[2] + q[1]*q[3], q[0]*q[1] - q[2]*q[3] );
 		bunge[2] = atan2( -1.0*q[0]*q[2] + q[1]*q[3], q[0]*q[1] + q[2]*q[3]);
 	}
-	
+
 	//ensure correct range
 	if ( bunge[0] < 0.0 ) 	bunge[0] += 2.0*_PI_;
 	if ( bunge[1] < 0.0 )	bunge[1] += _PI_;
@@ -454,7 +412,7 @@ void mathMethods::quat2euler_imm( double *q, double* bunge ) {
 	if( cosPHI > (1.0 - DOUBLE_ACCURACY) ) cosPHI = 1.0;
 	if( cosPHI < (-1.0 + DOUBLE_ACCURACY) ) cosPHI = -1.0;
 
-	//now application of acos function is safe to use... 
+	//now application of acos function is safe to use...
 	PHI = acos( cosPHI );
 
 	//special case: PHI=0.0, q[1]=q[2]=0 -->cosPHI=1
@@ -465,7 +423,7 @@ void mathMethods::quat2euler_imm( double *q, double* bunge ) {
 	//double tmp1 = atan2( y1, x1 );
 	//double tmp2 = atan2( y0, x0 );
 
-	//according to WolframAlpha atan2(y/a,x/a)-atan2(y,x) = 0 f�r a, x, y positive
+	//according to WolframAlpha atan2(y/a,x/a)-atan2(y,x) = 0 fuer a, x, y positive
 	//according to the same ref atan2(-y/a,-x/a)-atan2(y/a,x/a)=-pi
 	if( SQR(sP) > DOUBLE_ACCURACY ) {
 		phi2 = atan2( y0 / sP, x0 / sP ); //##MK::atan2( y0, x0 )
@@ -476,7 +434,7 @@ void mathMethods::quat2euler_imm( double *q, double* bunge ) {
 		phi1 = atan2( 2*(q[1]*q[2] + q[0]*q[3]), (SQR(q[0]) + SQR(q[1]) - SQR(q[2]) - SQR(q[3])) );
 		phi2 = 0.0; //arbitrary choice, Rollett for instance partitions equally phi1 and phi2 as in the case PHI = 0 but:: atan2(a12,a11) for phi1 is for instance inconsistent with Diebel
 
-		//more safe but equally heuristical is to make use of Melchers acos(q[0]^2 - q[3]^2) = phi1+phi2 and partition randomly the angular contribution in the case PHI=0 
+		//more safe but equally heuristical is to make use of Melchers acos(q[0]^2 - q[3]^2) = phi1+phi2 and partition randomly the angular contribution in the case PHI=0
 		//or acos(q[1]^2 - q[2]^2) = phi1 - phi2
 	}
 
@@ -488,7 +446,7 @@ void mathMethods::quat2euler_imm( double *q, double* bunge ) {
 
 	bunge[0] = phi1;
 	bunge[1] = PHI;
-	bunge[2] = phi2; //following the notation order used in Diebel, James 2006	
+	bunge[2] = phi2; //following the notation order used in Diebel, James 2006
 }
 
 
@@ -535,7 +493,7 @@ double mathMethods::disori_angle_oriquat_cubic_degraef( double* p, double* q ) {
 	double a2 = pqinv[2];
 	double a3 = pqinv[3];
 	double f = 1.0 / sqrt( 2.0 );
-	
+
 	double expr[24];
 	expr[0] = a0;					expr[1] = a1;					expr[2] = a2;					expr[3] = a3;					//Eq. 7a
 	expr[4] = f*(a0+a1);			expr[5] = f*(a0-a1);			expr[6] = f*(a2+a3);			expr[7] = f*(a2-a3);			//Eq. 7b
@@ -543,7 +501,7 @@ double mathMethods::disori_angle_oriquat_cubic_degraef( double* p, double* q ) {
 	expr[12] = f*(a0+a3);			expr[13] = f*(a0-a3);			expr[14] = f*(a1+a2);			expr[15] = f*(a1-a2);			//Eq. 7d
 	expr[16] = 0.5*(a0+a1+a2+a3);	expr[17] = 0.5*(a0+a1-a2-a3);	expr[18] = 0.5*(a0-a1+a2-a3); 	expr[19] = 0.5*(a0-a1-a2+a3); 	//Eq. 7e
 	expr[20] = 0.5*(a0+a1+a2-a3);	expr[21] = 0.5*(a0+a1-a2+a3);	expr[22] = 0.5*(a0-a1+a2+a3);	expr[23] = 0.6*(a0-a1-a2-a3);	//Eq. 7f
-	
+
 	double omega = 0.0;
 	for ( unsigned int i = 0; i < 24; i++ ) {
 		double b0 = fabs(expr[i]); //acos(fabs(x)) is minimal for fabs(x) maximal
@@ -571,16 +529,16 @@ double mathMethods::disori_angle_oriquat_cubic_imm( double* p, double* q ) {
 	qm1[2] = -1.0 * q[2];
 	qm1[3] = -1.0 * q[3];
 
-	double r[4]; //Resulting quaternion, ...ONE COMPUTES q^-1p, which is 
-	//because of the lacking commutativity of quaternion multiplication not pq^-1 it is however only because of 
+	double r[4]; //Resulting quaternion, ...ONE COMPUTES q^-1p, which is
+	//because of the lacking commutativity of quaternion multiplication not pq^-1 it is however only because of
 	//switching symmetry equivalent to p^-1q
 
-	multiply_quat_degraef( qm1, p, r ); 
+	multiply_quat_degraef( qm1, p, r );
 	//MK:: was p post applied to qm1 but that was not consistent with MTex, in particular not with -(q^-1) = -q0,q1,q2,q3
 	//the consistency with MTex was in fact not coincidentally, because, MTex defines all orientation math ACTIVELY,
 	//consequently given in MTex two orientations o1 and o2 the following results inv(o1)*o2 <=> inv(o2)*o1 does exactly
 	//that
-	//##MK::the working hypothesis is that the specifying of MTex Bunge Euler angles pertains only to the choice of 
+	//##MK::the working hypothesis is that the specifying of MTex Bunge Euler angles pertains only to the choice of
 	//the axis setup i.e. that MTex defines the rotation order with phi_1, PHI, phi_2 via ZXZ however, it does not
 	//render the MTex Euler angle numeric value triplets representing Bunge-Euler-angles in passive convention, they
 	//are the corresponding transpose <=> inverse!
@@ -651,12 +609,12 @@ void mathMethods::normalize_quaternion( double* q, double *uq ) {
 double mathMethods::rotationangle_quaternion( double* q ) {
 	if ( fabs(q[0]) < (1.0 - DOUBLE_ACCURACY) ) { //most likely argument safely within range [-1, +1]
 		return 2.0*acos(q[0]);
-	} 
+	}
 	else {
 		if ( q[0] < 0.0 ) //arg == -1.00000000000000000000
 			return _PI_;
 
-		return 0.0; //arg == 1.000000000000 
+		return 0.0; //arg == 1.000000000000
 	}
 }
 
@@ -686,7 +644,7 @@ void mathMethods::rnd_quat_shoemake( double *q ) {
 	q[0] *= qnorm;
 	q[1] *= qnorm;
 	q[2] *= qnorm;
-	q[3] *= qnorm;	
+	q[3] *= qnorm;
 }
 
 
@@ -930,8 +888,8 @@ void mathMethods::oriquat2sst_cubic_ipf_quat2pos( double* q1, double* refaxis, d
 		if ( tt > (1.0 - DOUBLE_ACCURACY) ) { tt = 1.0; }
 
 		double psi = 0.0; //capture discontinuity of the atan2 at 0,0
-		if ( fabs(hbar[0]) > DOUBLE_ACCURACY && fabs(hbar[1]) > DOUBLE_ACCURACY ) { 
-			psi = atan2( hbar[1], hbar[0] ); 
+		if ( fabs(hbar[0]) > DOUBLE_ACCURACY && fabs(hbar[1]) > DOUBLE_ACCURACY ) {
+			psi = atan2( hbar[1], hbar[0] );
 		}
 
 		//psi is limited against pi
@@ -989,7 +947,7 @@ void mathMethods::oriquat2sst_cubic_ipf_pos2rgb( double *pos, unsigned char *rgb
 	//cos(alpha) = (0,0,1)*(1,1,1)/(1*sqrt(3)) --> 54.74...., phi = 45...
 	double xo = pos[0];					double yo = pos[1];
 
-	//heuristic catch to avoid running in on-the-vertex-location singularities 
+	//heuristic catch to avoid running in on-the-vertex-location singularities
 	/*guideline implementation of the scaling approach Molodov
 	scaling suggestion from K. Molodov HKL and TSL implement different white
 	points and different strategies with respect to how to rescale the RGB
@@ -1036,7 +994,7 @@ void mathMethods::oriquat2sst_cubic_ipf_pos2rgb( double *pos, unsigned char *rgb
 	double absobbar = fabs(pow( (SQR(xo-xbbar) + SQR(yo-ybbar)) , 0.5));
 
 	double k1r = pow( (yo/xo), 2.0 );
-	//x0 == zero already excluded by R vertex proximity check and the coordiante system choice x>=y
+	//x0 == zero already excluded by R vertex proximity check and the coordinate system choice x>=y
 	double xrbar = pow( (2+k1r), 0.5);
 	xrbar = xrbar - 1;
 	xrbar /= (k1r + 1.0);
@@ -1110,7 +1068,7 @@ void mathMethods::disori_fromoriquat_cubic_imm( double* p, double* q, double* qu
 	int mi;
 	double max=0.0;
 
-	for( int i=0;i<6;i++ )						//Determing the quaternion with the maximal component and the component itself
+	for( int i=0;i<6;i++ )						//Determining the quaternion with the maximal component and the component itself
 		for( int j=0;j<4;j++ )
 		{
 			if( fabs(r0[i][j]) > max )
@@ -1126,7 +1084,7 @@ void mathMethods::disori_fromoriquat_cubic_imm( double* p, double* q, double* qu
 	rq[3] = fabs( r0[mi][3] );
 
 	bubbleSort( rq,4 );						//Sorting into ascending order, because a desorientation in the SST
-											//requires a quaternion with q0>=q1>=q2>=q3 which represents a minimal 
+											//requires a quaternion with q0>=q1>=q2>=q3 which represents a minimal
 	quat[0] = rq[3];						//rotation angle and an axis fulfilling h>k>l
 	quat[1] = rq[2];
 	quat[2] = rq[1];

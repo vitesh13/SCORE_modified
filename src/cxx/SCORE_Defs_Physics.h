@@ -1,46 +1,5 @@
-/* 
-*	Copyright Markus Kühbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
+// SPDX-License-Identifier: GPL-3.0-or-later
 
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
 #ifndef __SCORE_DEFS_PHYSICS_H_INCLUDED__
 #define	__SCORE_DEFS_PHYSICS_H_INCLUDED__
 
@@ -57,6 +16,7 @@
 
 //conversion of SI units for specific order of magnitude community standards
 #define MICRON2METER						(1.0e-6)
+#define METER2MICRON						(1.0e6)
 #define SCALING_DEFAULT_DISDENS				(1.0e14)				//m^2
 
 
@@ -110,9 +70,8 @@
 //default values in the construction phase
 #define DEFAULT_SIMID						0
 #define DEFAULT_CELLSIZE					(1e-6)
-#define DEFAULT_SHEARMODULUS				(2.7e10)		//RT pure aluminium
-#define DEFAULT_BURGERSVECTOR				(2.86e-10)	//RT pure aluminium
-#define DEFAULT_PUREALU_C					(1.0)
+#define DEFAULT_SHEARMODULUS				(2.7e10) // pure aluminium
+#define DEFAULT_BURGERSVECTOR				(2.86e-10)	//pure aluminium
 #define DEFAULT_PUREALU_TMELT				(933.0)
 
 #define DEFAULT_SMALL_NUMBER				(1e-6)
@@ -186,7 +145,7 @@
 #define	LAGB_TO_HAGB_TRANS					((15.0)/(180.0)*(_PI_))
 
 //MK::clustering nucleation model
-#define DEFAULT_KMAX_POISSRND				5000 
+#define DEFAULT_KMAX_POISSRND				5000
 #define DEFAULT_MASTERMATERN_MAXRAD			(0.1)
 
 //MK::Diehl/Kuehbach conversion of Kernel Average Misorientation in Dislocation density

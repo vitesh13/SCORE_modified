@@ -1,46 +1,4 @@
-/* 
-*	Copyright Markus Kühbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #ifndef __SCORE_KERNEL_H_INCLUDED__
 //#define __SCORE_KERNEL_H_INCLUDED__
@@ -48,12 +6,12 @@
 #include "SCORE_Kernel.h"
 
 
-void caHdl::write_rxfrontstats( void )
+void caHdl::write_rxfrontstats()
 {
 	//I/O interaction
 	stringstream log_rxfrontstats_fname;
 	ofstream log_rxfrontstats_file;
-	
+
 	log_rxfrontstats_fname << "SCORE." << myensHdl->simid << ".MyRank." << myensHdl->myRank << ".JobID." << this->jobid << ".RXFrontStats.csv";
 #ifdef REPORTSTYLE_DEVELOPER
 	cout << "File " << log_rxfrontstats_fname.str().c_str() << " is opened now" << endl;
@@ -72,12 +30,12 @@ void caHdl::write_rxfrontstats( void )
 }
 
 
-void caHdl::write_ThreadProfilingSummarySynthMachine( void )
+void caHdl::write_ThreadProfilingSummarySynthMachine()
 {
 	//I/O interaction ASCII
 	stringstream log_tprof_fname;
 	ofstream log_tprof_file;
-	
+
 	log_tprof_fname << "SCORE." << myensHdl->simid << ".MyRank." << myensHdl->myRank << ".JobID." << this->jobid << ".ThreadProfilingSynthesis.csv";
 #ifdef REPORTSTYLE_DEVELOPER
 	cout << "File " << log_tprof_fname.str().c_str() << " is opened now" << endl;
@@ -90,7 +48,7 @@ void caHdl::write_ThreadProfilingSummarySynthMachine( void )
 
 	//header
 	log_tprof_file << "IntegrationStep;X;";
-	for ( uint32_t props = 0; props < THREAD_PROFILING_NPROPS_SYNTH; props++ ) { 
+	for ( uint32_t props = 0; props < THREAD_PROFILING_NPROPS_SYNTH; props++ ) {
 		for ( uint32_t r = 0; r < nreg; r++ ) log_tprof_file << ";" << "Thread-" << r;
 	}
 	log_tprof_file << endl;
@@ -160,12 +118,12 @@ void caHdl::write_ThreadProfilingSummarySynthMachine( void )
 }
 
 
-void caHdl::write_ThreadProfilingSummaryGrowthMachine( void )
+void caHdl::write_ThreadProfilingSummaryGrowthMachine()
 {
 	//I/O interaction ASCII
 	stringstream log_tprof_fname;
 	ofstream log_tprof_file;
-	
+
 	log_tprof_fname << "SCORE." << myensHdl->simid << ".MyRank." << myensHdl->myRank << ".JobID." << this->jobid << ".ThreadProfilingGrowth.csv";
 #ifdef REPORTSTYLE_DEVELOPER
 	cout << "File " << log_tprof_fname.str().c_str() << " is opened now" << endl;
@@ -178,7 +136,7 @@ void caHdl::write_ThreadProfilingSummaryGrowthMachine( void )
 
 	//header
 	log_tprof_file << "Step;Time/s;X;";
-	for ( uint32_t props = 0; props < THREAD_PROFILING_NPROPS_GROWTH; props++ ) { 
+	for ( uint32_t props = 0; props < THREAD_PROFILING_NPROPS_GROWTH; props++ ) {
 		for ( uint32_t r = 0; r < nreg; r++ ) log_tprof_file << ";" << "Thread-" << r;
 	}
 	log_tprof_file << endl;
@@ -241,11 +199,11 @@ void caHdl::write_ThreadProfilingSummaryGrowthMachine( void )
 }
 
 
-void caHdl::write_grainevolution_ascii( void )
+void caHdl::write_grainevolution_ascii()
 {
 	stringstream log_grainevo_fname;
 	ofstream log_grainevo_file;
-	
+
 	log_grainevo_fname << "SCORE." << myensHdl->simid << ".MyRank." << myensHdl->myRank << ".JobID." << this->jobid << ".SingleGrainData.csv";
 #ifdef REPORTSTYLE_DEVELOPER
 	cout << "File " << log_grainevo_fname.str().c_str() << " is opened now" << endl;
@@ -276,7 +234,7 @@ void caHdl::write_grainevolution_ascii( void )
 	for ( uint32_t dgr = 0; dgr < ndisjoint_defgrains; dgr++ ) {
 		uint32_t oriid = mydefgpool[dgr].caori;
 
-		log_grainevo_file << dgr << ";;;;;" << myoripool[oriid].bunge1 << ";" << myoripool[oriid].bunge2 << ";" << myoripool[oriid].bunge3 << ";" << myoripool[oriid].closestideal; 
+		log_grainevo_file << dgr << ";;;;;" << myoripool[oriid].bunge1 << ";" << myoripool[oriid].bunge2 << ";" << myoripool[oriid].bunge3 << ";" << myoripool[oriid].closestideal;
 
 		//yeah, it hits caches badly I know, as matrix transposes do ...
 		for ( uint32_t s = 0; s < loginfo_grainevo_cnt; s++) {
@@ -312,7 +270,7 @@ void caHdl::write_grainevolution_ascii( void )
 }
 
 
-void caHdl::write_grainevolution_binary( void )
+void caHdl::write_grainevolution_binary()
 {
 	uint32_t ndisjoint_defgrains = mydefgpool.size();
 	uint32_t ndisjoint_grains = ndisjoint_defgrains + myrxgpool.size(); //rxg grains written after the deformed ones
@@ -419,7 +377,7 @@ void caHdl::write_grainevolution_binary( void )
 }
 
 
-void caHdl::write_PercolationProfilingSummary( void )
+void caHdl::write_PercolationProfilingSummary()
 {
 	stringstream log_tprof_fname;
 	ofstream log_tprof_file;
@@ -443,7 +401,7 @@ void caHdl::write_PercolationProfilingSummary( void )
 }
 
 
-void caHdl::write_rxareaprofile_ascii( void )
+void caHdl::write_rxareaprofile_ascii()
 {
 	//I/O
 	stringstream csv_fnm;
@@ -486,7 +444,7 @@ void caHdl::write_rxareaprofile_ascii( void )
 
 #define MPIIO_STRIPESIZE	((1024*1024)*10)
 
-void caHdl::ompcrit_write_voxeldata_coloring_regions( void )
+void caHdl::ompcrit_write_voxeldata_coloring_regions()
 {
 	//region topology
 	uint32_t npx = this->regions[MASTER]->thePartitioning.nreg_rdx; //1 required
@@ -675,6 +633,7 @@ void caHdl::ompcrit_write_voxeldata_coloring_grainids( string postfix )
 }
 
 
+/*
 void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char mode )
 {
 	//master executes this has to pull from neighboring threads memory
@@ -760,10 +719,10 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 								img_rgba[4*c + ALPHACHAN ] = myoripool[oid].RGB_A;
 							} //leave gridvalue < ndg BLACK
 						}
-						/*if ( gridvalue == CURRENTLY_INFECTED ) {
-							//read cellStatii and update later for now leave BLACK!
-						}*/
-						//else leave definately BLACK
+						//if ( gridvalue == CURRENTLY_INFECTED ) {
+						//	//read cellStatii and update later for now leave BLACK!
+						//}
+						//else leave definitely BLACK
 					}
 					else if ( mode == COLORIZE_DEF_LEAVE_RX_BLACK ) {
 						if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //most likely
@@ -775,10 +734,10 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 								img_rgba[4*c + ALPHACHAN ] = myoripool[oid].RGB_A;
 							} //leave RX BLACK
 						}
-						/*if ( gridvalue == CURRENTLY_INFECTED ) {
-							//read cellStatii and update later for now leave BLACK!
-						}*/
-						//else leave definately BLACK
+						//if ( gridvalue == CURRENTLY_INFECTED ) {
+						//	//read cellStatii and update later for now leave BLACK!
+						//}
+						//else leave definitely BLACK
 					}
 					else { //COLORIZE_RX_RHOGREYSCALE_DEFORMED
 						if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) {
@@ -791,10 +750,10 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 							}
 							else { //>= ndg
 								//else if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //implicitly >= ndg and explicitly <= CA_GRAINIDS_MAXIMUM < CURRENTLY_INFECTED by definition! hence implicitly RX because && >= ndg
-								/*img_rgba[4*c + REDCHAN ] = UCHAR_RANGE_MIN;
-								img_rgba[4*c + GREENCHAN ] = UCHAR_RANGE_MAX; //MK::DEBUG mask RX grains as pure green
-								img_rgba[4*c + BLUECHAN ] = UCHAR_RANGE_MIN;
-								img_rgba[4*c + ALPHACHAN ] = UCHAR_RANGE_MAX;*/
+								//img_rgba[4*c + REDCHAN ] = UCHAR_RANGE_MIN;
+								//img_rgba[4*c + GREENCHAN ] = UCHAR_RANGE_MAX; //MK::DEBUG mask RX grains as pure green
+								//img_rgba[4*c + BLUECHAN ] = UCHAR_RANGE_MIN;
+								//img_rgba[4*c + ALPHACHAN ] = UCHAR_RANGE_MAX;
 								//#######changing masking and instead IPFZ colorize RXGrains as in COLORIZE_RX
 								oid = myrxgpool[gridvalue-ndg].caori;
 								img_rgba[4*c + REDCHAN ] = myoripool[oid].RGB_R;
@@ -803,12 +762,11 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 								img_rgba[4*c + ALPHACHAN ] = myoripool[oid].RGB_A;
 							}
 						}
-						/*else { colorize > CA_GRAINIDS_MAXIMUM,i.e. implicitly == CURRENTLY_INFECTED later, i.e. infected, thus leave initial RGB assignment and explicitly set ALPHACHAN again
-							img_rgba[4*c + REDCHAN ] = UCHAR_RANGE_MAX; //mask currently infected cells as pure red
-							img_rgba[4*c + GREENCHAN ] = UCHAR_RANGE_MIN;
-							img_rgba[4*c + BLUECHAN ] = UCHAR_RANGE_MIN;
-							img_rgba[4*c + ALPHACHAN] = UCHAR_RANGE_MAX;
-						}*/
+						//else { colorize > CA_GRAINIDS_MAXIMUM,i.e. implicitly == CURRENTLY_INFECTED later, i.e. infected, thus leave initial RGB assignment and explicitly set ALPHACHAN again
+						//	img_rgba[4*c + REDCHAN ] = UCHAR_RANGE_MAX; //mask currently infected cells as pure red
+						//	img_rgba[4*c + GREENCHAN ] = UCHAR_RANGE_MIN;
+						//	img_rgba[4*c + BLUECHAN ] = UCHAR_RANGE_MIN;
+						//	img_rgba[4*c + ALPHACHAN] = UCHAR_RANGE_MAX;
 					}
 
 					c++; //stitching of the image occurs implicitly as yregion is increased
@@ -862,10 +820,10 @@ void caHdl::ompcrit_write_zsection_coloring_ipfz( double zpos, double xnow, char
 							img_rgba[cx + ALPHACHAN ] = UCHAR_RANGE_MAX;
 						}
 						else {
-							/*img_rgba[c + REDCHAN ] = UCHAR_RANGE_MIN;
-							img_rgba[c + GREENCHAN ] = UCHAR_RANGE_MAX; //MK::DEBUG mask RX grains as pure green
-							img_rgba[c + BLUECHAN ] = UCHAR_RANGE_MIN;
-							img_rgba[c + ALPHACHAN ] = UCHAR_RANGE_MAX;*/
+							//img_rgba[c + REDCHAN ] = UCHAR_RANGE_MIN;
+							//img_rgba[c + GREENCHAN ] = UCHAR_RANGE_MAX; //MK::DEBUG mask RX grains as pure green
+							//img_rgba[c + BLUECHAN ] = UCHAR_RANGE_MIN;
+							//img_rgba[c + ALPHACHAN ] = UCHAR_RANGE_MAX;
 							//#######changing masking and instead IPFZ colorize RXGrains as in COLORIZE_RX
 							oid = myrxgpool[gridvalue-ndg].caori;
 							img_rgba[cx + REDCHAN ] = myoripool[oid].RGB_R;
@@ -920,6 +878,7 @@ void caHdl::ompcrit_write_zsection_looping_ipfz( double rxfraction, char thatmod
 		ompcrit_write_zsection_coloring_ipfz( rendering_atthisZPos.at(zr), rxfraction, thatmode );
 	}
 }
+*/
 
 
 void caHdl::ompcrit_clarify_status_infectedcells( double rxthreshold ) {
@@ -928,9 +887,9 @@ void caHdl::ompcrit_clarify_status_infectedcells( double rxthreshold ) {
 	//thus, once a cell is infected only the myRXFrontLists know the initial and future assignment, therefore we require a function
 	//which collects for all such cells the current grain assignment
 	//most naively one could for each pixel to print when hitting a CURRENTLY_INFECTED scan all lists in all memregions to find that particular cell carrying the information
-	//however this is O(N^2) complexity, better, compile and cache the assignments once and thereafter operate over all these cells to 
+	//however this is O(N^2) complexity, better, compile and cache the assignments once and thereafter operate over all these cells to
 	//modify within the image all those pixels at which an infection happened, resulting in O(N) complexity
-	//if ( omp_get_thread_num() != MASTER ) 
+	//if ( omp_get_thread_num() != MASTER )
 	//	return;
 
 	//first of all delete all old region entries, because the structure evolves, hence the assignments change
@@ -990,7 +949,7 @@ void caHdl::ompcrit_clarify_status_infectedcells( double rxthreshold ) {
 				rstatii->push_back( ac );
 			}
 		}
-		
+
 		//hand over pointer to the memory which stores these assignments
 		this->cellStatii.at(r) = rstatii;
 	} //next region
@@ -1110,7 +1069,7 @@ void caHdl::ompcrit_write_semebsd_core( double zpos, char mode ) {
 
 					gridvalue = regions[r]->mycellgrid[region_corr];
 
-					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURENTLY_INFECTED most likely either rx or defg
+					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURRENTLY_INFECTED most likely either rx or defg
 						if ( gridvalue >= ndg ) {
 							oid = myrxgpool[gridvalue-ndg].caori;
 							iobuffer[4*su_corr+3] = +1.0 * (gridvalue - ndg + 1); //##MK::for MartinDiehl Fortran indexed ID of RX grain
@@ -1150,7 +1109,7 @@ void caHdl::ompcrit_write_semebsd_core( double zpos, char mode ) {
 							break; //found my match!
 						}
 						//handle nothing was found case
-						if ( match == false ) { 
+						if ( match == false ) {
 							ang << "----> no identifiable orientation in CURRENTLY_INFECTED cell!" << endl; //setprecision(8) << 0.0 << ";" << setprecision(8) << 0.0 << ";" << setprecision(8) << 0.0 << endl;
 						}
 					} //done with identifying the CURRENTLY_INFECTED cell
@@ -1285,7 +1244,7 @@ void caHdl::ompcrit_write_semebsd_core( double zpos, double xnow, uint32_t thres
 
 					gridvalue = regions[r]->mycellgrid[region_corr];
 
-					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURENTLY_INFECTED most likely either rx or defg
+					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURRENTLY_INFECTED most likely either rx or defg
 						if ( gridvalue >= ndg ) {
 							uint32_t rxgid = gridvalue;
 							auto it = rxg_pixel_count.find( rxgid );
@@ -1346,7 +1305,7 @@ void caHdl::ompcrit_write_semebsd_core( double zpos, double xnow, uint32_t thres
 
 					gridvalue = regions[r]->mycellgrid[region_corr];
 
-					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURENTLY_INFECTED most likely either rx or defg
+					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURRENTLY_INFECTED most likely either rx or defg
 						if ( gridvalue >= ndg ) {
 							auto it = rxg_pixel_count.find( gridvalue );
 							if ( it->second >= threshold ) {
@@ -1511,7 +1470,7 @@ double caHdl::ompcrit_probe_semebsd_core( double zpos, uint32_t threshold ) {
 
 					gridvalue = regions[r]->mycellgrid[region_corr];
 
-					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURENTLY_INFECTED most likely either rx or defg
+					if ( gridvalue <= CA_GRAINIDS_MAXIMUM ) { //therefore also != CURRENTLY_INFECTED most likely either rx or defg
 						if ( gridvalue >= ndg ) { //account for pixel count of recrystallized grain area section
 							/*uint32_t rxgid = gridvalue - ndg + 1;
 							auto it = rxg_pixel_count.find( rxgid );
@@ -1590,9 +1549,9 @@ void caHdl::ompcrit_write_semebsd_looping( char thatmode ) {
 	}
 }
 
+/*
+void caHdl::test_lodepng() {
 
-void caHdl::test_lodepng( void ) {
-	
 	//allocate memory to store the resulting image
 	uint32_t imgx = 256;
 	uint32_t imgy = 256;
@@ -1631,7 +1590,7 @@ void caHdl::test_lodepng( void ) {
 
 	delete [] img_rgba; img_rgba = NULL;
 }
-
+*/
 
 #define DAMASK_GRAININDEXING_OFFSET			1		//MK::because in SCORE grains start at 0
 #define DAMASK_TEXTUREINDEXING_OFFSET		1
@@ -1640,7 +1599,7 @@ void caHdl::write_damask_matconfig_ascii( string suffix )
 {
 	//CALLED FROM WITHIN A PARALLEL REGION AND MUST NOT BE EXECUTED BY OTHERS THAN THE MASTER THREAD
 	//MK::one can change this then however the OMP constructs in the solve_RXGROWTH need to be adjusted accordingly!
-	if ( omp_get_thread_num() != MASTER ) 
+	if ( omp_get_thread_num() != MASTER )
 		return;
 
 	omp_set_lock(&h5lock);
@@ -1656,7 +1615,7 @@ void caHdl::write_damask_matconfig_ascii( string suffix )
 	damask_matconfig << "//Mind that not all parts of the material.config file required are generated by this tool!!!\n";
 	damask_matconfig << "//We assume at the moment only one crystallite section and only one phase section and volume fraction 1.0\n";
 	damask_matconfig << "//End of comments for SCORE autogenerated DAMASK material.config file\n";
-	damask_matconfig << "\n\n\n"; 
+	damask_matconfig << "\n\n\n";
 
 	//write microstructure section
 	damask_matconfig << "#-------------------#\n";
@@ -1701,14 +1660,14 @@ void caHdl::write_damask_geom_ascii( string suffix )
 {
 	//CALLED FROM WITHIN A PARALLEL REGION AND MUST NOT BE EXECUTED BY OTHERS THAN THE MASTER THREAD
 	//MK::one can change this then however the OMP constructs in the solve_RXGROWTH need to be adjusted accordingly!
-	if ( omp_get_thread_num() != MASTER ) 
+	if ( omp_get_thread_num() != MASTER )
 		return;
 
 	//region topology
 	uint32_t npx = this->regions[MASTER]->thePartitioning.nreg_rdx; //1 required
 	uint32_t npy = this->regions[MASTER]->thePartitioning.nreg_tdy;
 	uint32_t npz = this->regions[MASTER]->thePartitioning.nreg_ndz;
-	if ( npx != 1 ) { 
+	if ( npx != 1 ) {
 		std::cout << "ERROR::Invalid region topology based on current hybrid MPI/OMP data/memory model!" << std::endl;
 		return;
 	}
@@ -1733,7 +1692,7 @@ void caHdl::write_damask_geom_ascii( string suffix )
 	damask_geom << "size\tx 1.000000\ty 1.000000\t z 1.000000\n";
 	damask_geom << "origin\tx 0.000000\ty 0.000000\t z 0.000000\n";
 	damask_geom << "microstructures " << (this->mydefgpool.size() + this->myrxgpool.size() ) << "\n";
-	damask_geom << "homogenization\t1" << endl; 
+	damask_geom << "homogenization\t1" << endl;
 	//MK::these make the output not portable but one can change here the structure accordingly...
 
 	//write uncompressed block of microstructure data...
@@ -1750,7 +1709,7 @@ void caHdl::write_damask_geom_ascii( string suffix )
 				xper = this->regions[r]->myGeom.nreg_rd;
 
 				for ( uint32_t yy = 0; yy < yper; yy++ ) {
-					for ( uint32_t xx = 0; xx < xper; xx++ ) { 
+					for ( uint32_t xx = 0; xx < xper; xx++ ) {
 						//##MK::utilizing for the formatting of the geom file that currently npx == 1 such that xper == nboxedge_rd
 
 						//translate into local coordinate in memory region
@@ -1763,7 +1722,7 @@ void caHdl::write_damask_geom_ascii( string suffix )
 								tmp = characterize_cellstatus( r, xx, yy, zz );
 
 								if ( tmp != NO_GRAIN_ASSIGNED ) {
-									if ( xx < (xper - 1) ) 
+									if ( xx < (xper - 1) )
 										damask_geom << (DAMASK_GRAININDEXING_OFFSET + tmp) << " ";
 									else
 										damask_geom << (DAMASK_GRAININDEXING_OFFSET + tmp) << endl; //xx == xper - 1 finish that line
@@ -1775,7 +1734,7 @@ void caHdl::write_damask_geom_ascii( string suffix )
 							}
 
 							//already correctly determined either deformed or recrystallized grain i.e. indices either [0,mydefgpool.size) (deformed grain) or [mydefpool.size+0,mydefpool.size+0+myrxgpool.size) (rx grain)
-							if ( xx < (xper - 1) ) 
+							if ( xx < (xper - 1) )
 								damask_geom << (DAMASK_GRAININDEXING_OFFSET + gridvalue) << " ";
 							else
 								damask_geom << (DAMASK_GRAININDEXING_OFFSET + gridvalue) << endl;
@@ -1857,7 +1816,7 @@ void caHdl::write_junction_skeleton( unsigned char mode )
 					cellsBndFast* bucket = this->regions[tid]->myjunctions.fjuncSkeleton[pmax].thefaces[f].voxelizedface;
 					for ( uint32_t c = 0; c < flen; c++ ) {
 						//MK::nportionDone and nportionNow are implicit global coordinates of the entire solitary unit domain volume!
-						if ( bucket[c].location >= nportionDone && bucket[c].location < (nportionDone + nportionNow) ) 
+						if ( bucket[c].location >= nportionDone && bucket[c].location < (nportionDone + nportionNow) )
 							rawdata[bucket[c].location - nportionDone] = 1 + tid;
 					}
 				}
@@ -1870,8 +1829,8 @@ void caHdl::write_junction_skeleton( unsigned char mode )
 					uint32_t flen = this->regions[tid]->myjunctions.fjuncSkeleton[pmax].thefaces[f].nvoxeltotal;
 					cellsBndFast* bucket = this->regions[tid]->myjunctions.fjuncSkeleton[pmax].thefaces[f].voxelizedface;
 					for ( uint32_t c = 0; c < flen; c++ ) {
-						if ( bucket[c].location >= nportionDone && bucket[c].location < (nportionDone + nportionNow) ) 
-							rawdata[bucket[c].location - nportionDone] = 1 + this->regions[tid]->myjunctions.fjuncSkeleton[pmax].thefaces[f].gbID; //##MK::colud be optimize to reduce lenght of necessary dereferencing
+						if ( bucket[c].location >= nportionDone && bucket[c].location < (nportionDone + nportionNow) )
+							rawdata[bucket[c].location - nportionDone] = 1 + this->regions[tid]->myjunctions.fjuncSkeleton[pmax].thefaces[f].gbID; //##MK::cloud be optimize to reduce length of necessary dereferencing
 					}
 				}
 			}
@@ -1882,7 +1841,7 @@ void caHdl::write_junction_skeleton( unsigned char mode )
 				uint32_t ntj = this->regions[thr]->myjunctions.tjuncSkeletonSize;
 				cellsTJ* bucket = this->regions[thr]->myjunctions.tjuncSkeleton;
 				for ( uint32_t tj = 0; tj < ntj; tj++ ) { //TRI junctions not consolidated yet
-					if ( bucket[tj].location >= nportionDone && bucket[tj].location < (nportionDone + nportionNow) ) 
+					if ( bucket[tj].location >= nportionDone && bucket[tj].location < (nportionDone + nportionNow) )
 							rawdata[bucket[tj].location - nportionDone] = 1 + thr;
 				}
 			}
@@ -1892,7 +1851,7 @@ void caHdl::write_junction_skeleton( unsigned char mode )
 				uint32_t nhj = this->regions[thr]->myjunctions.hjuncSkeletonSize;
 				cellsHJ* bucket = this->regions[thr]->myjunctions.hjuncSkeleton;
 				for ( uint32_t hj = 0; hj < nhj; hj++ ) { //HIGHER ORDER junctions not consolidated yet
-					if ( bucket[hj].location >= nportionDone && bucket[hj].location < (nportionDone + nportionNow) ) 
+					if ( bucket[hj].location >= nportionDone && bucket[hj].location < (nportionDone + nportionNow) )
 							rawdata[bucket[hj].location - nportionDone] = 1 + thr;
 				}
 			}
@@ -1934,7 +1893,7 @@ void caHdl::write_junction_log_gb( uint32_t thread, bool consolidated )
 	uint32_t nf = 0;
 
 	for( uint32_t pmax = 0; pmax < npmax; pmax++ ) {
-		if ( consolidated == true ) 
+		if ( consolidated == true )
 			thr = workPartitioning(pmax, nthreads); //accessing remote memory in shared memory
 		else
 			thr = thread;
@@ -1956,13 +1915,13 @@ void caHdl::write_junction_log_gb( uint32_t thread, bool consolidated )
 }
 
 
-void caHdl::write_junction_log_tj( void )
+void caHdl::write_junction_log_tj()
 {
 	std::cout << "write_junction_log_tj remains to be implemented!" << std::endl;
 }
 
 
-void caHdl::write_junction_log_hj( void )
+void caHdl::write_junction_log_hj()
 {
 	std::cout << "write_junction_log_hj remains to be implemented!" << std::endl;
 }

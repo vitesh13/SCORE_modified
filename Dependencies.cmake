@@ -16,31 +16,39 @@ endif()
 #update GitSHA of the paraprobe repository prior commit, i.e. pre-processing upon compilation pulling last GitSHA
 #we cannot update the current GitSHA as this would create a circular dependency, namely once we have commit, i.e. know the file
 # set(GITSHA "0")
-message([STATUS] "MYGITSHA: ${GITSHA}")
-string(REGEX REPLACE "-" "_" MYCLEANGITSHA ${GITSHA}) #'-' is an invalid character in a C preprocessor macro
-message([STATUS] "MYCLEANGITSHA: ${MYCLEANGITSHA}")
-add_definitions("-DGITSHA=${MYCLEANGITSHA}")
+#'-' is an invalid character in a C preprocessor macro
+string(REGEX REPLACE "-" "_" MYCLEANSCOREVERSION ${SCOREVERSION}) 
+add_definitions("-DSCOREVERSION=${MYCLEANSCOREVERSION}")
+string(REGEX REPLACE "-" "_" MYCLEANNEXUSVERSION ${NEXUSVERSION}) #'-' is an invalid character in a C preprocessor macro
+add_definitions("-DNEXUSVERSION=${MYCLEANNEXUSVERSION}")
+message([STATUS] "DSCOREVERSION: ${DSCOREVERSION}")
+message([STATUS] "DNEXUSVERSION: ${DNEXUSVERSION}")
 
-#tell where the source code of PARAPROBE is
+
+#tell where the source code is
 set(MYSRCPATH "${MYPROJECTPATH}/src/cxx")
 
-#SPECIFY LOCATION OF UTILITIES
-set(LIB_SZPATH "/opt/szip-2.1.1/GNU/11.2.0/")
-set(LIB_ZPATH "/usr/local/")
-set(LIB_AECPATH "/usr/local/")
-
-set(MYHDFPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/hdf5/CMake-hdf5-1.14.0/HDF5-1.14.0-Linux/HDF_Group/HDF5/1.14.0")
+#mandatory hdf5 library
+set(MYHDFPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/hdf5/HDF5-1.14.6-Linux/HDF_Group/HDF5/1.14.6")
+set(MYHDFLINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPATH}/lib/libhdf5.a ${MYHDFPATH}/lib/libszaec.a ${MYHDFPATH}/lib/libaec.a -ldl")  # ${MYHDFPATH}/lib/libzlib-static.a -ldl")
 include_directories("${MYHDFPATH}/include")
 link_directories("${MYHDFPATH}/lib")
-#link against static libraries
-set(MYHDFLINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPATH}/lib/libhdf5.a ${MYHDFPATH}/lib/libz.a ${MYHDFPATH}/lib/libszaec.a ${MYHDFPATH}/lib/libaec.a -ldl")
+
 
 #find installed locations of files from libssl-dev package via typing dpkg -L libssl-dev on the command line
-
 set(MYOPENSSL "/usr/lib/x86_64-linux-gnu")
 include_directories("${MYOPENSSL}/lib")
 #find_package(OpenSSL REQUIRED)
 set(MYSSLLINKFLAGS "-L${MYOPENSSL} ${MYOPENSSL}/libssl.a ${MYOPENSSL}/libcrypto.a")
+
+# optional stuff for developers for using ryml
+# python
+# git clone --recursive https://github.com/biojppm/rapidyaml.git
+# cd tools && python amalgamate.py ryml_all.hpp && cd ..
+# mkdir build && cd build
+# cmake -DCMAKE_BUILD_TYPE=Release ..
+# make -j8 && cd ..
+# set(MYRYMLLINKFLAGS "-L${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/rapidyaml/build/libryml.a")
 
 
 #choose which compiler to use
@@ -48,8 +56,7 @@ set(EMPLOY_INTELCOMPILER OFF)
 set(EMPLOY_GNUCOMPILER ON)
 
 #choose optimization level
-##-O0 for debug purposes only
+##-O0 -g for debug purposes only
 ##-O1 or -O2 for moderate optimization
 ##-O3 for production level optimization
-set(MYOPTLEVEL "-O2")
-
+set(MYOPTLEVEL "-O2")  # "-O0 -g")

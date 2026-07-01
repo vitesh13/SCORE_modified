@@ -1,46 +1,4 @@
-/* 
-*	Copyright Markus Kühbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #ifndef __SCORE_KERNEL_H_INCLUDED__
 //#define __SCORE_KERNEL_H_INCLUDED__
@@ -66,7 +24,7 @@ void caHdl::ompshar_init_regions( int threadid )
 }
 
 
-void caHdl::ompshar_ca2regions( void )
+void caHdl::ompshar_ca2regions()
 {
 	//MK:: IS CALLED FROM WITHIN PARALLEL REGION
 	//MK::static partitioning of structure in omp_get_num_threads() = npz * npy non-overlapping regions that comprise the whole domain
@@ -115,7 +73,7 @@ void caHdl::ompshar_ca2regions( void )
 	//z=0::0,1,2
 
 	uint32_t ti = 0;
-	for ( uint32_t z = 0; z < npz; z++ ) { 
+	for ( uint32_t z = 0; z < npz; z++ ) {
 		//MK::here we define the internal organization of the regions buffer, see example for npy = 3 and npz = 4 as an example then the z coordinates will read as
 		//id = 0 1 2 3 4 5 6 7 8 9 10 11
 		//z = 0 0 0 1 1 1 2 2 2 3 3 3
@@ -188,7 +146,7 @@ uint32_t caHdl::exists_nborhalo( int regid, short dx, short dy, short dz, int np
 {
 	//CALLED FROM WITHIN PARALLEL REGION
 	//finds the list position that a particular halo has in the list of a nboring memory region
-	//the function assumes it sits inside the region regid and moves in dx,dy,dz direction to find its if in this neighbor 
+	//the function assumes it sits inside the region regid and moves in dx,dy,dz direction to find its if in this neighbor
 	//a halo has been created,i.e thisneighbor->myhalos[cand]->theHaloCells != NULL && extendxyz > 0 function returns coordinates of regid
 	int targetreg = regid;
 
@@ -209,7 +167,7 @@ uint32_t caHdl::exists_nborhalo( int regid, short dx, short dy, short dz, int np
 	if ( iz < 0 )		iz += npz;
 	if ( iz >= npz )	iz -= npz;
 
-	targetreg = ( (iz * npy) + iy ); 
+	targetreg = ( (iz * npy) + iy );
 
 	if ( this->regions[targetreg]->myhalos[cand].extendxyz > 0 && this->regions[targetreg]->myhalos[cand].theHaloCells != NULL ) {
 		return cand;
@@ -224,7 +182,7 @@ void caHdl::ompshar_link_haloregions( int threadid )
 	//CALLED FROM WITHIN PARALLEL REGION
 	//connects regions[threadid] physically to the neighboring regions by assigning which entry in the neighboring regions haloregions
 	//is the one that is neighboring regions[threadid]. This ??might be required to read out quickly the haloregion
-	//of a neighbor to synchronize with the regions[thread] ids own mycellgrid 
+	//of a neighbor to synchronize with the regions[thread] ids own mycellgrid
 	//####
 	regions[threadid]->mynborhalos = NULL;
 	regions[threadid]->mynborhalos = new uint32_t[(MYSELF+NUMBER_OF_NEIGHBORS)]; //IDs of halos in list of neighboring regions, do not reference locally!
@@ -273,7 +231,7 @@ void caHdl::ompshar_link_haloregions( int threadid )
 /*
 #pragma omp critical
 {
-	cout << threadid << "--LINKING-HALOS;0;1;...;26--"; 
+	cout << threadid << "--LINKING-HALOS;0;1;...;26--";
 	for (uint32_t h = 0; h < (MYSELF+NUMBER_OF_NEIGHBORS); h++) { cout << ";" << regions[threadid]->mynborhalos[h];}
 	cout << endl;
 }

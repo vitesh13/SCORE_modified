@@ -1,46 +1,4 @@
-/* 
-*	Copyright Markus Kühbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. Kühbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. Kühbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ Jülich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #ifndef SCORE_KERNEL_H
 #define SCORE_KERNEL_H
@@ -98,7 +56,7 @@ void caHdl::ompshar_deformedgrains_infect_JuvenileNucleation( uint32_t seedid, u
 }
 
 
-void caHdl::ompshar_placeAllSeeds( void )
+void caHdl::ompshar_placeAllSeeds()
 {
 	//this function expects the mycellgrid positions to be marked with mydefgpool ids not tmpdefg seedids!
 	//CALLED FROM WITHIN PARALLEL REGIONS BECAUSE OF THAT JUVENILE NUCLEATION INTO MYCELLGRID
@@ -135,7 +93,7 @@ void caHdl::ompshar_placeAllSeeds( void )
 		//HERE THE THREADS FILTER OUT ONLY THOSE NUCLEI THAT ARE LOCATED IN THEIR OWN CELLGRID
 		//AS THE CELLGRIDS ARE NONOVERLAPPING AND FILLING COMPLETELY THE DOMAIN ALL THREADS EXECUTE
 		//IN PARALLEL THE SAME CODE BUT NEVER INTERFERE...
-		
+
 		if ( x < xmi ) continue; //for performance utilize that most likely the nucleus is outside my own region
 		if ( x > xmx ) continue;
 		if ( y < ymi ) continue;
@@ -161,7 +119,7 @@ void caHdl::ompshar_placeAllSeeds( void )
 }
 
 
-void caHdl::grow_deformedgrains_voxelize_omp( void )
+void caHdl::grow_deformedgrains_voxelize_omp()
 {
 	//grows synthetic deformed grains from the seed.locations with unit speed
 	//function is an adaption of solve_RXGROWTH() but made leaner for computational efficiency
@@ -228,7 +186,7 @@ void caHdl::grow_deformedgrains_voxelize_omp( void )
 		for ( integrationstep = 0; integrationstep < DEFAULT_NTSTEPSMAX_DEFSYNTH; integrationstep++ ) {
 			status = OMP_OPERATIVE;
 			//each thread reads globally synchronized variable and checks whether or not there is still something to do, because we are not allowed to break out uncontrolled of a parallel for construct
-			if ( Xcells >= myCAGeometry.nboxvol_rdtdnd ) 
+			if ( Xcells >= myCAGeometry.nboxvol_rdtdnd )
 				status = OMP_COMPLETED;
 
 			if ( status == OMP_OPERATIVE ) {
@@ -254,8 +212,9 @@ void caHdl::grow_deformedgrains_voxelize_omp( void )
 				//they are guided by neighboring regions' haloref list which stores which positions were newly infected by the neighboring thread in each halo
 				regions[omp_get_thread_num()]->ompshar_synchronize_haloregions_def();
 
-				if ( outopt_localthreadprof == OUTPUT_THREADPROFILING_YES )
+				if ( outopt_localthreadprof == OUTPUT_THREADPROFILING_YES ) {
 					regions[omp_get_thread_num()]->omp_log_synthfrontstats();
+				}
 
 				#pragma omp barrier //##MK::probably necessary...
 			} //growth step completed...
@@ -270,7 +229,7 @@ void caHdl::grow_deformedgrains_voxelize_omp( void )
 					for ( uint32_t tid = 0; tid < regions.size(); tid++ ) { //accumulate local results
 						dXstep = dXstep + ( regions[tid]->reg_dXstepInside + regions[tid]->reg_dXstepBorder );
 						Sv = Sv + (regions[tid]->reg_SvInside + regions[tid]->reg_SvBorder);
-						Xcells = Xcells + ( (double) (regions[tid]->reg_nUpdatedCellsInside + regions[tid]->reg_nUpdatedCellsBorder) ); 
+						Xcells = Xcells + ( (double) (regions[tid]->reg_nUpdatedCellsInside + regions[tid]->reg_nUpdatedCellsBorder) );
 					}
 					X = (Xcells / ((double) myCAGeometry.nboxvol_rdtdnd));
 
@@ -281,7 +240,7 @@ void caHdl::grow_deformedgrains_voxelize_omp( void )
 					step++;
 
 //#ifdef REPORTSTYLE_USER
-					if ( this->myensRank == MASTER ) 
+					if ( this->myensRank == MASTER )
 						cout << "\tstep;t;X;Sv;dt\t\t" << this->step << "\t\t" << this->t << "\t\t" << this->X  << "\t\t" << this->Sv << "\t\t" << this->dt << endl;
 //#endif
 				}
@@ -338,23 +297,17 @@ void caHdl::grow_deformedgrains_voxelize_omp( void )
 
 	cout << myensHdl->myRank << " myRank,jobid = " << this->jobid << " local CA deformation structure was synthetized with " << ndefgseeds  << endl;
 
-	if ( outopt_localthreadprof == OUTPUT_THREADPROFILING_YES )
+	if ( outopt_localthreadprof == OUTPUT_THREADPROFILING_YES ) {
 		write_ThreadProfilingSummarySynthMachine();
+	}
 
 	//##MK::output deformation structure//write_voxeldata_coloring_grainids();
 }
 
-void caHdl::grow_deformedgrains_voxelize_columns( void )
-{
-	//stretches an SEM/EBSD map along the 3d dimension such that the grain along z
-	//this->myensHdl->expData
-	//####
-}
 
-
-void caHdl::determine_polycrystalline_geometry( void )
+void caHdl::determine_polycrystalline_geometry()
 {
-	//synthesize polycrystalline aggregate of cuboids displace the lower left front origin of this aggregate randomly 
+	//synthesize polycrystalline aggregate of cuboids displace the lower left front origin of this aggregate randomly
 	//to the lower left front origin of the SU coordinate system to enable random sampling of the domain
 	myCADefMS.u_xrd = -1.0 * localprng.MersenneTwister() * myPhysData.defgmean_rd;
 	myCADefMS.v_ytd = -1.0 * localprng.MersenneTwister() * myPhysData.defgmean_td;
@@ -362,7 +315,7 @@ void caHdl::determine_polycrystalline_geometry( void )
 
 	//therewith, determine required size of the 3D grain grid, which encloses the SU domain completely
 	uint32_t nx = ( (myCAGeometry.boxedge_rd - myCADefMS.u_xrd) / myPhysData.defgmean_rd ); //will be zero if defg+u larger than box, so always add one grain
-	nx++; 
+	nx++;
 	uint32_t ny = ( (myCAGeometry.boxedge_td - myCADefMS.v_ytd) / myPhysData.defgmean_td );
 	ny++;
 	uint32_t nz = ( (myCAGeometry.boxedge_nd - myCADefMS.w_znd) / myPhysData.defgmean_nd );
@@ -391,7 +344,7 @@ void caHdl::determine_polycrystalline_geometry( void )
 }
 
 
-void caHdl::pick_deformedgrains( void )
+void caHdl::pick_deformedgrains()
 {
 	//MK::everything is possible, GIA-aggregate packing, MODF optimization or simply random picking
 	//##MK::here we start with sampling by picking randomly from the worlddefgpool grains resulting in an uncorrelated MODF
@@ -423,7 +376,7 @@ void caHdl::pick_deformedgrains( void )
 			double ensq[4] = { ens->worldoripool[ensoriid].q0, ens->worldoripool[ensoriid].q1, ens->worldoripool[ensoriid].q2, ens->worldoripool[ensoriid].q3 };
 			//orientation recategorization with known Bunge values in local caHdl to utilize that not all possible orientations are used in the local CA grid thus a more efficient hashtable can be generated however at additional memory costs...
 			dgr.worlddefgid = luckyGrain;
-			dgr.caori = ca_check_disjunctness_core( ensq, true, ens->worldoripool[ensoriid].bunge1, ens->worldoripool[ensoriid].bunge2, ens->worldoripool[ensoriid].bunge3 ); //checking against truely the closest avoids drifting orientation assignment
+			dgr.caori = ca_check_disjunctness_core( ensq, true, ens->worldoripool[ensoriid].bunge1, ens->worldoripool[ensoriid].bunge2, ens->worldoripool[ensoriid].bunge3 ); //checking against truly the closest avoids drifting orientation assignment
 			dgr.cellcount = 0;
 			dgr.rho0 = ens->worlddefgpool[luckyGrain].rho0;
 			dgr.rho = ens->worlddefgpool[luckyGrain].rho;
@@ -445,7 +398,7 @@ void caHdl::pick_deformedgrains( void )
 			continue;
 		}
 
-		//else DoIKnowLuckyGrain == true, i.e. I picked the grain already a while ago well then find it in 
+		//else DoIKnowLuckyGrain == true, i.e. I picked the grain already a while ago well then find it in
 		//mylist utilizing that worlddefgid are >= 0 and unique
 		for ( uint32_t testg = 0; testg < mydefgpool.size(); ++testg) {
 			if ( luckyGrain == mydefgpool[testg].worlddefgid ) {
@@ -463,7 +416,7 @@ void caHdl::pick_deformedgrains( void )
 }
 
 
-void caHdl::ompshar_voxelize_defms( void )
+void caHdl::ompshar_voxelize_defms()
 {
 	//if ( this->myensHdl->myRank == MASTER && omp_get_thread_num() == MASTER ) cout << "\t\tVoxelizing SU domain." << endl;
 	//CALLED FROM WITHIN PARALLEL REGION, function call so variables private because on thread local function stack!
@@ -512,7 +465,7 @@ void caHdl::ompshar_voxelize_defms( void )
 				gx = ((( (double) ix * cs) + cs2 - ux) / dgrd);
 				gxyz = gx + gy_ngrx + gz_ngrxy;
 
-				//if ( gxyz >= ndefgseeds) 
+				//if ( gxyz >= ndefgseeds)
 				//	validassignment = false;
 
 				reg->mycellgrid[crxyz] = gxyz;

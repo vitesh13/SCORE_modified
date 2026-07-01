@@ -1,46 +1,4 @@
-/* 
-*	Copyright Markus K�hbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. K�hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. K�hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ J�lich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #ifndef __SCORE_KERNEL_H_INCLUDED__
 //#define __SCORE_KERNEL_H_INCLUDED__
@@ -48,7 +6,7 @@
 #include "SCORE_Kernel.h"
 
 
-void caHdl::log_initialization( void )
+void caHdl::log_initialization()
 {
 	//user defined recrystallized fraction of desired logpoints are inputted as normalized quantities, so multiply with boxdimensions
 	double boxvolume = myCAGeometry.nboxvol_rdtdnd;
@@ -81,11 +39,12 @@ void caHdl::log_initialization( void )
 		//write_damask_geom_h5( "NetworkInitialState" );
 	}
 
-	//when desiring percolation analysis create a 
+	//when desiring percolation analysis create a
 	if ( percolation == PERCOLATION_ANALYZE_YES_SZDISTR ) {
 		write_clustersizedistr_h5_create();
 	}
 
+	nexus_write_automaton_geometry();
 
 	//implement intelligent precaching of logcontainers rxfrontstats and grainevo
 }
@@ -195,7 +154,7 @@ double caHdl::log_rxareafraction( double zpos )
 }
 
 
-void caHdl::log_rxareaprofile( void )
+void caHdl::log_rxareaprofile()
 {
 	//monitor how much area fraction is recrystallized in zpos, used to control output in Martin/Markus MMM2018 model
 	//shared memory every thread processes it and will get the same result
@@ -406,7 +365,7 @@ void caHdl::log_rxareaprofile( uint32_t threshold )
 
 
 
-void caHdl::log_rxfrontstats( void )
+void caHdl::log_rxfrontstats()
 {
 	struct loginfo_rxfrontstats_ca rflog;
 
@@ -414,7 +373,7 @@ void caHdl::log_rxfrontstats( void )
 	rflog.localX = this->X;
 	rflog.localmemory = this->myMemGuard;
 	rflog.localPmax = this->myMobilityWeightMax;
-	
+
 	rflog.localstep = this->step;
 	rflog.localSv = this->Sv;
 
@@ -431,7 +390,7 @@ void caHdl::log_rxfrontstats( void )
 }
 
 
-void caHdl::log_grainevo( void )
+void caHdl::log_grainevo()
 {
 	//collect current microstructure state
 	//MUST NOT BE CALLED BY MORE THAN ONE THREAD
@@ -442,7 +401,7 @@ void caHdl::log_grainevo( void )
 	//MK::in the old get_interp cell count there was a significant amount of time wasted with scanning mygrainevolution[i].localtime which is 40Byte just to find the internal
 	//now this scanning is first performed on mygrainevolutionlocaltime and then only for the interesting data the cache misses are paid for
 	mygrainevolutionlocaltime.push_back ( t );
-	
+
 	//temporary stack object invoking vector copy constructor of uninitialized grevo
 	struct loginfo_grainevo_ca grevo;
 	mygrainevolution.push_back ( grevo );
@@ -480,7 +439,7 @@ void caHdl::log_grainevo( void )
 	mygrainevolution[i].localdatabucket = cellcount_bucket;
 
 #ifdef REPORTSTYLE_DEVELOPER
-	cout << this->jobid << " logged grain evolution at step = " << this->step << " for the cnt = " << loginfo_grainevo_cnt << "-th time at desired X = " << UserDefLogPoint_X_Output[loginfo_grainevo_cnt] << endl;
+	cout << this->jobid << " logged grain evolution at step = " << this->step << " for the cnt = " << loginfo_grainevo_cnt << endl;
 #endif
 	loginfo_grainevo_cnt++;
 }
@@ -509,7 +468,7 @@ void caHdl::log_ca_physics( loginfo_ca_physicsP  container )
 }
 
 
-void caHdl::log_OUTPUT( void )
+void caHdl::log_OUTPUT()
 {
 	//CALLED FROM WITHIN PARALLEL REGION BUT BY THE MASTER THREAD ONLY
 	if ( this->outopt_localrxfront == OUTPUT_RXFRONTSTATS_YES ) {
@@ -520,7 +479,7 @@ void caHdl::log_OUTPUT( void )
 	//2D and 3D sections
 	if ( renderingForThisCA == true ) {
 		//##MK::old way of accounting was volume based i.e. Xcells / myCAGeometry.nboxvol_rdtdnd >= rendering_atthisX[loginfo_rendering_cnt] && loginfo_rendering_cnt < rendering_atthisX.size() ) {
-		//##MK::Diehl/K�hbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
+		//##MK::Diehl/Kuehbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
 		double Xarea_exp = log_rxareafraction( 0.0 );
 		double Xarea_hlf = log_rxareafraction( 0.5 );
 
@@ -537,6 +496,7 @@ void caHdl::log_OUTPUT( void )
 
 			ompcrit_clarify_status_infectedcells( RXFRACTION_THRESHOLD );
 
+			/*
 			if ( outopt_localrenderhow == RENDERING_MS2D ) {
 				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW ) {
 					if ( outopt_localrendercolor == RENDERING_COLOR_IPFZ ) {
@@ -547,15 +507,16 @@ void caHdl::log_OUTPUT( void )
 					else
 						cout << "ERROR::2D output in RAW format supports currently only IPFZ coloring!" << endl;
 				}
-				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ) 
+				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 )
 					cout << "ERROR::2D output with HDF5 currently not supported!" << endl;
 			}
+			*/
 
 			if ( outopt_localrenderhow == RENDERING_MS3D ) {
 				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW ) {
 					if ( outopt_localrendercolor == RENDERING_COLOR_GRAINID )
 						ompcrit_write_voxeldata_coloring_grainids( "GROWTH.3DGrainID" );
-					else 
+					else
 						cout << "ERROR::3D output in RAW format supports currently only grainid coloring!" << endl;
 				}
 				if ( outopt_localrenderfileformat == RENDERING_FILEFORMAT_HDF5 ) {
@@ -608,13 +569,13 @@ void caHdl::log_OUTPUT_Diehl()
 
 	//previous the outputting of CA sections was controlled by passing volume or area rx fractions above predefined thresholds
 	//and then output was rendered for all defined sections
-	//for Diehl/K�hbach, MMM2018 Special Issue paper though we monitor first the recrystallized fraction on specific planes
+	//for Diehl/Kuehbach, MMM2018 Special Issue paper though we monitor first the recrystallized fraction on specific planes
 	//and output individually when these reach predefined thresholds
 
 	//MK::NO PARALLEL RENDERING AT THE MOMENT
 	//2D and 3D sections
 	if ( renderingForThisCA == true ) {
-		//##MK::Diehl/K�hbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
+		//##MK::Diehl/Kuehbach way of accounting for MMM2018 January2019 study is that the inspection area needs sufficient RX fraction
 
 		uint32_t z00_logcnt = loginfo_rendering_sectionbased_cnt.at(0);
 		if ( z00_logcnt < rendering_atthisX.size() ) {
@@ -623,6 +584,7 @@ void caHdl::log_OUTPUT_Diehl()
 			//cout << "z00_area_13px\t\t" << z00_area_13px << endl;
 
 			if ( z00_area_13px >= rendering_atthisX[z00_logcnt] ) {
+				/*
 				if ( outopt_localrenderhow == RENDERING_MS2D &&
 						outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW &&
 							outopt_localrendercolor == RENDERING_COLOR_IPFZ ) {
@@ -631,6 +593,7 @@ void caHdl::log_OUTPUT_Diehl()
 							ompcrit_write_zsection_looping_ipfz( z00_area_13px, COLORIZE_DEF_LEAVE_RX_BLACK );
 							ompcrit_write_zsection_looping_ipfz( z00_area_13px, COLORIZE_RX_RHOGREYSCALE_DEFORMED );
 				}
+				*/
 				if ( outopt_localartsemebsd == OUTPUT_SEMEBSD_YES ) {
 	cout << "Reporting a zsection at 0.0 for z00_logcnt\t\t" << z00_logcnt << "\t\t" << z00_area_13px << endl;
 					ompcrit_write_semebsd_core( 0.0, z00_area_13px, 13, DEFAULT_SEMEBSD_MODE );
@@ -646,6 +609,7 @@ void caHdl::log_OUTPUT_Diehl()
 			//cout << "z05_area_13px\t\t" << z05_area_13px << endl;
 
 			if ( z05_area_13px >= rendering_atthisX[z05_logcnt] ) {
+				/*
 				if ( outopt_localrenderhow == RENDERING_MS2D &&
 						outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW &&
 							outopt_localrendercolor == RENDERING_COLOR_IPFZ ) {
@@ -653,6 +617,7 @@ void caHdl::log_OUTPUT_Diehl()
 							ompcrit_write_zsection_looping_ipfz( z05_area_13px, COLORIZE_DEF_LEAVE_RX_BLACK );
 							ompcrit_write_zsection_looping_ipfz( z05_area_13px, COLORIZE_RX_RHOGREYSCALE_DEFORMED );
 				}
+				*/
 				if ( outopt_localartsemebsd == OUTPUT_SEMEBSD_YES ) {
 	cout << "Reporting a zsection at 0.5 for z05_logcnt\t\t" << z05_logcnt << "\t\t" << z05_area_13px << endl;
 					ompcrit_write_semebsd_core( 0.5, z05_area_13px, 13, DEFAULT_SEMEBSD_MODE );
@@ -668,6 +633,7 @@ void caHdl::log_OUTPUT_Diehl()
 			//cout << "z10_area_13px\t\t" << z10_area_13px << endl;
 
 			if ( z10_area_13px >= rendering_atthisX[z10_logcnt] ) {
+				/*
 				if ( outopt_localrenderhow == RENDERING_MS2D &&
 					outopt_localrenderfileformat == RENDERING_FILEFORMAT_RAW &&
 						outopt_localrendercolor == RENDERING_COLOR_IPFZ ) {
@@ -675,6 +641,7 @@ void caHdl::log_OUTPUT_Diehl()
 						ompcrit_write_zsection_looping_ipfz( z10_area_13px, COLORIZE_DEF_LEAVE_RX_BLACK );
 						ompcrit_write_zsection_looping_ipfz( z10_area_13px, COLORIZE_RX_RHOGREYSCALE_DEFORMED );
 				}
+				*/
 				if ( outopt_localartsemebsd == OUTPUT_SEMEBSD_YES ) {
 	cout << "Reporting a zsection at 1.0 for z10_logcnt\t\t" << z10_logcnt << "\t\t" << z10_area_13px << endl;
 					ompcrit_write_semebsd_core( 1.0, z10_area_13px, 13, DEFAULT_SEMEBSD_MODE );
@@ -705,38 +672,42 @@ void caHdl::nexus_write_automaton_geometry()
 	ioAttributes anno = ioAttributes();
 	string grpnm = "";
 	string dsnm = "";
-	grpnm = "/entry/rve/grid";
-	if ( h5w.nexus_group_exists(grpnm) == true ) {
-		return;
-	}
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXcg_grid") );
-	if ( h5w.nexus_write_group(grpnm, anno) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
 
-	dsnm = grpnm + "/symmetry";
-	string value = "cubic";
+	//assuming that "/entry1/discretization/grid" and "/entry1/discretization/boundary" exist
+	grpnm = "/entry1/discretization/grid";
+	dsnm = grpnm + "/dimensionality";
+	uint32_t dimensionality = 3;
 	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, value, anno ) != MYHDF5_SUCCESS ) {
+	if ( h5w.nexus_write( dsnm, dimensionality, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << "\n";
 		return;
 	}
 
-	vector<double> f64 = vector<double>( 3, myCAGeometry.cellsize );
-	dsnm = grpnm + "/cell_dimensions";
+	dsnm = grpnm + "/cardinality";
+	uint32_t cardinality = this->myCAGeometry.nboxvol_rdtdnd;
 	anno = ioAttributes();
-	anno.add( "unit", string("m") );
-	if ( h5w.nexus_write_at_once(
-		dsnm,
-		io_info({f64.size() / 3, 3}),
-		f64,
-		anno ) != MYHDF5_SUCCESS ) {
+	if ( h5w.nexus_write( dsnm, cardinality, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/symmetry";
+	string symm = "cubic";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, symm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << "\n";
+		return;
+	}
+
+	//vector<double> f64 = vector<double>( 3, myCAGeometry.cellsize );
+	dsnm = grpnm + "/cell_dimensions";
+	double cellsize = myCAGeometry.cellsize;
+	anno = ioAttributes();
+	anno.add( "units", string("m") );
+	if ( h5w.nexus_write( dsnm, cellsize, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
-	f64 = vector<double>();
 
 	vector<unsigned int> u32;
 	dsnm = grpnm + "/extent";
@@ -744,9 +715,9 @@ void caHdl::nexus_write_automaton_geometry()
 	u32.push_back( myCAGeometry.nboxedge_td );
 	u32.push_back( myCAGeometry.nboxedge_nd );
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u32.size() / 3, 3}),
+		io_info({u32.size() / 3, 3}, {u32.size() / 3, 3}),
 		u32,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -754,13 +725,13 @@ void caHdl::nexus_write_automaton_geometry()
 	}
 	u32 = vector<unsigned int>();
 
-	f64 = vector<double>( 3, 0. );
+	vector<double> f64 = vector<double>( 3, 0. );
 	dsnm = grpnm + "/origin";
 	anno = ioAttributes();
-	anno.add( "unit", string("m") );
-	if ( h5w.nexus_write_at_once(
+	anno.add( "units", string("m") );
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 3, 3}),
+		io_info({f64.size() / 3, 3}, {f64.size() / 3, 3}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -768,27 +739,7 @@ void caHdl::nexus_write_automaton_geometry()
 	}
 	f64 = vector<double>();
 
-	dsnm = grpnm + "/dimensionality";
-	unsigned int dimensionality = 3;
-	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, dimensionality, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
-
-	dsnm = grpnm + "/cardinality";
-	unsigned int cardinality = 1;
-	cardinality *= myCAGeometry.nboxedge_rd;
-	cardinality *= myCAGeometry.nboxedge_td;
-	cardinality *= myCAGeometry.nboxedge_nd;
-	anno = ioAttributes();
-	//anno.add( "", string("") );
-	if ( h5w.nexus_write( dsnm, cardinality, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
-
-	dsnm = grpnm + "/identifier_offset";
+	dsnm = grpnm + "/index_offset_cell";
 	int offset = 0;
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, offset, anno ) != MYHDF5_SUCCESS ) {
@@ -796,14 +747,7 @@ void caHdl::nexus_write_automaton_geometry()
 		return;
 	}
 
-	grpnm = "/entry/rve/grid/boundary";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXcg_polyhedron_set") );
-	if ( h5w.nexus_write_group(grpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
-
+	grpnm = "/entry1/discretization/boundary";
 	dsnm = grpnm + "/number_of_boundaries";
 	unsigned int n_bnd = 6;
 	anno = ioAttributes();
@@ -821,9 +765,9 @@ void caHdl::nexus_write_automaton_geometry()
 	bnd_names.push_back("front"); bnd_names.push_back("back"); //y
 	bnd_names.push_back("bottom"); bnd_names.push_back("top"); //z
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({bnd_names.size() / 1, 1}),
+		io_info({bnd_names.size()}, {bnd_names.size()}),
 		bnd_names,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -834,9 +778,9 @@ void caHdl::nexus_write_automaton_geometry()
 	dsnm = grpnm + "/boundary_conditions";
 	vector<int> bnd_cond = vector<int>( 6, 2 );
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({bnd_cond.size() / 1, 1}),
+		io_info({bnd_cond.size()}, {bnd_cond.size()}),
 		bnd_cond,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -851,10 +795,17 @@ void caHdl::nexus_write_snapshot_kinetics()
 {
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
 	ioAttributes anno = ioAttributes();
-	string grpnm = "";
+	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1);
 	string dsnm = "";
 
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step);
+	dsnm = grpnm + "/time";
+	anno = ioAttributes();
+	anno.add( "units", string("s") );
+	if ( h5w.nexus_write( dsnm, this->t, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !";
+		return;
+	}
+
 	dsnm = grpnm + "/iteration";
 	anno = ioAttributes();
 	if ( h5w.nexus_write( dsnm, this->step, anno ) != MYHDF5_SUCCESS ) {
@@ -862,36 +813,13 @@ void caHdl::nexus_write_snapshot_kinetics()
 		return;
 	}
 
-	dsnm = grpnm + "/time";
-	anno = ioAttributes();
-	anno.add( "unit", string("s") );
-	if ( h5w.nexus_write( dsnm, this->t, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !";
-		return;
-	}
-
 	dsnm = grpnm + "/temperature";
 	anno = ioAttributes();
-	anno.add( "unit", string("K") );
+	anno.add( "units", string("K") );
 	if ( h5w.nexus_write( dsnm, this->CurrentTemperature, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !";
 		return;
 	}
-
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_kinetics";
-	dsnm = grpnm + "/target";
-	//is target because does not take into account the partially RXed active cells only fully transformed ones
-	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, this->X, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !";
-		return;
-	}
-}
-
-
-void caHdl::nexus_write_snapshot_texture()
-{
-
 }
 
 
@@ -906,7 +834,7 @@ void caHdl::nexus_write_snapshot_grain_based()
 	//we have to remind ourselves here that each cell is infected only once and this infection then filled through this simplifies the bookkeeping
 	//also keep in mind that the global list of cells does not keep information which of these cells are currently infected
 	//mainly to avoid unnecessary bookkeeping of these information for the sake of saving memory and improved performance
-	double cellvolume = CUBE(this->myCAGeometry.cellsize);
+	double cellvolume = CUBE((myCAGeometry.cellsize * METER2MICRON));
 	uint32_t ndisjoint_grains = mydefgpool.size() + myrxgpool.size();
 
 	//consider first discrete counts, in this case each cell is either fully deformed or fully recrystallized
@@ -965,23 +893,48 @@ void caHdl::nexus_write_snapshot_grain_based()
 
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
 	ioAttributes anno = ioAttributes();
-	string grpnm = "";
-	string dsnm = "";
+	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1);
+	string dsnm = grpnm + "/x";
+	double Xexact = 0.;
+	//accumulate per grain RX volume fraction contribution considering fully and partially RX portions
+	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) { 
+		Xexact += f64[rg];
+	}
+	double XX = (Xexact / ((double) myCAGeometry.nboxvol_rdtdnd));
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, XX, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
 
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grain_ensemble";
+	mynexusstats.push_back( loginfo_nexus( this->t, this->X, XX, this->step ) );
 
+	dsnm = grpnm + "/x_set";
+	double XXset = output_atthisX[loginfo_grainevo_cnt] / ((double) myCAGeometry.nboxvol_rdtdnd);
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, XXset, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+
+	grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/crystals";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXmicrostructure_feature") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	/* ##TODO::switched off until uint8 bug fixed in NOMAD
 	vector<unsigned char> u08 = vector<unsigned char>( ndisjoint_grains, 0x01 );
 	dsnm = grpnm + "/is_deformed";
 	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
 		u08[rg] = 0x00;
 	}
 	anno = ioAttributes();
-	//anno.add( "unit", string("") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1},
-				{u08.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u08.size()}, {u08.size()}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -995,52 +948,36 @@ void caHdl::nexus_write_snapshot_grain_based()
 		u08[dg] = 0x00;
 	}
 	anno = ioAttributes();
-	//anno.add( "unit", string("") );
-	if ( h5w.nexus_write_at_once(
+	/* ##TODO::switched off until uint8 bug fixed in NOMAD
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1},
-				{u08.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u08.size()}, {u08.size()}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
 	u08 = vector<unsigned char>();
+	*/
 
 	dsnm = grpnm + "/volume";
+	for ( size_t i = 0; i < f64.size(); i++ ) {
+		f64[i] *= cellvolume;
+	}
 	anno = ioAttributes();
-	anno.add( "unit", string("voxel volume equivalent") );  //1 px = CUBE(cellsize) which is in m^3
-	if ( h5w.nexus_write_at_once(
+	anno.add( "units", string("micrometer ** 3") );
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1},
-				{f64.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({f64.size()}, {f64.size()}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
 		return;
 	}
-
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_kinetics";
-	dsnm = grpnm + "/value";
-	//is target because does not take into account the partially RXed active cells
-	//only fully transformed ones
-	double Xexact = 0.;
-	for ( uint32_t rg = ndefg; rg < ndisjoint_grains; rg++ ) {
-		Xexact += f64[rg];
-	}
-	double XX = (Xexact / ((double) myCAGeometry.nboxvol_rdtdnd));
-	anno = ioAttributes();
-	anno.add( "unit", string("1") );
-	if ( h5w.nexus_write( dsnm, XX, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing " << dsnm << " failed !" << "\n";
-		return;
-	}
 	f64 = vector<double>();
 
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grain_ensemble";
-	dsnm = grpnm + "/euler";
+	grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/crystals";
+	dsnm = grpnm + "/bunge_euler";
 	f64.reserve(ndisjoint_grains * 3);
 	for ( uint32_t dg = 0; dg < ndefg; dg++ ) {
 		uint32_t ori_idx = mydefgpool[dg].caori;
@@ -1054,14 +991,11 @@ void caHdl::nexus_write_snapshot_grain_based()
 		f64.push_back( myoripool[ori_idx].bunge2 );
 		f64.push_back( myoripool[ori_idx].bunge3 );
 	}
-
 	anno = ioAttributes();
-	anno.add( "unit", string("rad") );
-	if ( h5w.nexus_write_at_once(
+	anno.add( "units", string("radian") );
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 3, 3},
-				{f64.size() / 3, 3},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({f64.size() / 3, 3}, {f64.size() / 3, 3}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1078,12 +1012,10 @@ void caHdl::nexus_write_snapshot_grain_based()
 		f64.push_back( RHOMAX_WELLANNEALED );
 	}
 	anno = ioAttributes();
-	anno.add( "unit", string("1/m^2") );
-	if ( h5w.nexus_write_at_once(
+	anno.add( "units", string("1 / meter ** 2") );
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1},
-				{f64.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({f64.size()}, {f64.size()}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1104,9 +1036,15 @@ void caHdl::nexus_write_snapshot_front_based()
 
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
 	ioAttributes anno = ioAttributes();
-	string grpnm = "";
+	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/recrystallization_front";
 	string dsnm = "";
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_front";
+
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXmicrostructure_feature") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
 
 	vector<short> i16;
 	dsnm = grpnm + "/coordinate";
@@ -1137,12 +1075,9 @@ void caHdl::nexus_write_snapshot_front_based()
 	} //next region
 
 	anno = ioAttributes();
-	anno.add( "unit", string("px") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({i16.size() / 3, 3},
-				{i16.size() / 3, 3},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({i16.size() / 3, 3}, {i16.size() / 3, 3}),
 		i16,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1151,7 +1086,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	i16 = vector<short>();
 
 	vector<unsigned short> u16;
-	dsnm = grpnm + "/thread_identifier";
+	dsnm = grpnm + "/thread_id";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1168,14 +1103,10 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u16.size() / 1, 1},
-				{u16.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u16.size()}, {u16.size()}),
 		u16,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1184,7 +1115,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	u16 = vector<unsigned short>();
 
 	vector<unsigned int> u32;
-	dsnm = grpnm + "/deformed_grain_identifier";
+	dsnm = grpnm + "/deformed_grain_id";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1201,14 +1132,10 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u32.size() / 1, 1},
-				{u32.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u32.size()}, {u32.size()}),
 		u32,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1216,7 +1143,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	}
 	u32 = vector<unsigned int>();
 
-	dsnm = grpnm + "/recrystallized_grain_identifier";
+	dsnm = grpnm + "/recrystallized_grain_id";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1233,14 +1160,10 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u32.size() / 1, 1},
-				{u32.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u32.size()}, {u32.size()}),
 		u32,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1266,14 +1189,10 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1},
-				{u08.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u08.size()}, {u08.size()}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1298,13 +1217,10 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u08.size() / 1, 1},
-				{u08.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u08.size()}, {u08.size()}),
 		u08,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1313,7 +1229,7 @@ void caHdl::nexus_write_snapshot_front_based()
 	u08 = vector<unsigned char>();
 
 	vector<double> f64;
-	dsnm = grpnm + "/recrystallized_volume_fraction";
+	dsnm = grpnm + "/recrystallized_fraction";
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
 		front = this->regions[r]->myRXFrontInside;
@@ -1330,13 +1246,10 @@ void caHdl::nexus_write_snapshot_front_based()
 			}
 		}
 	} //next region
-
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1},
-				{f64.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({f64.size()}, {f64.size()}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1363,11 +1276,9 @@ void caHdl::nexus_write_snapshot_front_based()
 	} //next region
 
 	anno = ioAttributes();
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
-		io_info({f64.size() / 1, 1},
-				{f64.size() / 1, 1},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({f64.size()}, {f64.size()}),
 		f64,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1385,6 +1296,7 @@ void caHdl::nexus_write_snapshot_cell_based()
 			this->myensHdl->ensCAGeometry.nboxvol_rdtdnd, INVALID_CELLASSIGNMENT );
 
 	uint32_t nreg = this->regions.size();
+	uint32_t ndisjoint_grains = mydefgpool.size() + myrxgpool.size();
 	for ( uint32_t r = 0; r < nreg; r++ ) {
 		uint32_t xmi = this->regions[r]->myGeom.nreg_rdmin; //global coordinates all inclusive [imi, imx]
 		uint32_t ymi = this->regions[r]->myGeom.nreg_tdmin;
@@ -1419,13 +1331,13 @@ void caHdl::nexus_write_snapshot_cell_based()
 						u32[index] = gridvalue;
 					}
 					else if ( gridvalue == CURRENTLY_INFECTED ) {
-						u32[index] = CURRENTLY_INFECTED;
+						u32[index] = ndisjoint_grains + 2000; //CURRENTLY_INFECTED;
 					}
 					else if ( gridvalue == CELL_IS_A_PARTICLE ) {
-						u32[index] = CELL_IS_A_PARTICLE;
+						u32[index] = ndisjoint_grains + 1000; //CELL_IS_A_PARTICLE;
 					}
 					else {
-						u32[index] = INVALID_CELLASSIGNMENT;
+						u32[index] = ndisjoint_grains + 3; //INVALID_CELLASSIGNMENT;
 					}
 					c++;
 				} //scan +x line
@@ -1435,18 +1347,22 @@ void caHdl::nexus_write_snapshot_cell_based()
 
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
 	ioAttributes anno = ioAttributes();
-	string grpnm = "";
+	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(this->loginfo_grainevo_cnt + 1) + "/grid";
 	string dsnm = "";
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grid";
 
-	dsnm = grpnm + "/grain_identifier";
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	anno.add( "NX_class", string("NXcg_grid") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	dsnm = grpnm + "/indices_crystal";
+	anno = ioAttributes();
+	if ( h5w.nexus_write(
 		dsnm,
 		io_info({this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
-				{this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+				{this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd}),
 		u32,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1484,15 +1400,12 @@ void caHdl::nexus_write_snapshot_cell_based()
 			} //scan +y line
 		} //scan +z lines
 	} //for each thread
-
-	dsnm = grpnm + "/thread_identifier";
+	dsnm = grpnm + "/thread_id";
 	anno = ioAttributes();
-	//anno.add( "unit", string("NX_UNITLESS") );
-	if ( h5w.nexus_write_at_once(
+	if ( h5w.nexus_write(
 		dsnm,
 		io_info({this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
-				{this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd},
-				MYHDF5_COMPRESSION_GZIP, 0x01),
+				{this->myCAGeometry.nboxedge_nd, this->myCAGeometry.nboxedge_td, this->myCAGeometry.nboxedge_rd}),
 		u16,
 		anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing " << dsnm << " failed !" << "\n";
@@ -1505,60 +1418,144 @@ void caHdl::nexus_write_snapshot_cell_based()
 void caHdl::nexus_write_snapshot()
 {
 	//CALLED FROM WITHIN PARALLEL REGION BUT BY THE MASTER THREAD ONLY
+	cellP front = NULL;
+	uint32_t ncandidates = 0;
+	uint32_t nreg = this->regions.size();
+	bool still_active_cells = false;
+	for ( uint32_t r = 0; r < nreg; r++ ) {
+		if ( still_active_cells == false ) {
+			ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
+			front = this->regions[r]->myRXFrontInside;
+			for ( uint32_t c = 0; c < ncandidates; c++ ) {
+				if ( front[c].activity == ACTIVE ) {
+					still_active_cells = true;
+					break;
+				}
+			}
+		}
+		if ( still_active_cells == false ) {
+			ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
+			front = this->regions[r]->myRXFrontBorder;
+			for ( uint32_t c = 0; c < ncandidates; c++ ) {
+				if ( front[c].activity == ACTIVE ) {
+					still_active_cells = true;
+					break;
+				}
+			}
+		}
+		if ( still_active_cells == false ) {
+			continue;
+		}
+		break;
+	} //next region
+
+	if ( still_active_cells == false ) {
+		return;
+	}
 
 	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
+	string grpnm = "/entry1/spatiotemporal1/microstructure" + to_string(loginfo_grainevo_cnt + 1);
+	string subgrpnm = "";
 
-	string grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step);
 	ioAttributes anno = ioAttributes();
-	anno.add( "NX_class", string("NXms_snapshot") );
+	anno.add( "NX_class", string("NXmicrostructure") );
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
 		cerr << "Writing group " << grpnm << " failed !" << "\n";
 		return;
 	}
-
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grid";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXcg_grid") );
-	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
-
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_kinetics";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXprocess") );
-	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
-
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/recrystallization_front";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXprocess") );
-	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
-
-	grpnm = "/entry/rve/snapshot_set/snapshot" + to_string(this->step) + "/grain_ensemble";
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXprocess") );
-	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
-		cerr << "Writing group " << grpnm << " failed !" << "\n";
-		return;
-	}
-
-	nexus_write_automaton_geometry();
 
 	nexus_write_snapshot_kinetics();
-
-	nexus_write_snapshot_texture();
-
 	nexus_write_snapshot_grain_based();
-
 	nexus_write_snapshot_front_based();
-
 	nexus_write_snapshot_cell_based();
+}
+
+
+void caHdl::nexus_write_summary_stats()
+{
+	//CALLED FROM WITHIN PARALLEL REGION BY MASTER ONLY!
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( myensHdl->nexus_results_file_name );
+	string grpnm = "/entry1/spatiotemporal1/summary_statistics";
+	ioAttributes anno = ioAttributes();
+	anno.add( "NX_class", string("NXprocess") );
+	anno.add( "default", string("kinetics") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << grpnm << " failed !" << "\n";
+		return;
+	}
+
+	//add NeXus default plot and annotations
+	string subgrpnm = grpnm + "/kinetics";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXdata") );
+	anno.add( "signal", string("x") );
+	//anno.add( "axes", string("time") );
+	anno.add( "axes", string("iteration") );
+	anno.add( "time_indices", (unsigned int) 0 );
+	anno.add( "iteration_indices", (unsigned int) 0 );
+	if ( h5w.nexus_write_group( subgrpnm, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing group " << subgrpnm << " failed !" << "\n";
+		return;
+	}
+
+	string dsnm = subgrpnm + "/title";
+	string title = "X(i)";  //"X(t)"
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, title, anno ) != MYHDF5_SUCCESS ) {
+		cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	dsnm = subgrpnm + "/time";
+	vector<double> f64 = vector<double>( mynexusstats.size(), 0.0);
+	for ( size_t i = 0; i < mynexusstats.size(); i++ ) {
+		f64.push_back(mynexusstats[i].localtime );
+	}
+	anno = ioAttributes();
+	anno.add( "units", string("s") );
+	anno.add( "long_name", string("t(s)") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size()}, {f64.size()}),
+		f64,
+		anno) != MYHDF5_SUCCESS ) {
+			cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+
+	dsnm = subgrpnm + "/x";
+	f64 = vector<double>( mynexusstats.size(), 0.0);
+	for ( size_t i = 0; i < mynexusstats.size(); i++ ) {
+		f64.push_back(mynexusstats[i].localxexact );
+	}
+	anno = ioAttributes();
+	anno.add( "long_name", string("Recrystallized volume fraction X") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size()}, {f64.size()}),
+		f64,
+		anno) != MYHDF5_SUCCESS ) {
+			cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	f64 = vector<double>();
+
+	dsnm = subgrpnm + "/iteration";
+	vector<unsigned int> u32 = vector<unsigned int>( mynexusstats.size(), 0 );
+	for ( size_t i = 0; i < mynexusstats.size(); i++ ) {
+		u32.push_back(mynexusstats[i].localiteration );
+	}
+	anno = ioAttributes();
+	anno.add( "long_name", string("Iteration step i") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({u32.size()}, {u32.size()}),
+		u32,
+		anno) != MYHDF5_SUCCESS ) {
+			cerr << "Writing " << dsnm << " failed !" << "\n";
+		return;
+	}
+	u32 = vector<unsigned int>();
 }
 
 
@@ -1596,7 +1593,7 @@ void caHdl::binarize_partiallyrxed_microstructure( vector<bool>* outp )
 				xyzwoff = xmi+(y+ymi)*gx + zwoff;
 				for ( uint32_t x = 0; x < rx; x++ ) {
 					c = thegrid[x+yzroff]; //read cell index, recrystallized?
-					if ( c >= reg_ndgp ) 
+					if ( c >= reg_ndgp )
 						outp->at(x+xyzwoff) = true;
 					if ( c == CURRENTLY_INFECTED )
 						outp->at(x+xyzwoff) = true;
@@ -1607,7 +1604,7 @@ void caHdl::binarize_partiallyrxed_microstructure( vector<bool>* outp )
 }
 
 
-void caHdl::log_PERCOLATION( void )
+void caHdl::log_PERCOLATION()
 {
 	//CALLED FROM WITHIN A PARALLEL REGION
 	//MK::currently called by omp thread master only!
@@ -1732,23 +1729,23 @@ void caHdl::log_grain_IDs( double t ){
 	    uint32_t c = 0;
 
 	    uint32_t* thegrid = this->regions[r]->mycellgrid;
-   
+
             for ( uint32_t z = 0; z < rz; z++){
                 for (uint32_t y = 0; y < ry; y++){
-                    yzoffset = y*rx + z*ry*rx; 
+                    yzoffset = y*rx + z*ry*rx;
                     for (uint32_t x = 0; x < rx; x++){
                        index = x + (y + rymin)*myCAGeometry.nboxedge_rd + (z + rzmin)*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
                        c = thegrid[x + yzoffset];
                        if (c <= CA_GRAINIDS_MAXIMUM){ //not infected
                           grain_ID[index] = c;
                        }
-                    
-                       } 
+
+                       }
 
                 }
 
              } // z layer completed
-             
+
              // assuming that myRXFrontInside & myRXFrontBorder have all the infected cells
              // analyze cells inside
 	     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
@@ -1764,7 +1761,7 @@ void caHdl::log_grain_IDs( double t ){
                     }
                  }
              }
-   
+
              // analyse cells border
 	     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
 	     front = this->regions[r]->myRXFrontBorder;
@@ -1779,7 +1776,7 @@ void caHdl::log_grain_IDs( double t ){
                     }
                  }
              }
-             
+
         } // loop for threads
         // need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         /*
@@ -1815,28 +1812,28 @@ void caHdl::log_grain_rho_cell_based( double t ){
 		    uint32_t c = 0;
 
 		    uint32_t* thegrid = this->regions[r]->mycellgrid;
-	   
+
 		    for ( uint32_t z = 0; z < rz; z++){
 			for (uint32_t y = 0; y < ry; y++){
-			    yzoffset = y*rx + z*ry*rx; 
+			    yzoffset = y*rx + z*ry*rx;
 			    for (uint32_t x = 0; x < rx; x++){
 			       index = x + (y + rymin)*myCAGeometry.nboxedge_rd + (z + rzmin)*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
 			       c = thegrid[x + yzoffset];
 			       if (c <= CA_GRAINIDS_MAXIMUM){ //not infected either RX or deformed
 				  if (c >= ndg){ // recrystallized
-				      rho[index] = RHO_RECRYSTALLIZED_MATERIAL; 
+				      rho[index] = RHO_RECRYSTALLIZED_MATERIAL;
 				  }
 				  else { // deformed
 				      rho[index] = mydefgpool[c].rho;
 				  }
 			       }
-			    
-			       } 
+
+			       }
 
 			}
 
 		     } // z layer completed
-		     
+
 		     // assuming that myRXFrontInside & myRXFrontBorder have all the infected cells
 		     // analyze cells inside
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
@@ -1850,11 +1847,11 @@ void caHdl::log_grain_rho_cell_based( double t ){
 			    }
 			    //grain_ID[ixyz] = ndg + front[c].myrxgid;
 			    else{ //recrystallized
-			    rho[ixyz] = RHO_RECRYSTALLIZED_MATERIAL; 
+			    rho[ixyz] = RHO_RECRYSTALLIZED_MATERIAL;
 			    }
 			 }
 		     }
-	   
+
 		     // analyse cells border
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
 		     front = this->regions[r]->myRXFrontBorder;
@@ -1865,15 +1862,15 @@ void caHdl::log_grain_rho_cell_based( double t ){
 			       rho[ixyz] = mydefgpool[front[c].mydefgid].rho;
 			    }
 			    else{ //recrystallized
-			    rho[ixyz] = RHO_RECRYSTALLIZED_MATERIAL; 
+			    rho[ixyz] = RHO_RECRYSTALLIZED_MATERIAL;
 			    }
 			 }
 		     }
-		     
+
 		} // loop for threads
 
 		// loop over the grain IDs to fill the rho array
-		
+
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         /*
         //##MK::2023-V
@@ -1909,36 +1906,36 @@ void caHdl::log_grain_rho_cell_based( double t ){
 		    uint32_t c = 0;
 
 		    uint32_t* thegrid = this->regions[r]->mycellgrid;
-	   
+
 		    for ( uint32_t z = 0; z < rz; z++){
 			for (uint32_t y = 0; y < ry; y++){
-			    yzoffset = y*rx + z*ry*rx; 
+			    yzoffset = y*rx + z*ry*rx;
 			    for (uint32_t x = 0; x < rx; x++){
 			       index = x + (y + rymin)*myCAGeometry.nboxedge_rd + (z + rzmin)*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
 			       c = thegrid[x + yzoffset];
 			       if (c <= CA_GRAINIDS_MAXIMUM){ //not infected either RX or deformed
 				  if (c >= ndg){ // recrystallized
 				      oid = myrxgpool[c - ndg].caori;
-				      ori_quats[index][0] = myoripool[oid].q0; 
-				      ori_quats[index][1] = myoripool[oid].q1; 
-				      ori_quats[index][2] = myoripool[oid].q2; 
-				      ori_quats[index][3] = myoripool[oid].q3; 
+				      ori_quats[index][0] = myoripool[oid].q0;
+				      ori_quats[index][1] = myoripool[oid].q1;
+				      ori_quats[index][2] = myoripool[oid].q2;
+				      ori_quats[index][3] = myoripool[oid].q3;
 				  }
 				  else { // deformed
 				      oid = mydefgpool[c].caori;
-				      ori_quats[index][0] = myoripool[oid].q0; 
-				      ori_quats[index][1] = myoripool[oid].q1; 
-				      ori_quats[index][2] = myoripool[oid].q2; 
-				      ori_quats[index][3] = myoripool[oid].q3; 
+				      ori_quats[index][0] = myoripool[oid].q0;
+				      ori_quats[index][1] = myoripool[oid].q1;
+				      ori_quats[index][2] = myoripool[oid].q2;
+				      ori_quats[index][3] = myoripool[oid].q3;
 				  }
 			       }
-			    
-			       } 
+
+			       }
 
 			}
 
 		     } // z layer completed
-		     
+
 		     // assuming that myRXFrontInside & myRXFrontBorder have all the infected cells
 		     // analyze cells inside
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
@@ -1962,7 +1959,7 @@ void caHdl::log_grain_rho_cell_based( double t ){
 			    }
 			 }
 		     }
-	   
+
 		     // analyse cells border
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
 		     front = this->regions[r]->myRXFrontBorder;
@@ -1987,11 +1984,11 @@ void caHdl::log_grain_rho_cell_based( double t ){
 			    }
 			 }
 		     }
-		     
+
 		} // loop for threads
 
 		// loop over the grain IDs to fill the rho array
-		
+
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
 		/*
         //##MK::2023-V
@@ -2035,11 +2032,11 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 		    uint32_t c = 0;
 
 		    uint32_t* thegrid = this->regions[r]->mycellgrid;
-	   
+
 		    uint32_t count = 0;
 		    for ( uint32_t z = 0; z < rz; z++){
 			for (uint32_t y = 0; y < ry; y++){
-			    yzoffset = y*rx + z*ry*rx; 
+			    yzoffset = y*rx + z*ry*rx;
 			    for (uint32_t x = 0; x < rx; x++){
 			       index = x + (y + rymin)*myCAGeometry.nboxedge_rd + (z + rzmin)*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
 			       c = thegrid[x + yzoffset];
@@ -2050,23 +2047,23 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 			       if (c <= CA_GRAINIDS_MAXIMUM){ //not infected either RX or deformed
 				  count = count + 1;
 				  if (c >= ndg){ // recrystallized
-				      //RXfrac[index] = RXFRACTION_THRESHOLD; 
-				      RXfrac[index] = 1.0; 
+				      //RXfrac[index] = RXFRACTION_THRESHOLD;
+				      RXfrac[index] = 1.0;
 				  }
 				  else { // deformed
 				      RXfrac[index] = 0.0;
 				  }
 			       }
-			    
-			       } 
+
+			       }
 
 			}
 
 		     } // z layer completed
-	     
+
 		     //std::cout << "The non infected cells at time " << t << "are " << count << std::endl;
-		     //std::cout << "The infected cells would be" << rx*ry*rz - count << std::endl; 
-		     
+		     //std::cout << "The infected cells would be" << rx*ry*rz - count << std::endl;
+
 		     // assuming that myRXFrontInside & myRXFrontBorder have all the infected cells
 		     // analyze cells inside
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontInside;
@@ -2079,12 +2076,12 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 			       RXfrac[ixyz] = front[c].rxFrac;
 			    }
 			    else{ // just recrytsallized
-			    //RXfrac[ixyz] = RXFRACTION_THRESHOLD; 
-			    RXfrac[ixyz] = 1.0; 
+			    //RXfrac[ixyz] = RXFRACTION_THRESHOLD;
+			    RXfrac[ixyz] = 1.0;
 			    }
 			 }
 		     }
-	   
+
 		     // analyse cells border
 		     ncandidates = this->regions[r]->nextSlotNeverActiveRXFrontBorder;
 		     front = this->regions[r]->myRXFrontBorder;
@@ -2096,15 +2093,15 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 			       RXfrac[ixyz] = front[c].rxFrac;
 			    }
 			    else {// just recrystalized
-			    //RXfrac[ixyz] = RXFRACTION_THRESHOLD; 
-			    RXfrac[ixyz] = 1.0; 
+			    //RXfrac[ixyz] = RXFRACTION_THRESHOLD;
+			    RXfrac[ixyz] = 1.0;
 			    }
 			 }
 		     }
-		     
+
 		} // loop for threads
 
-		//std::cout << "In the end the RXfrac array is" << RXfrac[166509] << "at time " << t << std::endl; 
+		//std::cout << "In the end the RXfrac array is" << RXfrac[166509] << "at time " << t << std::endl;
 		// need to create the HDF5 file outside the parallel region (inside the parallel region might need some other work arounds)
         /*
         //##MK::2023-V
@@ -2125,7 +2122,7 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 
 	    for ( uint32_t g = 0; g < ngrains; g++){
 		if (g < ndg){ //deformed grain
-		    rho[g] = mydefgpool[g].rho; 
+		    rho[g] = mydefgpool[g].rho;
 		}
 		else{ // recrystallized grain
 		    rho[g] = RHO_RECRYSTALLIZED_MATERIAL;
@@ -2150,19 +2147,19 @@ double caHdl::calculate_RXfrac_total( std::vector<double> RXfrac ){
 		std::vector<std::vector<double>> ori_quats(ngrains, std::vector<double>(4));
 
 		for (uint32_t g = 0; g < ngrains; g++){
-		    if (g < ndg){// deformed 
-			oid = mydefgpool[g].caori; 
-			ori_quats[g][0] = myoripool[oid].q0; 
-			ori_quats[g][1] = myoripool[oid].q1; 
-			ori_quats[g][2] = myoripool[oid].q2; 
-			ori_quats[g][3] = myoripool[oid].q3; 
+		    if (g < ndg){// deformed
+			oid = mydefgpool[g].caori;
+			ori_quats[g][0] = myoripool[oid].q0;
+			ori_quats[g][1] = myoripool[oid].q1;
+			ori_quats[g][2] = myoripool[oid].q2;
+			ori_quats[g][3] = myoripool[oid].q3;
 		    }
 		    else{
                 oid = myrxgpool[g - ndg].caori;
-                ori_quats[g][0] = myoripool[oid].q0; 
-                ori_quats[g][1] = myoripool[oid].q1; 
-                ori_quats[g][2] = myoripool[oid].q2; 
-                ori_quats[g][3] = myoripool[oid].q3; 
+                ori_quats[g][0] = myoripool[oid].q0;
+                ori_quats[g][1] = myoripool[oid].q1;
+                ori_quats[g][2] = myoripool[oid].q2;
+                ori_quats[g][3] = myoripool[oid].q3;
             }
         }
 

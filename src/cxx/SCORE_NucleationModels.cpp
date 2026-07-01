@@ -1,46 +1,4 @@
-/* 
-*	Copyright Markus K�hbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. K�hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. K�hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ J�lich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #ifndef __SCORE_KERNEL_H_INCLUDED__
 //#define __SCORE_KERNEL_H_INCLUDED__
@@ -97,14 +55,14 @@ struct organizeGBNuc caHdl::find_gbface( uint32_t idx, vector<organizeGBNuc>* lu
 }
 
 
-void caHdl::solve_nucmodeling_gbnuc_pickrandomly( void )
+void caHdl::solve_nucmodeling_gbnuc_pickrandomly()
 {
 	//this grain boundary nucleation model spreads a total of NucleiDesired randomly on the available boundary sites
 	uint32_t NucleiDesired = this->myNucleationModel.defaultnucdensity;
 	uint32_t NucleiPlaced = 0;
 	uint32_t NucleiUnplaceable = 0;
 
-	//MK::it is errorneous to simply pick a grain and a boundary at random and place a nucleus at a cell because 
+	//MK::it is erroneous to simply pick a grain and a boundary at random and place a nucleus at a cell because
 	//the individual boundary face cell counts are different, therefore first we have to find the size of the boundaries
 
 	//count boundary cell structure
@@ -136,7 +94,7 @@ void caHdl::solve_nucmodeling_gbnuc_pickrandomly( void )
 
 			//MK::we remember that all cellsBndFast arrays maintain not directly the location but location + 1 to enable
 			//the flagging of cells as already occupied, so lets check for this
-			lc = rndcell - whereisthis.istart; 
+			lc = rndcell - whereisthis.istart;
 			if ( this->regions[whereisthis.thr]->myjunctions.fjuncSkeleton[whereisthis.pmax].thefaces[whereisthis.fid].voxelizedface[lc].location == EMPTY ) {
 				repeat++;
 				continue;
@@ -204,7 +162,7 @@ void caHdl::solve_nucmodeling_gbnuc_pickrandomly( void )
 }
 
 
-void caHdl::solve_nucmodeling_csr_enforced( void )
+void caHdl::solve_nucmodeling_csr_enforced()
 {
 	//MK::place exactly myNucleationModel.defaultnucdensity in each solitary unit domain (THIS IS THE OLD SCORE NUCLEATION MODEL utilzed in the K\"uhbach et. al. 2015 paper)
 	uint32_t nuc = 0;
@@ -278,7 +236,7 @@ void caHdl::solve_nucmodeling_csr_enforced( void )
 
 		//damn, collision - AlreadyOccupied == true so attempt a new place
 		maxattempts++;
-	} 
+	}
 	while (nuc < myNucleationModel.defaultnucdensity && maxattempts < MAXATTEMPTS_NUCSITE );
 
 	//add characterization of resulting nucleus placement here...
@@ -289,7 +247,7 @@ void caHdl::solve_nucmodeling_csr_enforced( void )
 }
 
 
-void caHdl::solve_nucmodeling_csr_pickrandomly( void )
+void caHdl::solve_nucmodeling_csr_pickrandomly()
 {
 	//MK::in a large CSR point pattern with a unit density what is the size of the observation window in generalized coordinates?
 	//with myNucleationModel.defaultnucdensity as the limiting unit density for very many draws of owins
@@ -402,7 +360,7 @@ void caHdl::solve_nucmodeling_csr_pickrandomly( void )
 }
 
 
-void caHdl::solve_nucmodeling_csrdiehl( void )
+void caHdl::solve_nucmodeling_csrdiehl()
 {
 	//if ( myensHdl->experimentInput == false ) { cout << "ERROR::This nucleation model is design only for utilization with a SEM/EBSD mapping!" << endl; return; }
 	//MK::random subwindow of a CSR point process (without enforcing fixed number of nuclei), orientation inheriting from parent grains + scatter
@@ -532,7 +490,7 @@ void caHdl::solve_nucmodeling_csrdiehl( void )
 }
 
 
-void caHdl::init_myMaternUniverse( void )
+void caHdl::init_myMaternUniverse()
 {
 	//a very large Matern cluster process on a cubic RVE of size rvesize in micron is squeezed on a unit cube in \mathbb{R}^3
 	//point process is on cubic RVE with myNucleationModel.cluster_rvesize^3 micron each cluster radius is cluster_extenda * cellsize
@@ -610,7 +568,7 @@ cout << this->jobid << " -- GenerateMaternClusterUniverse NClust/MeanDensityPerC
 }
 
 
-void caHdl::pickrandomly_myMaternUniverse( void )
+void caHdl::pickrandomly_myMaternUniverse()
 {
 	//the solitary unit domain has a specific size (edge length in microns) that is a fraction of myNucleationModel.clust_rvesize
 	double owinx = myCAGeometry.boxedge_rd / myNucleationModel.cluster_rvesize;
@@ -706,7 +664,7 @@ cout << "The window = " << owinoo[XMI] << ";" << owinoo[XMX] << ";" << owinoo[YM
 
 		//placement only if site still unoccupied
 		if ( occupied == false ) {
-			//###currently, pick nucleus at random from worldrxgpool 
+			//###currently, pick nucleus at random from worldrxgpool
 			uint32_t luckyNucleus = localprng.MersenneTwister() * nworldrxgpool;
 
 			//contrary to the deformed grains in mydefgpool, each nucleus requires entry in myrxgpool as then incubation time can be different and furthermore also the site and single-nucleus resolved kinetics should be stored
@@ -745,78 +703,75 @@ cout << "The window = " << owinoo[XMI] << ";" << owinoo[XMX] << ";" << owinoo[YM
 	cout << "Clustering process performed with so many entries = " << myrxgpool.size() << endl;
 }
 
-void caHdl::solve_nucmodelling_dislo_ori_based( void )
+void caHdl::solve_nucmodelling_dislo_ori_based()
 {
-// This nucleation model is based on the nucleation criterion described in paper by Shah et al. (2022)
-// The actual nucleation sites are already detected by a post processing script. 
-// Here this info is read from the HDF5 file and then incorporated in the CA framework for their growth.
-        hid_t file;
-        hid_t group_ID;
-        std::vector<int> nuc_flag;
-    
-        uint32_t nbx = myCAGeometry.nboxedge_rd;
-        uint32_t nby = myCAGeometry.nboxedge_td;
-        uint32_t nbz = myCAGeometry.nboxedge_nd;
-        uint32_t ix,iy,iz,luckysite;
-        bool valid = false;
+	// This nucleation model is based on the nucleation criterion described in paper by Shah et al. (2022)
+	// The actual nucleation sites are already detected via a proprietary nucleation model, nuclei are marked in DREAM.3D
+	// Here this info is read from the HDF5 file and then incorporated in the CA framework for their growth.
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( damask_file_name );
+	string grpnm = "/DataContainers/SyntheticVolumeDataContainer/";
+	string dsnm = "";
 
-        // read the nucleation flag dataset from HDF5
-        //string fname = "/home/SCORE_orig/example_files/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
-        string fname = damask_file_name; //"/home/mkuehbach/SCORE-VITESH/SCORE_modified/example_files/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
+	dsnm = "CellData/nuc_flag";
+	vector<int> nuc_flag;
+	if ( h5r.nexus_read( grpnm + dsnm, nuc_flag ) != MYHDF5_SUCCESS ) {
+		cerr << grpnm << dsnm << "\n";
+	}
 
-        
-        file = HDF5_openFile( fname );
-        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
-        nuc_flag = HDF5_read_dataset_int_rank_4( group_ID, "nuc_flag");
-       
-        double qderived[4] = {1.0, 0.0, 0.0, 0.0};
-        for (uint32_t i = 0; i < nbx*nby*nbz; i++){
-            if (nuc_flag[i] == 1){
-                luckysite = i;
-                valid = true;
-                // check if the nucleus was already placed in the CA box
-                for (uint32_t s = 0; s < myrxgpool.size(); s++){
-                    if ( luckysite == myrxgpool[s].nucsite ){valid = false; break;}
-                }
-                // still true, so plant a nucleus
-                if ( valid == true ){
-	            //inspect parent grain at the site, as nucleation functions are executed before solve_REPLACE_CA_STRUCTURE() we have to
-	            //access deformed grains via the tmpdefgseeds ID references
-                    // how to get co-ordinates from indices
-                    // https://stackoverflow.com/questions/10155893/1d-vector-3d-indices
-                    ix = i%nbx; 
-                    iy = (i/nbx)%nby;
-                    iz = ((i/nbx)/nby)%nbz;
-	            uint32_t parentid = tmpdefgseeds[getDeformedGrainID( ix, iy, iz )].mydefgpoolid;
-	            uint32_t oid = mydefgpool[parentid].caori;
-	            double qparent_ref[4] = { myoripool[oid].q0, myoripool[oid].q1, myoripool[oid].q2, myoripool[oid].q3 };
-                    qderived[0] = qparent_ref[0];
-                    qderived[1] = qparent_ref[1];
-                    qderived[2] = qparent_ref[2];
-                    qderived[3] = qparent_ref[3];
-                    
-                }
-            
-            struct carxg rxg;
-            rxg.caori = ca_check_disjunctness_core( qderived, false, 0.0, 0.0, 0.0 ); //internal quat2euler
-            rxg.cellcount = 0;
-            rxg.nucsite   = luckysite;
-            rxg.startingsite = luckysite;
-            rxg.tincub    = 0.0; //## assume site-saturation
+	uint32_t nbx = myCAGeometry.nboxedge_rd;
+	uint32_t nby = myCAGeometry.nboxedge_td;
+	uint32_t nbz = myCAGeometry.nboxedge_nd;
+	uint32_t ix, iy, iz, luckysite;
+	bool valid = false;
+	double qderived[4] = {MYONE, MYZERO, MYZERO, MYZERO};
+	for ( uint32_t i = 0; i < nbx*nby*nbz; i++ ) {
+		if ( nuc_flag[i] != 1 ) { //only a small fraction of cells are typically set as nuclei
+			continue;
+		}
+		luckysite = i;
+		valid = true;
+		// check if the nucleus was already placed in the CA box
+		for ( uint32_t rg = 0; rg < myrxgpool.size(); rg++ ){
+			if ( luckysite == myrxgpool[rg].nucsite ){
+				valid = false;
+				break;
+			}
+		}
+		// still true, so plant a nucleus
+		if ( valid == true ) {
+			//inspect parent grain at the site, as nucleation functions are executed before solve_REPLACE_CA_STRUCTURE() we have to
+			//access deformed grains via the tmpdefgseeds ID references
+			// how to get co-ordinates from indices
+			// https://stackoverflow.com/questions/10155893/1d-vector-3d-indices
+			ix = i % nbx;
+			iy = (i / nbx) % nby;
+			iz = ((i / nbx ) / nby) % nbz;
+			uint32_t parentid = tmpdefgseeds[getDeformedGrainID( ix, iy, iz )].mydefgpoolid;
+			uint32_t oid = mydefgpool[parentid].caori;
+			double qparent_ref[4] = { myoripool[oid].q0, myoripool[oid].q1, myoripool[oid].q2, myoripool[oid].q3 };
+			qderived[0] = qparent_ref[0];
+			qderived[1] = qparent_ref[1];
+			qderived[2] = qparent_ref[2];
+			qderived[3] = qparent_ref[3];
 
-            myrxgpool.push_back( rxg );
+			struct carxg rxg;
+			rxg.caori = ca_check_disjunctness_core( qderived, false, 0.0, 0.0, 0.0 ); //internal quat2euler
+			rxg.cellcount = 0;
+			rxg.nucsite = luckysite;
+			rxg.startingsite = luckysite;
+			rxg.tincub = 0.; //## assume site-saturation
 
-            }
-
-        }
-
-
+			myrxgpool.push_back( rxg );
+		}
+	}
+	nuc_flag = vector<int>();
+	cout << "solve_nucmodelling_dislo_ori_based done" << "\n";
 }
 
-void caHdl::solve_nucmodeling_ellipsoidalcluster_pickrandomly( void )
+
+void caHdl::solve_nucmodeling_ellipsoidalcluster_pickrandomly()
 {
-	
-cout << "Pick cluster randomly" << endl;
+	cout << "Pick cluster randomly" << endl;
 
 	//generate a large Matern cluster process on the unit cube [0,1]^3
 	init_myMaternUniverse();

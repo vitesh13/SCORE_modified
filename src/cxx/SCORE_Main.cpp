@@ -1,82 +1,41 @@
-/* 
-*	Copyright Markus K�hbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. K�hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. K�hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ J�lich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "SCORE_Kernel.h"
+//#include "thirdparty/optional/yamlcore/RAPIDYAMLCore.h"
 
-using namespace std;
+//using namespace std;
 
-//MK::dont forget to initialize proper environment by setting OMP_NUM_THREADS and 
+//MK::dont forget to initialize proper environment by setting OMP_NUM_THREADS and
 //utilize process + thread pinning via $export OMP_NUM_THREADS=<n> and $export KMP_AFFINITY=verbose,scatter
 //execute program via $mpiexec -n <numproc> scorehybrid_rhcs <ID> <INPUTFILE> optional:<EBSDMAPPING> <PRNGSEED>
 #define	ID						1
 #define INPUTFILE				2
-#define EBSDMAPPING				3
-#define PRNGSEED				4
 
+//#define EBSDMAPPING			3
+//#define PRNGSEED				4
 
+/*
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
+*/
 
 void die( const char* message, bool inmpi ) {
 	cout << "ERROR::" << message << endl;
-	if ( inmpi == true ) 
+	if ( inmpi == true )
 		MPI_Finalize();
 }
 
 void versioninfo( int myrank, int nranks ) {
-	cout << "SCORE GITSHA " << string(xstr(GITSHA)) << "\n";
+	//string test = replace_all_occurrences(string("____"), '_', '-'); cout << test << "\n";
+	string score = replace_all_occurrences(string(xstr(SCOREVERSION)), '_', '-');
+	string nexus = replace_all_occurrences(string(xstr(NEXUSVERSION)), '_', '-');
+	//replacement is necessary because during the compilation in cmake
+	//- is replaced with _ as - is not allow by the C preprocessor
+	cout << "SCORE version " << score << "\n";
+	cout << "NeXus version " << nexus << "\n";
 	cout << "SCORE starting rank " << myrank << " within " << nranks << "\n";
-	cout << "SCORE v" << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_REVISION;
-#ifdef IS_BETAVERSION_YES
-		cout << "beta" << endl;
-#else
-		cout << endl;
-#endif
-		cout << "SCORE the coordinate system is right-handed with x pointing right and ||RD, y pointing inwards and ||TD, and z pointing upwards and ||ND" << endl;
+	cout << "SCORE the coordinate system is right-handed with x pointing right and ||RD, y pointing inwards and ||TD, and z pointing upwards and ||ND" << endl;
 #ifdef USE_QUATLIB_DEGRAEF
 		cout << "SCORE the mathlibrary is the Rowenhorst/Rollett/Konijnenberg/deGraef et. al. library" << endl;
 #endif
@@ -88,11 +47,12 @@ void versioninfo( int myrank, int nranks ) {
 #endif
 }
 
+/*
 bool checkworkingdirectory( string dirname ) {
 	//create an organizational folder structure specific wf simulation if not already existing
 	int status = 0;
 	struct stat st = {0};
-	if (stat(dirname.c_str(), &st) == -1) { //if not existent attempt to generate simulation folder 
+	if (stat(dirname.c_str(), &st) == -1) { //if not existent attempt to generate simulation folder
 		status = mkdir( dirname.c_str(), 0777);
 		//perror("mkdir");
 		if ( stat(dirname.c_str(), &st) == -1) { return false; } //still not there go out
@@ -139,96 +99,10 @@ bool checkworkingdirectory( string dirname ) {
 		status = mkdir( prof.c_str(), 0777 );
 		if ( stat(prof.c_str(), &st) == -1) { return false; }
 	}
-
 	//##MK::add further folders to organize data storage
 	return true;
 }
-
-
-void test_hdf5()
-{
-	//HDF5 examples
-	string nexus_results_file_name = "SCORE.Results.SimID.Test.nxs";
-	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( nexus_results_file_name );
-	if( h5w.nexus_create() != MYHDF5_SUCCESS ) {
-		cerr << "Unable to create " << nexus_results_file_name << "\n";
-		return;
-	}
-
-	string grpnm = "/entry";
-	ioAttributes anno = ioAttributes();
-	anno = ioAttributes();
-	anno.add( "NX_class", string("NXentry") );
-	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
-
-	anno = ioAttributes();
-	anno.add( "unit", string("nm") );
-	//contiguous
-	//()
-	string dsnm = "/entry/u32_0d_cnt";
-	vector<unsigned int> uint;
-	for( unsigned int i = 0; i < 1; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info(), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(2,)
-	dsnm = "/entry/u32_1d_cnt";
-	for( unsigned int i = 0; i < 2; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(3,2)
-	dsnm = "/entry/u32_2d_cnt";
-	for( unsigned int i = 0; i < 3*2; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(4,3,2)
-	dsnm = "/entry/u32_3d_cnt";
-	for( unsigned int i = 0; i < 4*3*2; i++ ) { uint.push_back(i); }
-	//should be interpreted as 4 is the x changing fastest, 3 changing slower, 2, two images changing slowest
-	//see how for d >= 3 the dimension shape sequence has to be reversed i.e. 2, 3, 4 instead of 4, 3, 2 !!!
-	if ( h5w.nexus_write_at_once( dsnm, io_info({2, 3, 4}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(6*5*4*3)
-	dsnm = "/entry/u32_4d_cnt";
-	for( unsigned int i = 0; i < 6*5*4*3; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 4, 5, 6}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//chunked
-	//(2,)
-	dsnm = "/entry/u32_1d_chk";
-	for( unsigned int i = 0; i < 2; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(3,2)
-	dsnm = "/entry/u32_2d_chk";
-	for( unsigned int i = 0; i < 3*2; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 2}, {3, 2}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(4,3,2)
-	dsnm = "/entry/u32_3d_chk";
-	for( unsigned int i = 0; i < 4*3*2; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({2, 3, 4}, {2, 3, 4}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//(6*5*4*3)
-	dsnm = "/entry/u32_4d_chk";
-	for( unsigned int i = 0; i < 6*5*4*3; i++ ) { uint.push_back(i); }
-	if ( h5w.nexus_write_at_once( dsnm, io_info({3, 4, 5, 6}, {3, 4, 5, 6}), uint, anno ) != MYHDF5_SUCCESS ) { return; }
-	uint = vector<unsigned int>();
-
-	//string_array
-	vector<string> str;
-	str.push_back("string_array");
-	dsnm = "/entry/string_array";
-	if ( h5w.nexus_write_at_once( dsnm, str, anno ) != MYHDF5_SUCCESS ) { return; }
-}
-
+*/
 
 int main(int argc, char** argv)
 {
@@ -236,37 +110,56 @@ int main(int argc, char** argv)
 	//set environment and working folders probe if input files are there and load them
 	ensembleHdlP myensemble = new ensembleHdl;
 	myensemble->simid = strtoul(argv[ID], NULL, 0 );
+#ifdef PARSE_CONFIG_FROM_HDF
+	myensemble->nexus_config_file_name = argv[INPUTFILE];
+#else
+#ifdef PARSE_CONFIG_FROM_YML
+	myensemble->yaml_config_file_name = argv[INPUTFILE];
+#else
 	myensemble->uds_config_file_name = argv[INPUTFILE];
+#endif
+#endif
 	myensemble->nexus_results_file_name = "SCORE.Results.SimID." + to_string(myensemble->simid) + ".nxs";
 	myensemble->init_nexus_results_file();
 
+	/*
 	string dirnm = "SCORE_" + std::to_string(myensemble->simid);
 	myensemble->simwrkdir = dirnm;
 	if ( checkworkingdirectory( dirnm ) == false ) { die("Unable to generate working directories!", false ); }
 	cout << "SCORE initialized working directory " << dirnm.c_str() << " ..." << endl;
 
-	//##MK::2023-V
-	string uds_file_fnm = argv[INPUTFILE];
-	string uds_file_sha256 = SHA256( uds_file_fnm.c_str() );
-	cout << "uds_file_fnm " << uds_file_fnm << "\n";
-	cout << "uds_file_sha256 " << uds_file_sha256 << "\n";
-	cout << "iso8601 timestamp now " << timestamp_now_iso8601() << "\n";
-
-	if( !myensemble->open(READ, argv[INPUTFILE], &(myensemble->score_input)) ) { die("Reading input file!", false); }
+	string config_file_name = argv[INPUTFILE];
+	string config_file_sha256 = SHA256( config_file_name.c_str() );
+	cout << "config_file_name " << config_file_name << "\n";
+	cout << "config_file_sha256 " << config_file_sha256 << "\n";
+	cout << "ISO8601 timestamp now " << timestamp_now_iso8601() << "\n";
+	*/
+#ifdef PARSE_CONFIG_FROM_HDF
+#else
+#ifdef PARSE_CONFIG_FROM_YML
+	string contents = file_get_contents<string>(myensemble->yaml_config_file_name.c_str());
+	myensemble->tree = ryml::parse_in_arena(ryml::to_csubstr(contents)); // immutable (csubstr) overload
+#else
+	//die("Reading input file!", false);
+	if( !myensemble->open(READ, argv[INPUTFILE], &(myensemble->score_input)) ) {
+		die("Reading input file!", false);
+	}
+#endif
+#endif
 	cout << "SCORE loaded input data " << argv[INPUTFILE] << " ..." << endl;
 
+	/*
 	if ( argc > (1+2) ) {
 		myensemble->damask_file_name = string(argv[EBSDMAPPING]);
 		cout << "Loading initial microstructure from " << myensemble->damask_file_name << "\n";
-		/*
 		if ( myensemble->init_ebsdmap_read( argv[EBSDMAPPING] ) == false ) {
 			die("EBSDMapping input desired but failed!", true ); delete myensemble; return 0;
-		} //if readmap didnt fail data are now loaded!
+		} //if readmap did not fail data are now loaded!
 		else {
 			cout << "SCORE loaded SEM/EBSD map " << argv[EBSDMAPPING] << " ..." << endl;
 		}
-		*/
 	}
+	*/
 
 	//MK::Init MPI capable of hybrid MPI/OpenMP even though SCORE currently at no point calls MPI within a parallel region
 	int supportlevel_desired = MPI_THREAD_FUNNELED;
@@ -283,15 +176,15 @@ int main(int argc, char** argv)
 
 		//preparation phase
 		myensemble->prof_t0 = MPI_Wtime();
-		if ( argc > (1+3) ) {
-			if ( atoi(argv[PRNGSEED]) > 0 )
-				myensemble->init_ensprng( atoi(argv[PRNGSEED]) );
-			else
-				myensemble->init_ensprng( true );
-		}
-		else {
-			myensemble->init_ensprng( true );
-		}
+		//if ( argc > (1+3) ) {
+		//	if ( atoi(argv[PRNGSEED]) > 0 )
+		//		myensemble->init_ensprng( atoi(argv[PRNGSEED]) );
+		//	else
+		//		myensemble->init_ensprng( true );
+		//}
+		//else {
+		myensemble->init_ensprng( true );
+		//}
 
 		myensemble->init_mpidatatypes();
 		if ( myensemble->init_parameter() == false ) { die("Invalid parameterization and/or input data!", true ); delete myensemble; return 0; }

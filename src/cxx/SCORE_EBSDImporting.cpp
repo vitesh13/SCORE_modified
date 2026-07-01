@@ -1,53 +1,11 @@
-/* 
-*	Copyright Markus K�hbach, 2014-2017
-*	L. A. Barrales-Mora (quaternion library) and V. Mohles (I/O routines for reading the UDS file format)
-*	contributed to the code.
-
-*	SCORE is an MPI/OpenMP-parallel implementation of a cellular automaton model for the studying 
-*	of microstructure evolution during the growth phase of static recrystallization in metallic alloys.
-*	Its novelity is to solve an ensemble of independent simulation domains and to average their results
-*	into an ensemble result. In comparison to the classical RVE-based approach this strategy enables 
-*	studies with much higher statistical significance as orders of magnitude more grains can be studied
-*	while these are solved at the same time in independent individual simulations which are thus executable
-*	in parallel.
-*	For this task, SCORE utilizes a two-layer data parallelism with a main layer of MPI-processes. 
-*	Each of which solves for a queue of cellular automata domains. A second layer of OpenMP-thread 
-*	parallelism accelerates the executing of each individual CA domain. The method is described in:
-
-*	M. K�hbach, G. Gottstein, L. A. Barrales-Mora: A statistical ensemble cellular automaton 
-*	microstructure model for primary recrystallization, Acta Materialia, Vol 107, 2016, p366
-*	http://dx.doi.org/10.1016/j.actamat.2016.01.068
-
-*	Further details, in particular to this implementation and the concept, are detailed in:
-*	M. K�hbach: Efficient Recrystallization Microstructure Modeling by Utilizing Parallel Computation
-
-*	The authors gratefully acknowledge the financial support from the Deutsche Forschungsgemeinschaft
-*	(DFG) within the Reinhart Koselleck-Project (GO 335/44-1) and computing time grants kindly provided
-*	by RWTH Aachen University and the FZ J�lich within the scope of the JARAHPC project JARA0076.
-
-
-*	This file is part of SCORE.
-
-*	SCORE is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-
-*	SCORE is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-
-*	You should have received a copy of the GNU General Public License
-*	along with SCORE.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #ifndef __SCORE_KERNEL_H_INCLUDED__
 //#define __SCORE_KERNEL_H_INCLUDED__
 
 #include "SCORE_Kernel.h"
 
-void caHdl::ebsd2polycrystal( void )
+void caHdl::ebsd2polycrystal()
 {
 	//determine CA volume geometry and lay EBSD map at x,y, z=0 then "extend" structure along z
 	//MK::concept of M. Kuehbach/M. Diehl: extend 2D grains along z as sections of diameter ? Mean DefSizePoissonDiameter
@@ -148,7 +106,7 @@ cout << "\t\tAdd defgrain seed kam/rho0/x/y/z/location = " << myensHdl->expGrain
 */
 
 
-void caHdl::ebsd2polycrystal2( void )
+void caHdl::ebsd2polycrystal2()
 {
 	//determine CA volume geometry and lay EBSD map at x,y, z=0 then "extend" structure along z
 	//MK::concept of M. Kuehbach/M. Diehl: extend 2D mapping along z potentially into sections of diameter ? Mean DefSizePoissonDiameter
@@ -193,7 +151,7 @@ void caHdl::ebsd2polycrystal2( void )
 			tmp2defgseeds->push_back( aseed );
 
 			//ID transformation seed2mydefgpool? mydefgpool[tmp2defgseeds[seedid].mydefgpoolid]...
-			//ID transformation EBSD pixel expGrain id to seed: 
+			//ID transformation EBSD pixel expGrain id to seed:
 			//this->myensHdl->expGrains[this->myensHdl->expData[px].gid-1].gid, this->myensHdl->expGrains[0].gid
 			//connection to tmp2defgseeds->at()
 			//########
@@ -283,62 +241,63 @@ void caHdl::ebsd2polycrystal2( void )
 	} //all zlayers were build
 }
 
-void caHdl::DAMASKtoCA( void )
+void caHdl::damask2polycrystal()
 {
-        hid_t file;
-        hid_t group_ID;
-        herr_t ret; 
-        std::vector<int> dim_vec;
-        std::vector<std::vector<double>> eulers_vec;
-        std::vector<std::vector<double>> rho_vec;
-        std::vector<int> grain_ID;
-        int* rdata_int;
-        int i, j, ndims;
-
-        struct cadefg dgr;   // pool of deformed grains in the CA
-        struct dgopt anopt;  // maintainence structure which keeps track of a reduction rho to speed up Euler forward integration
-        struct defgseed aseed;     // register this deformed grain as a with tmpdefgseeds for the REPLACE_CA_STRUCTURE function to work properly
-
 	vector<defgseed>* tmp2defgseeds = NULL;
 	tmp2defgseeds = new vector<defgseed>;
+	cout << "damask2polycrystal " << damask_file_name << "\n";
 
-        // get the grain based data
-        std::cout << "The filename is carried over here -----" << filename << "\n" << std::endl;
-        //string fname = "/home/SCORE_orig/example_files/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
-        string fname = damask_file_name; //"/home/mkuehbach/SCORE-VITESH/SCORE_modified/example_files/Tphase_Vf_01_tensionX_remeshed_increment19000_segmented.dream3D";
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( damask_file_name );
+	string grpnm = "/DataContainers/SyntheticVolumeDataContainer/";
+	string dsnm = "";
 
+	dsnm = "_SIMPL_GEOMETRY/DIMENSIONS";
+	vector<long> i64;
+	if ( h5r.nexus_read( grpnm + dsnm, i64 ) != MYHDF5_SUCCESS ) {
+		cerr << grpnm << dsnm << "\n";
+	}
+	if ( i64.size() != 3 ) {
+		cerr << grpnm << dsnm << "i64.size() != 3 " << "\n";
+	}
+	dsnm = "DIMENSIONS";
+	//must have been set already during configuration!
 
-        file = HDF5_openFile( fname );
-        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/_SIMPL_GEOMETRY" );
+	dsnm = "CellFeatureData/AvgEulerAngles";
+	vector<double> eulers_vec;
+	if ( h5r.nexus_read( grpnm + dsnm, eulers_vec ) != MYHDF5_SUCCESS ) {
+		cerr << grpnm << dsnm << "\n";
+	}
+	dsnm = "CellFeatureData/AvgRho";
+	vector<double> rho_vec;
+	if ( h5r.nexus_read( grpnm + dsnm, rho_vec ) != MYHDF5_SUCCESS ) {
+		cerr << grpnm << dsnm << "\n";
+	}
 
-        dim_vec = HDF5_read_dataset_int_rank_1( group_ID, "DIMENSIONS");
+	struct cadefg dgr; // pool of deformed grains in the CA
+	struct dgopt anopt; // maintainence structure which keeps track of a reduction rho to speed up Euler forward integration
+	struct defgseed aseed; // register this deformed grain as a with tmpdefgseeds for the REPLACE_CA_STRUCTURE function to work properly
 
-        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
-        eulers_vec = HDF5_read_dataset_float_rank_2( group_ID, "AvgEulerAngles");
+	// filling the grain data, the first element in the grain average arrays is neglected as Dream3D adds an extra row/element at index 0
+	for( size_t g = 1; g < rho_vec.size(); g++ ) {
+		double bunge_ref[3] = {eulers_vec[(g*3)+0], eulers_vec[(g*3)+1], eulers_vec[(g*3)+2]};
+		double quaternion_ref[4] = {MYZERO, MYZERO, MYZERO, MYZERO};
+		localmath.euler2quat_damask(bunge_ref,quaternion_ref);
 
-        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellFeatureData" );
-        rho_vec = HDF5_read_dataset_float_rank_2( group_ID, "AvgRho");
+		dgr.caori = ca_check_disjunctness_core(quaternion_ref, true, bunge_ref[0],bunge_ref[1],bunge_ref[2]);
+		dgr.rho0  = rho_vec[g];
+		dgr.rho = rho_vec[g];
+		mydefgpool.push_back( dgr );
 
-        // filling the grain data
-        // the first element in the grain average arrays is neglected as Dream3D adds an extra row/element at index 0
-        for(size_t g = 1; g < rho_vec.size(); g++){
-            double bunge_ref[3] = {eulers_vec[g][0],eulers_vec[g][1],eulers_vec[g][2]};
-            double quaternion_ref[4] = {0.0,0.0,0.0,0.0};
-            localmath.euler2quat_damask(bunge_ref,quaternion_ref);
-            dgr.caori = ca_check_disjunctness_core(quaternion_ref, true, bunge_ref[0],bunge_ref[1],bunge_ref[2]);
-            dgr.rho0  = rho_vec[g][0];
-            dgr.rho   = rho_vec[g][0];
-            mydefgpool.push_back( dgr );
+		anopt.rho = rho_vec[g];
+		anopt.id  = mydefgpool.size() - 1;
+		anopt.cnt = 0;
+		mydgoptimize.push_back( anopt );
 
-            anopt.rho = rho_vec[g][0]; 
-            anopt.id  = mydefgpool.size() - 1;
-            anopt.cnt = 0;
-            mydgoptimize.push_back( anopt );
-
-            aseed.mydefgpoolid = (mydefgpool.size() - 1);
-            tmp2defgseeds->push_back( aseed );
-
-       }
+		aseed.mydefgpoolid = (mydefgpool.size() - 1);
+		tmp2defgseeds->push_back( aseed );
+	}
+	eulers_vec = vector<double>();
+	rho_vec = vector<double>();
 
 	//transfer seeds from temporary into tmpdefgseeds, this workaround is necessary because total number of seeds is unknown at subfunction entry ##MK::consider to replace tmpdefgseeds in the future
 	ndefgseeds = tmp2defgseeds->size(); //MK::total number of seeds is an integer multiple of expGrains.size()
@@ -354,27 +313,21 @@ void caHdl::DAMASKtoCA( void )
 	}
 	delete tmp2defgseeds; tmp2defgseeds = NULL;
 
-        // get the Grain_Ids
-        group_ID = HDF5_openGroup( file,"/DataContainers/SyntheticVolumeDataContainer/CellData" );
-        //grain_ID = HDF5_read_dataset_int_rank_4( group_ID, "Grain_Ids");
-        grain_ID = HDF5_read_dataset_int_rank_4( group_ID, "FeatureIds");
+	dsnm = "CellData/FeatureIds";
+	vector<int> grain_ID;
+	if ( h5r.nexus_read( grpnm + dsnm, grain_ID ) != MYHDF5_SUCCESS ) {
+		cerr << grpnm << dsnm << "\n";
+	}
+	for( size_t i = 0; i < grain_ID.size(); i++) {
+		grain_ID[i] = grain_ID[i] - 1;
+	}
 
-        for( i = 0; i < grain_ID.size(); i++){
-            grain_ID[i] = grain_ID[i] - 1;
-        }
-
-        // go into a particular region of CA based on the partitioning
-        // copying relevant code from ebsd2polycrystal
-	//set explicitly initial state of every cell in every region
 	//##MK::mind dimensions of global CA coordinates whose organization with +x lines along +y stacked slabs along +z is the same as expData, i.e. +x lines then +y lines downwards
-        int r, index;
-	uint32_t rxmi, rxmx, rymi, rymx, rzmi, rzmx, extentx, extenty;
 	//no domain partitioning into regions along x, but along y and z
+	uint32_t rxmi, rxmx, rymi, rymx, rzmi, rzmx, extentx, extenty;
 	uint32_t npy = this->regions[0]->thePartitioning.nreg_tdy; //MK::fixed array access with 0 works because there is always at least one region and all regions know the global partitioning
 	uint32_t npz = this->regions[0]->thePartitioning.nreg_ndz;
 	uint32_t ry, rz;
-	uint32_t seedid;
-
 	for ( uint32_t z = 0; z < myCAGeometry.nboxedge_nd; z++ ) {
 		//in which xy slab of regions is this particular CA layer xy, z included?
 		for ( uint32_t rr = 0; rr < (1*npy*npz); rr = rr + npy ) { //mind that implicit region id 0 unfolds into ry=0,rz=0, if npy e.g. =3 then next zlayer in 3
@@ -387,7 +340,8 @@ void caHdl::DAMASKtoCA( void )
 			//in which slab yregion is the particular coordinate line y?
 			for ( uint32_t rr = 0+(rz*npy); rr < npy+(rz*npy); rr++ ) { //mind that caHdl->regions is organized as contiguous groups of regions along +y stacked in +z
 				if ( y >= this->regions[rr]->myGeom.nreg_tdmin && y <= this->regions[rr]->myGeom.nreg_tdmax ) {
-					ry = rr-(rz*npy); break;
+					ry = rr-(rz*npy);
+					break;
 				}
 			}
 			//no region partitioning along x so now we know in which particular region to place the xline assignments
@@ -406,46 +360,15 @@ void caHdl::DAMASKtoCA( void )
 			extenty = rymx - rymi + 1;
 
 			uint32_t yzoffset = (y-rymi)*extentx + (z-rzmi)*extentx*extenty;
+			uint32_t yz_index_offset = y*myCAGeometry.nboxedge_rd + z*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
 			for ( uint32_t x = 0; x < extentx; x++ ) { //setup region partitioning more efficiently
-				//ebsdgid = myensHdl->expData[px].gid; //the grain at this position, expGrains is contiguous with IDs on [1,N]
-                                index = x + y*myCAGeometry.nboxedge_rd + z*(myCAGeometry.nboxedge_rd)*(myCAGeometry.nboxedge_td);
- 
-
-				//seedid = (ebsdgid - 1) + (column_block_id * totalexpgrains); //MK::-1 substracting on ebsdgid necessary because expGrains.gid start at 1 but seedid are positions on linear array!
-                                //if (index > 491510) {
-                                //std::cout << "index overshooting check" << index << std::endl; 
-                                //std::cout << "check offsets" << x+yzoffset << std::endl; 
-                                //}
-
-				//make the CA cell to represent a voxel of a particular seeded deformed grain
-				thecells[x+yzoffset] = grain_ID[index];
-                                //if (index > 491510) {
-                                //std::cout << "data mapped" << index << std::endl; 
-                                //}
-                                //if (index == 491519) {
-                                //std::cout << "the index " << index << std::endl;
-                                //std::cout << "the x " << x << std::endl;
-                                //std::cout << "the y " << y << std::endl;
-                                //std::cout << "the z " << z << std::endl;
-                                //std::cout << "the data in region 1 " << thecells[x + yzoffset] << std::endl;
-                                //std::cout << "the offset value is" << x + yzoffset << std::endl;
-                                //}
-				//translate next pixel to CA volume
-				//px++;
+				uint32_t index = x + yz_index_offset;
+				thecells[x+yzoffset] = (uint32_t) grain_ID[index];
 			} //xline completed
 		} //ylines done
-
-	//	height += this->myCAGeometry.cellsize;
-	//	//cout << "ZLayer " << column_block_id << " up to height " << height << " build, assigned a total of " << px << " cells." << endl;
-	//	if ( height >= columnheight ) { //next block
-	//		cout << "Beginning new block layer..." << endl;
-	//		height = 0.0;
-	//		column_block_id++;
-	//	}
-	//} //all zlayers were build
-
-
-}
+	} //all zlayers were build
+	grain_ID = vector<int>();
+	cout << "damask2polycrystal CA instantiated" << "\n";
 }
 
 #endif

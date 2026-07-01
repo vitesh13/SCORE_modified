@@ -1,0 +1,30 @@
+solver: {mechanical: spectral_basic, thermal: spectral}
+initial_conditions:
+  thermal: {T: 293.0}
+loadstep:
+- boundary_conditions:
+    mechanical:
+      L:
+      - [x, 0, 0]
+      - [0, 0, 0]
+      - [0, 0, -13.8]
+      P:
+      - [0, x, x]
+      - [x, x, x]
+      - [x, x, x]
+  discretization: {t: 0.0076, N: 3000}
+  f_out: 1000
+  f_restart: 1000
+- boundary_conditions:
+    mechanical:
+      L:
+      - [x, 0, 0]
+      - [0, 0, 0]
+      - [0, 0, -13.8]
+      P:
+      - [0, x, x]
+      - [x, x, x]
+      - [x, x, x]
+  discretization: {t: 0.0076, N: 3000}
+  f_out: 1000
+  f_restart: 1000
