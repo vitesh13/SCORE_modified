@@ -2,32 +2,6 @@
 
 `SCORE` targets computers running a Unix operating system. Windows11/WSL2 is also possible.
 
-0. Assure you have a working C++ compiler, e.g., `GNU` or `Intel` installed, alongside
-
-```
-`build-essentials`
-`cmake`
-`mpich`
-`libssl-dev`
-`wget`
-`git`
-```
-
-If some of these dependencies are missing they can be installed, at the host system level, e.g., through `apt`.
-
-Once installed or to check their presence use the following commands
-
-```
-gcc --version
-g++ --version
-# above two lines exemplify for GNU compiler, may need a change, e.g., icx and icpx respectively when using the Intel compiler
-cmake --version
-mpiexec --version
-openssl version -a
-wget --version
-git --version
-```
-
 1. Clone this repository
 
 ```
@@ -44,19 +18,41 @@ This directory is mentioned in the variable `MYPROJECTPATH` in the `CMakeLists.t
 file to assure the project directory is correctly configured for building, i.e.,
 compiling and linking of the C++ executable `score`.
 
-2. Compile the `HDF5` library from its source code `src/cxx/thirdparty/hdf5`
+2. Assure you have a working C++ compiler, e.g. `GNU` installed
 
-A few C/C++ libraries are required for `SCORE` to work correctly. While most of their source code
-is set by the `git submodule update` step, it remains to compile a version of the `HDF5` library.
-If this library is not present on the host already instructions on how to go about doing this
-are given here
+```
+`build-essentials`
+`cmake`
+`mpich`
+`libssl-dev`
+`wget`
+`git`
+```
+
+If some of these dependencies are missing they can be installed, at the host system level, e.g., through `apt`.
+
+Check using
+
+```
+./SCORE.Prerequisites.sh
+```
+
+and install those missing.
+
+3. Compile the `HDF5` library from its source code `src/cxx/thirdparty/hdf5`
+
+A few C/C++ libraries are required for `SCORE` to work correctly. While most of these
+we pull in automatically via the `git submodule` step, the `HDF5` library is a trickier
+one to take care of. If this library is not present on the host already instructions
+we have composed instructions to compile the library locally with all steps already
+pre-configured and scripts for automation available here
 
 ```
 # follow the instructions as detailed in
 src/cxx/thirdparty/hdf5/README.md
 ```
 
-3. Compile `SCORE` by navigating into the build directory, configure, and compile
+4. Compile `SCORE` by navigating into the build directory, configure, and compile
 
 A script is available to support you. Modify the script as needed to define
 how many computing resources to use or if you plan to install in places
