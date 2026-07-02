@@ -8,6 +8,8 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
+  - cxx-compiler
+  - mpich
   - dream3dnx
   - damask==3.0.2
   - h5py

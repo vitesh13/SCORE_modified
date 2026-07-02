@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# EXECUTE FROM WITHIN src/cxx/thirdparty/mandatory/hdf5
+
 set -euo pipefail
 
 wget https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5_1.14.6.tar.gz
@@ -13,3 +15,4 @@ mkdir -p "build"
 mv "hdf5_1.14.6.tar.gz" "hdf5-1.14.6.tar.gz"
 tar -xvf "hdf5-1.14.6.tar.gz"
 mv "hdf5-hdf5_1.14.6" "hdf5-1.14.6"
+

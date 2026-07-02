@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+set -euo pipefail
+
 Tools="gcc g++ cmake mpiexec wget git"
 # icx and icpx respectively when using the Intel compiler
 
