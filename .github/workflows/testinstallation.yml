@@ -26,9 +26,24 @@ jobs:
           git submodule sync --recursive
           git submodule update --init --recursive --jobs=4
           echo "$PWD"
-          ls
 
       - name: Create conda environment
         shell: bash -l {0}
         run: |
+          echo "$PWD"
           conda env create -f conda.yml
+
+      - name: Build HDF5
+        run: |
+          echo "$PWD"
+          cd src/cxx/thirdparty/mandatory/hdf5
+          ./DownloadHdfFiveAndPlugins.sh
+          ctest -S HDF5config.cmake,BUILD_GENERATOR=Unix -C Release -VV -O hdf5.log
+          ./HDF5-1.14.6-Linux.sh --include-subdir --skip-license 2>&1
+
+      - name: Build HDF5
+        run: |
+          echo "$PWD"
+          mkdir -p build
+          ./SCORE.Build.sh
+          ls -lah build/
