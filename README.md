@@ -2,7 +2,7 @@
 
 `SCORE` targets computers running a Unix operating system. Windows11/WSL2 is also possible.
 
-1. Clone this repository
+### 1. Clone this repository
 
 ```
 git clone https://www.github.com/vitesh13/SCORE_modified.git
@@ -18,7 +18,7 @@ This directory is mentioned in the variable `MYPROJECTPATH` in the `CMakeLists.t
 file to assure the project directory is correctly configured for building, i.e.,
 compiling and linking of the C++ executable `score`.
 
-2. Provide third-party dependencies via setting up a conda environment
+### 2. Provide third-party dependencies via setting up a conda environment
 
 Assure you have a working [C/C++ compiler (e.g. `GNU`)](https://gcc.gnu.org/) and the [Message Passing Interface library (`MPI`)](https://www.mpich.org/) installed
 For this you can either use the [`conda` environment](https://www.anaconda.com/docs/getting-started/miniconda/main) and recipe we provided, as it includes a C/C++ compiler, `MPI` library, and `openssl`
@@ -44,7 +44,7 @@ Use for checking if these libraries are present
 ./SCORE.Prerequisites.sh
 ```
 
-3. Compile the `HDF5` library from its source code `src/cxx/thirdparty/hdf5`
+### 3. Compile the `HDF5` library from its source code `src/cxx/thirdparty/hdf5`
 
 A few C/C++ libraries are required for `SCORE` to work correctly. While most of these
 we pull in automatically via the `git submodule` step, the `HDF5` library is a trickier
@@ -57,7 +57,7 @@ pre-configured and scripts for automation available here
 src/cxx/thirdparty/hdf5/README.md
 ```
 
-4. Compile `SCORE` by navigating into the build directory, configure, and compile
+### 4. Compile `SCORE` by navigating into the build directory, configure, and compile
 
 A script is available to support you. Modify the script as needed to define
 how many computing resources to use or if you plan to install in places
@@ -136,7 +136,7 @@ mpirun -n 1 ./../../build/score 1 SCORE.Config.SimID.1.nxs
 
 ## Run the example from the research paper
 
-## How to run your own simulations
+## Run your own simulations
 
 With these suggestions and tutorials you have a blue-print how to create your own `SCORE` and `DAMASK`
 configurations. With the configuration modernized and expressed now in `Python` and having the
