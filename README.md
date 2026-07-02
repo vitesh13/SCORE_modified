@@ -89,10 +89,6 @@ export OMP_NUM_THREADS=1
 jupyter-lab
 ```
 
-## Numerical details
-
-SCORE uses a deterministic algorithm. A pseudo-random number generator is used that is seeded deterministically.
-
 <!--We can also take advantage of functionalities provided by the pynxtools-em, which
 is a plugin of pynxtools to get functionalities that allow us to generate
 a human-readable summary of the binary content in the HDF5 files as a flat
