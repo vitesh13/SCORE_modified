@@ -6,6 +6,7 @@ cmake_minimum_required(VERSION 3.18.4)
 ################################################################################################################################
 #choose which target system to use
 set(USE_WINWSL2_OR_LINUX ON)
+set(CONDA_BUILD ON)
 
 #SPECIFY THE HOME/ROOT DIRECTORY OF THIS LOCAL SCORE INSTANCE
 if(USE_WINWSL2_OR_LINUX)
@@ -15,11 +16,10 @@ endif()
 #INTEGRATE THE HASH OF THE PARENT COMMIT FROM WHICH THIS VERSION WAS CREATED
 #update GitSHA of the paraprobe repository prior commit, i.e. pre-processing upon compilation pulling last GitSHA
 #we cannot update the current GitSHA as this would create a circular dependency, namely once we have commit, i.e. know the file
-# set(GITSHA "0")
 #'-' is an invalid character in a C preprocessor macro
 string(REGEX REPLACE "-" "_" MYCLEANSCOREVERSION ${SCOREVERSION}) 
 add_definitions("-DSCOREVERSION=${MYCLEANSCOREVERSION}")
-string(REGEX REPLACE "-" "_" MYCLEANNEXUSVERSION ${NEXUSVERSION}) #'-' is an invalid character in a C preprocessor macro
+string(REGEX REPLACE "-" "_" MYCLEANNEXUSVERSION ${NEXUSVERSION})
 add_definitions("-DNEXUSVERSION=${MYCLEANNEXUSVERSION}")
 message([STATUS] "DSCOREVERSION: ${DSCOREVERSION}")
 message([STATUS] "DNEXUSVERSION: ${DNEXUSVERSION}")
@@ -29,17 +29,30 @@ message([STATUS] "DNEXUSVERSION: ${DNEXUSVERSION}")
 set(MYSRCPATH "${MYPROJECTPATH}/src/cxx")
 
 #mandatory hdf5 library
-set(MYHDFPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/hdf5/HDF5-1.14.6-Linux/HDF_Group/HDF5/1.14.6")
-set(MYHDFLINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPATH}/lib/libhdf5.a ${MYHDFPATH}/lib/libszaec.a ${MYHDFPATH}/lib/libaec.a -ldl")  # ${MYHDFPATH}/lib/libzlib-static.a -ldl")
-include_directories("${MYHDFPATH}/include")
-link_directories("${MYHDFPATH}/lib")
-
-
-#find installed locations of files from libssl-dev package via typing dpkg -L libssl-dev on the command line
-set(MYOPENSSL "/usr/lib/x86_64-linux-gnu")
-include_directories("${MYOPENSSL}/lib")
-#find_package(OpenSSL REQUIRED)
-set(MYSSLLINKFLAGS "-L${MYOPENSSL} ${MYOPENSSL}/libssl.a ${MYOPENSSL}/libcrypto.a")
+if(CONDA_BUILD)
+	if(NOT DEFINED ENV{CONDA_PREFIX})
+		message(FATAL_ERROR "CONDA_PREFIX not set. Activate your conda environment first.")
+	endif()
+	set(CONDA_PREFIX $ENV{CONDA_PREFIX})
+	
+	include_directories("${CONDA_PREFIX}/include")
+	link_directories("${CONDA_PREFIX}/lib")
+	set(MYHDFLINKFLAGS "-L${CONDA_PREFIX}/lib -lhdf5_hl -lhdf5 -ldl")
+	
+	include_directories("${CONDA_PREFIX}/include")
+	link_directories("${CONDA_PREFIX}/lib")
+	set(MYSSLLINKFLAGS "-L${CONDA_PREFIX}/lib -lssl -lcrypto")
+else()
+	set(MYHDFPATH "${MYPROJECTPATH}/src/cxx/thirdparty/mandatory/hdf5/HDF5-1.14.6-Linux/HDF_Group/HDF5/1.14.6")
+	set(MYHDFLINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPATH}/lib/libhdf5.a ${MYHDFPATH}/lib/libszaec.a ${MYHDFPATH}/lib/libaec.a -ldl")
+	include_directories("${MYHDFPATH}/include")
+	link_directories("${MYHDFPATH}/lib")
+	
+	#find installed locations of files from libssl-dev package via typing dpkg -L libssl-dev on the command line
+	set(MYOPENSSL "/usr/lib/x86_64-linux-gnu")
+	include_directories("${MYOPENSSL}/lib")
+	set(MYSSLLINKFLAGS "-L${MYOPENSSL} ${MYOPENSSL}/libssl.a ${MYOPENSSL}/libcrypto.a")
+endif()
 
 # optional stuff for developers for using ryml
 # python
@@ -59,4 +72,4 @@ set(EMPLOY_GNUCOMPILER ON)
 ##-O0 -g for debug purposes only
 ##-O1 or -O2 for moderate optimization
 ##-O3 for production level optimization
-set(MYOPTLEVEL "-O2")  # "-O0 -g")
+set(MYOPTLEVEL "-O2")

@@ -13,6 +13,6 @@ wget https://github.com/MathisRosenhauer/libaec/releases/download/v1.1.3/libaec-
 
 mkdir -p "build"
 mv "hdf5_1.14.6.tar.gz" "hdf5-1.14.6.tar.gz"
-tar -xvf "hdf5-1.14.6.tar.gz"
+tar -xf "hdf5-1.14.6.tar.gz"
 mv "hdf5-hdf5_1.14.6" "hdf5-1.14.6"
 

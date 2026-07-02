@@ -1,6 +1,6 @@
 # https://www.dream3d.io/python_docs/Installation.html
 # execute from within the project root! 
-# conda env create -f conda.yaml
+# conda env create -f conda.yml
 # conda activate amag-py3.12
 name: amag-py3.12
 channels:
@@ -11,6 +11,7 @@ dependencies:
   - cxx-compiler
   - mpich
   - openssl
+  - hdf5=1.14.6
   - dream3dnx
   - damask==3.0.2
   - h5py
@@ -19,7 +20,7 @@ dependencies:
   - flatdict>=4.1.0
   - jupyter
   - jupyterlab
-  - jupyterlab-h5web
+  - jupyterlab-h5web>=12.5.0
   - pip
   - pip:
       - -e ".[dev,docs]"

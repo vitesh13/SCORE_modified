@@ -33,17 +33,27 @@ jobs:
           echo "$PWD"
           conda env create -f conda.yml
 
-      - name: Build HDF5
-        run: |
-          echo "$PWD"
-          cd src/cxx/thirdparty/mandatory/hdf5
-          ./DownloadHdfFiveAndPlugins.sh
-          ctest -S HDF5config.cmake,BUILD_GENERATOR=Unix -C Release -VV -O hdf5.log
-          ./HDF5-1.14.6-Linux.sh --include-subdir --skip-license 2>&1
+      # - name: Build HDF5
+      #  run: |
+      #    echo "$PWD"
+      #    cd src/cxx/thirdparty/mandatory/hdf5
+      #    ./DownloadHdfFiveAndPlugins.sh
+      #    ctest -S HDF5config.cmake,BUILD_GENERATOR=Unix -C Release -VV -O hdf5.log
+      #    ./HDF5-1.14.6-Linux.sh --include-subdir --skip-license 2>&1
 
-      - name: Build HDF5
+      - name: Build SCORE
         run: |
           echo "$PWD"
-          mkdir -p build
           ./SCORE.Build.sh
           ls -lah build/
+
+      - name: Run SCORE
+        run: |
+          echo "$PWD"
+          ./SCORE.Run.sh 0
+          ls -lah examples/verification
+
+      - name: Test SCORE
+        run: |
+          echo "$PWD"
+          pytest -sv tests

@@ -23,6 +23,9 @@ examples/amag/*
 !examples/amag/tensionX.yaml
 !examples/amag/Microstructure_for_SCORE_template.json
 
+tests/*
+!tests/test_score_run.py
+
 thirdparty/dream3d/DREAM3D-*
 
 src/cxx/thirdparty/mandatory/hdf5/*
