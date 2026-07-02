@@ -18,7 +18,16 @@ This directory is mentioned in the variable `MYPROJECTPATH` in the `CMakeLists.t
 file to assure the project directory is correctly configured for building, i.e.,
 compiling and linking of the C++ executable `score`.
 
-2. Assure you have a working C++ compiler, e.g. `GNU` installed
+2. Provide third-party dependencies via setting up a conda environment
+
+Assure you have a working [C/C++ compiler (e.g. `GNU`)](https://gcc.gnu.org/) and the [Message Passing Interface library (`MPI`)](https://www.mpich.org/) installed
+For this you can either use the [`conda` environment](https://www.anaconda.com/docs/getting-started/miniconda/main) and recipe we provided, as it includes a C/C++ compiler, `MPI` library, and `openssl`
+
+```
+conda env create -f conda.yaml
+```
+
+or provide these tools via your host system, e.g. through installations made on your system via `apt`, and then compiling with that system compiler
 
 ```
 `build-essentials`
@@ -29,15 +38,11 @@ compiling and linking of the C++ executable `score`.
 `git`
 ```
 
-If some of these dependencies are missing they can be installed, at the host system level, e.g., through `apt`.
-
-Check using
+Use for checking if these libraries are present
 
 ```
 ./SCORE.Prerequisites.sh
 ```
-
-and install those missing.
 
 3. Compile the `HDF5` library from its source code `src/cxx/thirdparty/hdf5`
 
@@ -64,7 +69,7 @@ other than here exemplified project root directory.
 
 Once compiled, the C++ executable `score` is executable from its location in `build`.
 
-4. Install `Python` tools to generate configuration files and enable access to visualization tools
+<!--4. Install `Python` tools to generate configuration files and enable access to visualization tools
 
 Configuration files for `SCORE` and analyses of results from `SCORE` simulations are created using `Python`.
 For this working with a virtual environment is recommended. Several routes exists for setting up a virtual environment.
@@ -107,7 +112,7 @@ uv pip install flatdict
 # for SCORE comply with the NXmicrostructure_score application definitions
 # note that for just performing simulations with SCORE the next line is not
 uv pip install pynxtools
-```
+```-->
 
 ## Run the most basic example
 

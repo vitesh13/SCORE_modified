@@ -1,0 +1,32 @@
+name: Test installation using conda
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  spellcheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          activate-environment: amag-py3.12
+          auto-activate-base: false
+
+      - name: Clone repository
+        run: |
+          git clone https://github.com/vitesh13/SCORE_modified.git
+          cd SCORE_modified
+          git checkout master
+          git submodule sync --recursive
+          git submodule update --init --recursive --jobs=4
+          echo "$PWD"
+
+      - name: Create conda environment
+        shell: bash -l {0}
+        run: |
+          cd SCORE_modified
+          conda env create -f conda.yml
