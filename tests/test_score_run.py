@@ -2,12 +2,11 @@
 
 """Default parameterization of the SCORE model."""
 
-
 import os
 from pathlib import Path
-import numpy as np
 
 import h5py
+import numpy as np
 
 
 def test_score_example_verification_ran_successfully():
@@ -18,5 +17,5 @@ def test_score_example_verification_ran_successfully():
         assert np.isclose(
             h5r["/entry1/spatiotemporal1/microstructure100/x"][...],
             0.9983775979864946,
-            atol=1e-6
+            atol=1e-6,
         )
