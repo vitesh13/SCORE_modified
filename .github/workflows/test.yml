@@ -16,17 +16,19 @@ jobs:
           activate-environment: amag-py3.12
           auto-activate-base: false
 
-      - name: Clone repository
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Sync submodules
         run: |
-          git clone https://github.com/vitesh13/SCORE_modified.git
-          cd SCORE_modified
-          git checkout master
           git submodule sync --recursive
           git submodule update --init --recursive --jobs=4
           echo "$PWD"
+          ls
 
       - name: Create conda environment
         shell: bash -l {0}
         run: |
-          cd SCORE_modified
           conda env create -f conda.yml
