@@ -1,5 +1,10 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+set -euo pipefail
+
 Tools="gcc g++ cmake mpiexec wget git"
+# icx and icpx respectively when using the Intel compiler
+
 for Tool in $Tools; do
 	if command -v "$Tool" >/dev/null 2>&1; then
 		$Tool --version

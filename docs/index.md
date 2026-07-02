@@ -20,17 +20,17 @@ pynxtools-em is useful for scientists from the electron microscopy community, fo
 ### Tutorial
 
 - [Installation guide](tutorial/installation.md)
-- [Verification example](tutorial/verification.md)
+<!--- [Verification example](tutorial/verification.md)
 - [DAMASK example](tutorial/damask.md)
-- [Explore in NOMAD](tutorial/nomad.md)
+- [Explore in NOMAD](tutorial/nomad.md)-->
 
 </div>
 <div markdown="block">
 
 ### How-to guides
 
-<!-- - [How to cite SCORE](how-tos/citation.md)-->
-- [Development notes](how-tos/contributing.md)
+<!-- - [How to cite SCORE](how-tos/citation.md)
+- [Development notes](how-tos/contributing.md)-->
 
 </div>
 <div markdown="block">

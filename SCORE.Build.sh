@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # EXECUTE starting from the home directory of SCORE
+
 
 # GNU C/C++ compiler
 MY_C_COMPILER=gcc-14
@@ -36,7 +37,6 @@ echo $NEXUS_VERSION
 cd ../../../../../
 echo $PWD
 
-# rm -rf build/
 mkdir -p build
 cd build
 echo $PWD

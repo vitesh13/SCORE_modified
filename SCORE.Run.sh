@@ -1,8 +1,10 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # if desired set the maximum number of OpenMP processes
 # if not set by default all available cores will be used
 # export OMP_NUM_THREADS=1
+
+set -euo pipefail
 
 mode="$1"
 
@@ -20,11 +22,8 @@ fi
 
 echo "Running: $run_type"
 
-cd examples/$run_type
-echo $pwd
-mpirun -n 1 ./../../build/score $mode SCORE.Config.SimID.$mode.nxs 1>SCORE.Results.SimID.$mode.nxs.STDOUT.txt 2>SCORE.Results.SimID.$mode.nxs.STDERR.txt
-cd ../../
+cd "examples/$run_type"
+echo "$PWD"
+mpirun -n 1 "./../../build/score" "$mode" "SCORE.Config.SimID.$mode.nxs" 1>"SCORE.Results.SimID.$mode.nxs.STDOUT.txt" 2>"SCORE.Results.SimID.$mode.nxs.STDERR.txt"
+cd "../../"
 
-# cd examples/damask
-# mpirun -n 1 ./../../build/score $mode SCORE.Config.SimID.$mode.nxs 1>SCORE.Results.SimID.$mode.nxs.STDOUT.txt 2>SCORE.Results.SimID.$mode.nxs.STDERR.txt
-# cd ../../

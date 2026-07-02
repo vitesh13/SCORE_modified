@@ -1,0 +1,52 @@
+name: Test installation using conda
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  testinstallation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          activate-environment: amag-py3.12
+          auto-activate-base: false
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Sync submodules
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive --jobs=4
+
+      - name: Create conda environment
+        shell: bash -l {0}
+        run: |
+          conda env create -f conda.yml
+
+      # - name: Build HDF5
+      #  run: |
+      #    cd src/cxx/thirdparty/mandatory/hdf5
+      #    ./DownloadHdfFiveAndPlugins.sh
+      #    ctest -S HDF5config.cmake,BUILD_GENERATOR=Unix -C Release -VV -O hdf5.log
+      #    ./HDF5-1.14.6-Linux.sh --include-subdir --skip-license 2>&1
+
+      - name: Build SCORE
+        run: |
+          conda run -n amag-py3.12 ./SCORE.Build.sh
+
+      - name: Run SCORE
+        run: |
+          export OMP_NUM_THREADS=4
+          conda run -n amag-py3.12 ./SCORE.Run.sh 0
+
+      - name: Test SCORE
+        run: |
+          conda run -n amag-py3.12 pytest -sv tests

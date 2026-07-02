@@ -13,11 +13,12 @@ set(CMAKE_BUILD_DIR "build")
 #pull general information about external libraries and paths related to paraprobe
 include("Dependencies.cmake")
 message([STATUS] "MYPROJECTPATH: ${MYPROJECTPATH}")
-message([STATUS] "MYHDFPATH: ${MYHDFPATH}")
+#message([STATUS] "MYHDFPATH: ${MYHDFPATH}")
 #message([STATUS] "LIB_SZPATH: ${LIB_SZPATH}")
 #message([STATUS] "LIB_ZPATH: ${LIB_ZPATH}")
 #message([STATUS] "LIB_AECPATH: ${LIB_AECPATH}")
 message([STATUS] "MYHDFLINKPATH: ${MYHDFLINKFLAGS}")
+message([STATUS] "MYSSLLINKPATH: ${MYSSLLINKFLAGS}")
 #message([STATUS] "MYRYMLLINKPATH: ${MYRYMLLINKFLAGS}")
 
 
