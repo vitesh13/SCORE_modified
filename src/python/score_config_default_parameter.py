@@ -85,7 +85,7 @@ DF_MOBILITY_SG: list[tuple[str, Any]] = [
 ]
 
 DF_TEXTURE: dict[str, Any] = {
-    "name": ["Alpha001-110", "Alpha112-110"],
+    "names": ["Alpha001-110", "Alpha112-110"],
     "bunge_euler": ureg.Quantity(
         np.asarray([[0.0, 0.0, 0.0], [0.0, 35.0, 45.0]], np.float64), ureg.degree
     ).to(ureg.radian),
