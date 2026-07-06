@@ -65,14 +65,16 @@ class ScoreConfig(ConfigBase):
             ""
         )
 
-    def user(self, user_names: list[str] = ["SCORE User"]):
+    def user(self, users: list[tuple[str, str]] = [("SCORE User", "")]):
         """Configure the user."""
         idx = 0
-        for user_name in user_names:
-            if user_name != "":
+        for user in users:
+            if isinstance(user, tuple) and len(user) == 2 and user[0] != "":
                 trg = f"entry{self.entry_id}/user{idx + 1}/"
                 self.cfg[f"{trg}@NX_class"] = "NXuser"
-                self.cfg[f"{trg}name"] = user_name
+                self.cfg[f"{trg}name"] = user[0]
+                if user[1] != "":
+                    self.cfg[f"{trg}ORCID"] = user[1]
                 idx += 1
 
     def sample(self, atom_types: str = "Al"):
@@ -80,7 +82,7 @@ class ScoreConfig(ConfigBase):
         trg = f"entry{self.entry_id}/sample/"
         self.cfg[f"{trg}@NX_class"] = "NXsample"
         self.cfg[f"{trg}dimensionality"] = "3"
-        self.cfg[f"{trg}is_simulation"] = "simulation"
+        self.cfg[f"{trg}is_simulation"] = True
         self.cfg[f"{trg}atom_types"] = atom_types
 
     def material(self, parameters: list[tuple] = DF_MATERIAL):
@@ -188,7 +190,7 @@ class ScoreConfig(ConfigBase):
         """Configure which macrotexture components the code should bookkeep for volume evolution."""
         trg = f"entry{self.entry_id}/component_analysis/"
         self.cfg[f"{trg}@NX_class"] = "NXparameters"
-        if all(val in parameters for val in ("names", "bunge_euler", "theta")):
+        if all([key in parameters for key in ("names", "bunge_euler", "theta")]):
             num = np.shape(parameters["names"])[0]
             if all(
                 np.shape(parameters[val])[0] == num for val in ("bunge_euler", "theta")

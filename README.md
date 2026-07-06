@@ -30,6 +30,12 @@ The environment can be installed like this
 conda env create -f conda.yaml
 ```
 
+Thereafter, install the `score-recrystallization` Python module which is used for generating configuration files for SCORE.
+
+```
+pip install -e "."
+```
+
 Alternatively, `SCORE` can be installed on your host system, i.e. locally, which requires dependencies installed via a package manager
 for the operating system of choice, e.g., `apt`. See the installation instructions in `docs/tutorial/installation.md`.
 

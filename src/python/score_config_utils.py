@@ -70,7 +70,7 @@ def get_sha256_of_file_content(fpath) -> str:
 def get_nexus_version() -> str:
     """Compute git describe version of the NeXus definitions used."""
     try:
-        with open("../cxx/thirdparty/mandatory/nexus-version.txt") as fp:
+        with open("../../src/cxx/thirdparty/mandatory/nexus-version.txt") as fp:
             return f"{fp.read()}"
     except FileNotFoundError:
         return "0"
