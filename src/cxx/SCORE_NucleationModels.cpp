@@ -513,7 +513,7 @@ std::vector<double> caHdl::calculate_nuc_rate( void )
 
 		uint32_t ix = i % nbx;
 		uint32_t iy = (i / nbx) % nby;
-		uint32_t iz = (i / nbx) / nby;
+		uint32_t iz = ((i / nbx) / nby) % nbz;
 
 		//nucleation functions run before solve_REPLACE_CA_STRUCTURE(), deformed grains are accessed via tmpdefgseeds
 		uint32_t dgid = getDeformedGrainID( ix, iy, iz );
@@ -526,6 +526,47 @@ std::vector<double> caHdl::calculate_nuc_rate( void )
 	}
 
 	return nuc_rate;
+}
+
+
+void caHdl::solve_continuous_nucleation( void )
+{
+	//continuous nucleation part 2: turn voxels whose accumulated nuclei_density exceeds the threshold into nuclei
+	uint32_t nbx = myCAGeometry.nboxedge_rd;
+	uint32_t nby = myCAGeometry.nboxedge_td;
+	uint32_t nbz = myCAGeometry.nboxedge_nd;
+
+	for ( uint32_t i = 0; i < nuclei_density.size(); i++ ) {
+		if ( nuclei_density[i] < 1.0 ) continue;
+
+		bool valid = true;
+		for ( uint32_t s = 0; s < myrxgpool.size(); s++ ) {
+			if ( i == myrxgpool[s].nucsite ) { valid = false; break; }
+		}
+		if ( valid == false ) continue;
+
+		uint32_t ix = i % nbx;
+		uint32_t iy = (i / nbx) % nby;
+		uint32_t iz = ((i / nbx) / nby) % nbz;
+
+		//nucleation functions run before solve_REPLACE_CA_STRUCTURE(), deformed grains are accessed via tmpdefgseeds
+		uint32_t dgid = getDeformedGrainID( ix, iy, iz );
+
+		//nucleus inherits the orientation of its parent deformed grain
+		uint32_t oid = mydefgpool[tmpdefgseeds[dgid].mydefgpoolid].caori;
+		double qderived[4] = { myoripool[oid].q0, myoripool[oid].q1, myoripool[oid].q2, myoripool[oid].q3 };
+
+		struct carxg rxg;
+		rxg.caori = ca_check_disjunctness_core( qderived, false, 0.0, 0.0, 0.0 );
+		rxg.cellcount = 0;
+		rxg.nucsite = i;
+		rxg.startingsite = i;
+		rxg.tincub = t;
+
+		myrxgpool.push_back( rxg );
+
+		nuclei_density[i] = 0.0;
+	}
 }
 
 

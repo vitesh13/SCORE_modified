@@ -1100,6 +1100,7 @@ public:
 	uint32_t getDeformedGrainID( uint32_t xglo, uint32_t yglo, uint32_t zglo );
 	void solve_nucmodeling_csrdiehl();
 	std::vector<double> calculate_nuc_rate( void );
+	void solve_continuous_nucleation( void );
     void solve_nucmodelling_dislo_ori_based ();
 	void init_myMaternUniverse();
 	void pickrandomly_myMaternUniverse(void );
@@ -1354,6 +1355,7 @@ public:
 	double CurrentBurgersVector;
 	double CurrentTemperature;
 	double t;									//current time, X(t), and temperature
+	vector<double> nuclei_density;				//continuous nucleation, accumulated nuclei per voxel, size nboxvol_rdtdnd
 	double X;									//current RX fraction
 	double Xcells;
 	double dXstep;								//accumulated change in rxVolume accounting for overshoot as well
