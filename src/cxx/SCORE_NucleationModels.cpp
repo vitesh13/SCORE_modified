@@ -490,6 +490,45 @@ void caHdl::solve_nucmodeling_csrdiehl()
 }
 
 
+std::vector<double> caHdl::calculate_nuc_rate( void )
+{
+	//continuous nucleation part 1: nucleation rate per voxel from the stored energy of the parent deformed grain
+	uint32_t nbx = myCAGeometry.nboxedge_rd;
+	uint32_t nby = myCAGeometry.nboxedge_td;
+	uint32_t nbz = myCAGeometry.nboxedge_nd;
+	std::vector<double> nuc_rate( ((size_t) nbx) * nby * nbz, 0.0 );
+
+	//sites that already host a nucleus keep rate 0
+	std::vector<bool> occupied( nuc_rate.size(), false );
+	for ( size_t s = 0; s < myrxgpool.size(); s++ ) {
+		if ( myrxgpool[s].nucsite < occupied.size() )
+			occupied[myrxgpool[s].nucsite] = true;
+	}
+
+	double arrhenius = myNucleationModel.pre_factor_nuc_rate * exp( -1.0 * myNucleationModel.Q_act / (kboltzman * CurrentTemperature) );
+	double zener = this->get_zener();
+
+	for ( size_t i = 0; i < nuc_rate.size(); i++ ) {
+		if ( occupied[i] == true ) continue;
+
+		uint32_t ix = i % nbx;
+		uint32_t iy = (i / nbx) % nby;
+		uint32_t iz = (i / nbx) / nby;
+
+		//nucleation functions run before solve_REPLACE_CA_STRUCTURE(), deformed grains are accessed via tmpdefgseeds
+		uint32_t dgid = getDeformedGrainID( ix, iy, iz );
+		if ( dgid >= ndefgseeds ) continue; //already recrystallized or infected
+
+		double rho = mydefgpool[tmpdefgseeds[dgid].mydefgpoolid].rho;
+		double F = myPhysData.G * SQR(myPhysData.b) * (rho - myNucleationModel.rho_0);
+		double rate = arrhenius * (F - zener);
+		nuc_rate[i] = ( rate > 0.0 ) ? rate : 0.0;
+	}
+
+	return nuc_rate;
+}
+
+
 void caHdl::init_myMaternUniverse()
 {
 	//a very large Matern cluster process on a cubic RVE of size rvesize in micron is squeezed on a unit cube in \mathbb{R}^3

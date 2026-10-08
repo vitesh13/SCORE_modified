@@ -398,6 +398,11 @@ struct nucData
 	double gbnucleation_drho2dens;
 	double gbnucleation_scatter;
 	double tincub_rayleigh_sigma;
+
+	//continuous nucleation
+	double pre_factor_nuc_rate;
+	double Q_act;
+	double rho_0;
 	nucData() : gbnucleation(GBNUCLEATION_NO), csrnucleation(CSRNUCLEATION_NO), clustnucleation(CLUSTERNUCLEATION_NO), tincubmodel( TINCUB_SITESATURATION ), defaultnucdensity( DEFAULT_NUCDENSITY_CSR ), cluster_nclust(0.0), cluster_lambda(0.0), cluster_rvesize(0.0), cluster_a(0.0), cluster_b(0.0), cluster_c(0.0), gbnucleation_dens2num(0.0), gbnucleation_drho2dens(0.0), gbnucleation_scatter(0.0), tincub_rayleigh_sigma(0.0) {}
 };
 typedef struct nucData * nucDataP;
@@ -1094,6 +1099,7 @@ public:
 	void solve_nucmodeling_csr_pickrandomly();
 	uint32_t getDeformedGrainID( uint32_t xglo, uint32_t yglo, uint32_t zglo );
 	void solve_nucmodeling_csrdiehl();
+	std::vector<double> calculate_nuc_rate( void );
     void solve_nucmodelling_dislo_ori_based ();
 	void init_myMaternUniverse();
 	void pickrandomly_myMaternUniverse(void );
