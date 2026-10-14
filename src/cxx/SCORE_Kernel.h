@@ -384,6 +384,7 @@ struct nucData
 	unsigned char csrnucleation;
 	unsigned char clustnucleation;
 	unsigned char tincubmodel;
+	unsigned char continuous_nucleation;
 
 	//##MK::add further parameter here
 	uint32_t defaultnucdensity;
@@ -403,7 +404,7 @@ struct nucData
 	double pre_factor_nuc_rate;
 	double Q_act;
 	double rho_0;
-	nucData() : gbnucleation(GBNUCLEATION_NO), csrnucleation(CSRNUCLEATION_NO), clustnucleation(CLUSTERNUCLEATION_NO), tincubmodel( TINCUB_SITESATURATION ), defaultnucdensity( DEFAULT_NUCDENSITY_CSR ), cluster_nclust(0.0), cluster_lambda(0.0), cluster_rvesize(0.0), cluster_a(0.0), cluster_b(0.0), cluster_c(0.0), gbnucleation_dens2num(0.0), gbnucleation_drho2dens(0.0), gbnucleation_scatter(0.0), tincub_rayleigh_sigma(0.0) {}
+	nucData() : gbnucleation(GBNUCLEATION_NO), csrnucleation(CSRNUCLEATION_NO), clustnucleation(CLUSTERNUCLEATION_NO), tincubmodel( TINCUB_SITESATURATION ), continuous_nucleation( CONTNUCLEATION_NO ), defaultnucdensity( DEFAULT_NUCDENSITY_CSR ), cluster_nclust(0.0), cluster_lambda(0.0), cluster_rvesize(0.0), cluster_a(0.0), cluster_b(0.0), cluster_c(0.0), gbnucleation_dens2num(0.0), gbnucleation_drho2dens(0.0), gbnucleation_scatter(0.0), tincub_rayleigh_sigma(0.0), pre_factor_nuc_rate(0.0), Q_act(0.0), rho_0(0.0) {}
 };
 typedef struct nucData * nucDataP;
 
