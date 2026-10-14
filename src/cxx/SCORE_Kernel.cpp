@@ -8391,7 +8391,10 @@ void caHdl::solve_RXGROWTH()
 
 		//add nuclei into the simulation, at the moment ##MK::MPI/OMP only site-saturated --> inject time-dependent nucleation here...
 		vector<rxgcommit>* thrsafesync = NULL;	thrsafesync = new vector<rxgcommit>;
-		ompshar_sim_myCA_sitesaturatedNucleation( thrsafesync );
+		if (myNucleationModel.continuous_nucleation != CONTNUCLEATION_YES ) {
+			std::cout << "Start site saturated nucleation --------- " << std::endl;
+			ompshar_sim_myCA_sitesaturatedNucleation( thrsafesync );
+		}
 		#pragma omp barrier
 
 		#pragma omp critical
@@ -8401,7 +8404,7 @@ void caHdl::solve_RXGROWTH()
 				myrxgpool[thrsafesync->at(s).nrxgid].tincub = thrsafesync->at(s).tincub;
 			}
 		}
-		delete thrsafesync; thrsafesync = NULL;
+		//delete thrsafesync; thrsafesync = NULL;
 
 		//necessary, not possible to start before the threads seeded all nuclei surplus barrier implicitly flushes
 		#pragma omp barrier
@@ -8436,7 +8439,51 @@ void caHdl::solve_RXGROWTH()
 				}
 
 				//MK::no time dependent nucleation model for OpenMP at the moment--> if desired inject it here!
+				std::cout << "integration step: " << integrationstep << std::endl;
+                std::cout << "time : " << t << std::endl;
+                if( myNucleationModel.continuous_nucleation == CONTNUCLEATION_YES )
+				{
+                    std::vector<double> nuc_rate;
+                    nuc_rate = calculate_nuc_rate();
 
+                    for( uint32_t i = 0; i < nuc_rate.size(); i++ ){
+                        nuclei_density[i] = nuclei_density[i] + nuc_rate[i]*dt;
+                        //std::cout << "integration step: " << integrationstep << "nuclei density: " << nuclei_density[i] << std::endl;
+                        }
+
+                    solve_continuous_nucleation();
+                    if( integrationstep == 0){
+                    	solve_REPLACE_CA_STRUCTURE();
+                    }
+                    else{
+                        solve_REPLACE_CA_STRUCTURE_CONTNUCLEATION();
+                    }
+                    ompshar_sim_myCA_sitesaturatedNucleation( thrsafesync );
+                    std::cout << "number of nuclei" << regions[0]->reg_nmynuclei << std::endl;
+                    #pragma omp barrier
+                    #pragma omp critical
+                    {
+                        for ( uint32_t s = 0; s < thrsafesync->size(); s++ ) {
+                            myrxgpool[thrsafesync->at(s).nrxgid].nucsite = thrsafesync->at(s).nucsite;
+                            myrxgpool[thrsafesync->at(s).nrxgid].tincub = thrsafesync->at(s).tincub;
+                            }
+                    }
+
+                    #pragma omp barrier
+
+                    #pragma omp master
+                    {
+                        nmynuclei = 0;
+                        for (uint32_t r = 0; r < regions.size(); r++) {
+                            if ( regions[r]->reg_myMobilityWeightMax >= myMobilityWeightMax ) { myMobilityWeightMax = regions[r]->reg_myMobilityWeightMax; }
+                                nmynuclei = nmynuclei + regions[r]->reg_nmynuclei;
+                            }
+                            cout << "Starting RX Growth with myMobilityWeightMax = " << myMobilityWeightMax << " and " << nmynuclei << " nuclei." << "total RXGpool is: " << myrxgpool.size() << endl;
+                    }
+                    //barrier necessary, as otherwise the threads would start iterating even though myMobilityWeightMax is not yet consistent because pragma omp master construct has no implicit barrier
+                    }
+                    #pragma omp barrier
+					
 				//fill ACTIVE cells while keeping track of INACTIVE cells in myRecyclingList, totally local and independent of others
 				regions[omp_get_thread_num()]->ompshar_sim_myCA_calcGrowthStepInside();
 				regions[omp_get_thread_num()]->ompshar_sim_myCA_calcGrowthStepBorder();
