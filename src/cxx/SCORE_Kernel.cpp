@@ -8241,6 +8241,51 @@ void caHdl::solve_REPLACE_CA_STRUCTURE()
 	if (myensHdl->myRank == MASTER ) { cout << "myRank " << this->myensHdl->myRank << "; JobID " << this->jobid << " CA structure replaced successfully" << endl; }
 }
 
+void caHdl::solve_REPLACE_CA_STRUCTURE_CONTNUCLEATION( void )
+{
+        //now we know all potential nuclei, so no new orientations are added further because only existing ones grow
+        nmyrxgpool = myrxgpool.size();
+
+        //MK::allocate memory to store the deformation texture, only once and sequential
+        DefMicrotextureClasses = myensHdl->standardlagen.size() + 1;
+        DefMicrotexture = NULL;
+        DefMicrotexture = new uint32_t[DefMicrotextureClasses];
+        QUICKASSERT ( DefMicrotexture != NULL );
+        for ( uint32_t d = 0; d < DefMicrotextureClasses; d++ ) { this->DefMicrotexture[d] = 0; }
+
+        int threadid;
+        uint32_t c, nxyz, seedid, mydgid;
+
+        #pragma omp parallel private(threadid, c, nxyz, seedid )
+        {
+                threadid = omp_get_thread_num(); //MK::hereby it is dictacted that each thread works on disjoint data!
+                nxyz = regions[threadid]->myGeom.nregvol_rdtdnd;
+
+
+                //threads initialize local copy of the myrxgpool and the mydefgpoolcell counters
+                //such that during updating the cells in the growth simulation, the bookkeeping is race free and thread-locality maximized
+                ompshar_initialize_region_myrxgpools(threadid);
+				// no re-initializing of the deformed structure needed otherwise the bookkeeping of tmpdfgseeds would be lost
+                //ompshar_initialize_region_mydfgpools(threadid);
+
+
+        } //implicit barrier and flush
+
+        //counter pool bookkeeping, must not be executed in parallel otherwise race conditions!
+        synchronize_mydefpool_counts();
+        synchronize_myrxgpool_counts();
+
+        //nuclei bookkeeping
+        determine_initial_nucleitexture_myrxgpoolids();
+
+		//tmpdefgseeds are not deleted here to preserve bookkeeping
+        //delete [] tmpdefgseeds;
+        //tmpdefgseeds = NULL;
+        myMemGuard = myMemGuard - ( ndefgseeds * sizeof(struct defgseed) );
+
+        if (myensHdl->myRank == MASTER ) { cout << "myRank " << this->myensHdl->myRank << "; JobID " << this->jobid << " CA structure replaced successfully" << endl; }
+}
+
 
 void caHdl::cleanMyGrainEvolution()
 {
