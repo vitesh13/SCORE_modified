@@ -601,6 +601,30 @@ bool ensembleHdl::init_parameter_from_hdf_nucleation() {
 		}
 	}
 	*/
+
+	ensNucleationModel.continuous_nucleation = CONTNUCLEATION_NO;
+	if ( h5r.nexus_path_exists( grpnm + "continuous_nucleation" ) == true ) {
+		uint32_t continuous = 0;
+		if ( h5r.nexus_read( grpnm + "continuous_nucleation", continuous ) != MYHDF5_SUCCESS ) {
+			status = false; cerr << grpnm << "continuous_nucleation" << endl;
+		}
+		if ( continuous == 1 ) {
+			ensNucleationModel.continuous_nucleation = CONTNUCLEATION_YES;
+			if ( h5r.nexus_read( grpnm + "activation_energy", ensNucleationModel.Q_act ) != MYHDF5_SUCCESS ) {
+				status = false; cerr << grpnm << "activation_energy" << endl;
+			}
+			ensNucleationModel.Q_act *= echarge; //input in eV
+			if ( h5r.nexus_read( grpnm + "pre_factor", ensNucleationModel.pre_factor_nuc_rate ) != MYHDF5_SUCCESS ) {
+				status = false; cerr << grpnm << "pre_factor" << endl;
+			}
+			if ( h5r.nexus_read( grpnm + "critical_dislocation_density", ensNucleationModel.rho_0 ) != MYHDF5_SUCCESS ) {
+				status = false; cerr << grpnm << "critical_dislocation_density" << endl;
+			}
+			if ( ( ensNucleationModel.Q_act <= 0. || ensNucleationModel.pre_factor_nuc_rate <= 0. || ensNucleationModel.rho_0 < 0. ) && myRank == MASTER ) {
+				status = false; cerr << "Invalid continuous nucleation parameters!" << endl;
+			}
+		}
+	}
 	return status;
 }
 
@@ -3057,13 +3081,18 @@ void ensembleHdl::SIMULATE_myCAs()
 
 			//##MK::nucleation does not run OpenMP parallel
 			if ( theca->myNucleationModel.csrnucleation != CSRNUCLEATION_NO || theca->myNucleationModel.gbnucleation != GBNUCLEATION_NO ) {
-				theca->solve_NUCLEATIONMODELING();
+				if ( theca->myNucleationModel.continuous_nucleation != CONTNUCLEATION_YES ) {
+					theca->solve_NUCLEATIONMODELING();
+				}
 			}
 			timer[4] = MPI_Wtime();
 			prof.MPIWTimeSpendNucleation = timer[4] - timer[3];
 
 
-			theca->solve_REPLACE_CA_STRUCTURE();
+			//##VS::for continuous nucleation tmpdefgseeds are still needed, so the replacement has to happen later inside solve_RXGROWTH
+			if ( theca->myNucleationModel.continuous_nucleation != CONTNUCLEATION_YES ) {
+				theca->solve_REPLACE_CA_STRUCTURE();/
+			}
 			//MK::now everything is prepared for placing nuclei from myrxgpool let them grow
 
 
@@ -7559,6 +7588,10 @@ void caHdl::init_parameter()
 	myNucleationModel.gbnucleation_drho2dens = myens->ensNucleationModel.gbnucleation_drho2dens;
 	myNucleationModel.gbnucleation_scatter = myens->ensNucleationModel.gbnucleation_scatter;
 	myNucleationModel.tincub_rayleigh_sigma = myens->ensNucleationModel.tincub_rayleigh_sigma;
+	myNucleationModel.continuous_nucleation = myens->ensNucleationModel.continuous_nucleation;
+	myNucleationModel.Q_act = myens->ensNucleationModel.Q_act;
+	myNucleationModel.pre_factor_nuc_rate = myens->ensNucleationModel.pre_factor_nuc_rate;
+	myNucleationModel.rho_0 = myens->ensNucleationModel.rho_0;
 
 	percolation = myens->percolation;
 	mobilitymodel = myens->mobilitymodel;
@@ -8271,6 +8304,7 @@ void caHdl::solve_RXGROWTH()
 	dXstep = 0.0;
 	Sv = 0;
 	step = 0;
+	nuclei_density.resize(myCAGeometry.nboxvol_rdtdnd); // resizing to the size of the whole geometry
 
 	//MK::you desire initial I/O prior to simulation? --> inject the code then here
 
