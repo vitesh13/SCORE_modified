@@ -1125,6 +1125,7 @@ public:
 	void solve_GRAINBOUNDARYNUCLEATION();
 	void solve_NUCLEATIONMODELING();
 	void solve_REPLACE_CA_STRUCTURE();
+	void solve_REPLACE_CA_STRUCTURE_CONTNUCLEATION();
 	void solve_RXGROWTH();
 	void solve_FINAL_IO();
 
