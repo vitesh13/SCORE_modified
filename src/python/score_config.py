@@ -125,7 +125,7 @@ class ScoreConfig(ConfigBase):
 
     def nucleation(self, model="csr", parameters: dict[str, Any] = DF_NUCLEATION_CSR):
         """Configure nucleation model."""
-        if model not in ("csr", "damask"):
+        if model not in ("csr", "damask", "continuous"):
             return
         trg = f"entry{self.entry_id}/nucleation/"
         self.cfg[f"{trg}@NX_class"] = "NXparameters"
@@ -135,6 +135,11 @@ class ScoreConfig(ConfigBase):
         # self.cfg[f"{trg}incubation_time_sigma"] = ureg.Quantity(np.float64(1000.), ureg.second)
         if model == "damask":
             self.cfg[f"{trg}orientation"] = "damask"
+        else if model == "continuous":
+            self.cfg[f"{trg}orientation"] = "damask"
+            self.cfg[f"{trg}incubation_time"] = "continuous"
+            for key in ("activation_energy", "pre_factor", "critical_dislocation_density"):
+                self.cfg[f"{trg}{key}"] = parameters[key]
         else:  # "csr":
             self.cfg[f"{trg}orientation"] = "ensemble"  # "random"
             if "bunge_euler" in parameters and "incubation_time" in parameters:
