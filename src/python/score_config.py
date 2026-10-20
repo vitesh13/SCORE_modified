@@ -135,7 +135,7 @@ class ScoreConfig(ConfigBase):
         # self.cfg[f"{trg}incubation_time_sigma"] = ureg.Quantity(np.float64(1000.), ureg.second)
         if model == "damask":
             self.cfg[f"{trg}orientation"] = "damask"
-        else if model == "continuous":
+        elif model == "continuous":
             self.cfg[f"{trg}orientation"] = "damask"
             self.cfg[f"{trg}incubation_time"] = "continuous"
             for key in ("activation_energy", "pre_factor", "critical_dislocation_density"):

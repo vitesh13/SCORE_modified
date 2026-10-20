@@ -3085,7 +3085,7 @@ void ensembleHdl::SIMULATE_myCAs()
 
 			//##VS::for continuous nucleation tmpdefgseeds are still needed, so the replacement has to happen later inside solve_RXGROWTH
 			if ( theca->myNucleationModel.continuous_nucleation != CONTNUCLEATION_YES ) {
-				theca->solve_REPLACE_CA_STRUCTURE();/
+				theca->solve_REPLACE_CA_STRUCTURE();
 			}
 			//MK::now everything is prepared for placing nuclei from myrxgpool let them grow
 
