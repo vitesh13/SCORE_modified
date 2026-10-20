@@ -603,26 +603,20 @@ bool ensembleHdl::init_parameter_from_hdf_nucleation() {
 	*/
 
 	ensNucleationModel.continuous_nucleation = CONTNUCLEATION_NO;
-	if ( h5r.nexus_path_exists( grpnm + "continuous_nucleation" ) == true ) {
-		uint32_t continuous = 0;
-		if ( h5r.nexus_read( grpnm + "continuous_nucleation", continuous ) != MYHDF5_SUCCESS ) {
-			status = false; cerr << grpnm << "continuous_nucleation" << endl;
+	if ( spatial_model.compare("continuous") == 0 || spatial_model.compare("continuous_nucleation") == 0 ) {
+		ensNucleationModel.continuous_nucleation = CONTNUCLEATION_YES;
+		if ( h5r.nexus_read( grpnm + "activation_energy", ensNucleationModel.Q_act ) != MYHDF5_SUCCESS ) {
+			status = false; cerr << grpnm << "activation_energy" << endl;
 		}
-		if ( continuous == 1 ) {
-			ensNucleationModel.continuous_nucleation = CONTNUCLEATION_YES;
-			if ( h5r.nexus_read( grpnm + "activation_energy", ensNucleationModel.Q_act ) != MYHDF5_SUCCESS ) {
-				status = false; cerr << grpnm << "activation_energy" << endl;
-			}
-			ensNucleationModel.Q_act *= echarge; //input in eV
-			if ( h5r.nexus_read( grpnm + "pre_factor", ensNucleationModel.pre_factor_nuc_rate ) != MYHDF5_SUCCESS ) {
-				status = false; cerr << grpnm << "pre_factor" << endl;
-			}
-			if ( h5r.nexus_read( grpnm + "critical_dislocation_density", ensNucleationModel.rho_0 ) != MYHDF5_SUCCESS ) {
-				status = false; cerr << grpnm << "critical_dislocation_density" << endl;
-			}
-			if ( ( ensNucleationModel.Q_act <= 0. || ensNucleationModel.pre_factor_nuc_rate <= 0. || ensNucleationModel.rho_0 < 0. ) && myRank == MASTER ) {
-				status = false; cerr << "Invalid continuous nucleation parameters!" << endl;
-			}
+		ensNucleationModel.Q_act *= echarge; //input in eV
+		if ( h5r.nexus_read( grpnm + "pre_factor", ensNucleationModel.pre_factor_nuc_rate ) != MYHDF5_SUCCESS ) {
+			status = false; cerr << grpnm << "pre_factor" << endl;
+		}
+		if ( h5r.nexus_read( grpnm + "critical_dislocation_density", ensNucleationModel.rho_0 ) != MYHDF5_SUCCESS ) {
+			status = false; cerr << grpnm << "critical_dislocation_density" << endl;
+		}
+		if ( ( ensNucleationModel.Q_act <= 0. || ensNucleationModel.pre_factor_nuc_rate <= 0. || ensNucleationModel.rho_0 < 0. ) && myRank == MASTER ) {
+			status = false; cerr << "Invalid continuous nucleation parameters!" << endl;
 		}
 	}
 	return status;
