@@ -384,6 +384,7 @@ struct nucData
 	unsigned char csrnucleation;
 	unsigned char clustnucleation;
 	unsigned char tincubmodel;
+	unsigned char continuous_nucleation;
 
 	//##MK::add further parameter here
 	uint32_t defaultnucdensity;
@@ -398,7 +399,12 @@ struct nucData
 	double gbnucleation_drho2dens;
 	double gbnucleation_scatter;
 	double tincub_rayleigh_sigma;
-	nucData() : gbnucleation(GBNUCLEATION_NO), csrnucleation(CSRNUCLEATION_NO), clustnucleation(CLUSTERNUCLEATION_NO), tincubmodel( TINCUB_SITESATURATION ), defaultnucdensity( DEFAULT_NUCDENSITY_CSR ), cluster_nclust(0.0), cluster_lambda(0.0), cluster_rvesize(0.0), cluster_a(0.0), cluster_b(0.0), cluster_c(0.0), gbnucleation_dens2num(0.0), gbnucleation_drho2dens(0.0), gbnucleation_scatter(0.0), tincub_rayleigh_sigma(0.0) {}
+
+	//continuous nucleation
+	double pre_factor_nuc_rate;
+	double Q_act;
+	double rho_0;
+	nucData() : gbnucleation(GBNUCLEATION_NO), csrnucleation(CSRNUCLEATION_NO), clustnucleation(CLUSTERNUCLEATION_NO), tincubmodel( TINCUB_SITESATURATION ), continuous_nucleation( CONTNUCLEATION_NO ), defaultnucdensity( DEFAULT_NUCDENSITY_CSR ), cluster_nclust(0.0), cluster_lambda(0.0), cluster_rvesize(0.0), cluster_a(0.0), cluster_b(0.0), cluster_c(0.0), gbnucleation_dens2num(0.0), gbnucleation_drho2dens(0.0), gbnucleation_scatter(0.0), tincub_rayleigh_sigma(0.0), pre_factor_nuc_rate(0.0), Q_act(0.0), rho_0(0.0) {}
 };
 typedef struct nucData * nucDataP;
 
@@ -1094,6 +1100,8 @@ public:
 	void solve_nucmodeling_csr_pickrandomly();
 	uint32_t getDeformedGrainID( uint32_t xglo, uint32_t yglo, uint32_t zglo );
 	void solve_nucmodeling_csrdiehl();
+	std::vector<double> calculate_nuc_rate( void );
+	void solve_continuous_nucleation( void );
     void solve_nucmodelling_dislo_ori_based ();
 	void init_myMaternUniverse();
 	void pickrandomly_myMaternUniverse(void );
@@ -1117,6 +1125,7 @@ public:
 	void solve_GRAINBOUNDARYNUCLEATION();
 	void solve_NUCLEATIONMODELING();
 	void solve_REPLACE_CA_STRUCTURE();
+	void solve_REPLACE_CA_STRUCTURE_CONTNUCLEATION();
 	void solve_RXGROWTH();
 	void solve_FINAL_IO();
 
@@ -1348,6 +1357,7 @@ public:
 	double CurrentBurgersVector;
 	double CurrentTemperature;
 	double t;									//current time, X(t), and temperature
+	vector<double> nuclei_density;				//continuous nucleation, accumulated nuclei per voxel, size nboxvol_rdtdnd
 	double X;									//current RX fraction
 	double Xcells;
 	double dXstep;								//accumulated change in rxVolume accounting for overshoot as well

@@ -490,6 +490,96 @@ void caHdl::solve_nucmodeling_csrdiehl()
 }
 
 
+std::vector<double> caHdl::calculate_nuc_rate( void )
+{
+	//continuous nucleation part 1: nucleation rate per voxel from the stored energy of the parent deformed grain
+	// This function finds nucleation rate per point
+	// the next function assigns a nucleus when number of nuclei at a voxel exceeds certain value
+	uint32_t nbx = myCAGeometry.nboxedge_rd;
+	uint32_t nby = myCAGeometry.nboxedge_td;
+	uint32_t nbz = myCAGeometry.nboxedge_nd;
+	std::vector<double> nuc_rate( ((size_t) nbx) * nby * nbz, 0.0 );
+
+	//sites that already host a nucleus keep rate 0
+	std::vector<bool> occupied( nuc_rate.size(), false );
+	for ( size_t s = 0; s < myrxgpool.size(); s++ ) {
+		if ( myrxgpool[s].nucsite < occupied.size() )
+			occupied[myrxgpool[s].nucsite] = true;
+	}
+
+	double arrhenius = myNucleationModel.pre_factor_nuc_rate * exp( -1.0 * myNucleationModel.Q_act / (kboltzman * CurrentTemperature) );
+	double zener = this->get_zener();
+
+	// in rest of the cells, calculate the nucleation rate based on the local driving force
+	for ( size_t i = 0; i < nuc_rate.size(); i++ ) {
+		if ( occupied[i] == true ) continue;
+
+		//access deformed grains via the tmpdefgseeds ID references 
+		// how to get co-ordinates from indices 
+		// https://stackoverflow.com/questions/10155893/1d-vector-3d-indices
+		uint32_t ix = i % nbx;
+		uint32_t iy = (i / nbx) % nby;
+		uint32_t iz = ((i / nbx) / nby) % nbz;
+
+		//nucleation functions run before solve_REPLACE_CA_STRUCTURE(), deformed grains are accessed via tmpdefgseeds
+		// only the non-RXed points are considered. The infected and already recrystallized points are skipped. 
+		uint32_t dgid = getDeformedGrainID( ix, iy, iz );
+		if ( dgid >= ndefgseeds ) continue; //already recrystallized or infected
+		double rho = mydefgpool[tmpdefgseeds[dgid].mydefgpoolid].rho;
+		double F = myPhysData.G * SQR(myPhysData.b) * (rho - myNucleationModel.rho_0);
+		double rate = arrhenius * (F - zener);
+		nuc_rate[i] = ( rate > 0.0 ) ? rate : 0.0;
+	}
+
+	return nuc_rate;
+}
+
+
+void caHdl::solve_continuous_nucleation( void )
+{
+	//continuous nucleation part 2: turn voxels whose accumulated nuclei_density exceeds the threshold into nuclei
+	uint32_t nbx = myCAGeometry.nboxedge_rd;
+	uint32_t nby = myCAGeometry.nboxedge_td;
+	uint32_t nbz = myCAGeometry.nboxedge_nd;
+
+	// Assuming that more than 1 nucleus per cell leads to nucleation
+	for ( uint32_t i = 0; i < nuclei_density.size(); i++ ) {
+		if ( nuclei_density[i] < 1.0 ) continue;
+
+		bool valid = true;
+		// check if nucleus was already placed in the box
+		for ( uint32_t s = 0; s < myrxgpool.size(); s++ ) {
+			if ( i == myrxgpool[s].nucsite ) { valid = false; break; }
+		}
+		if ( valid == false ) continue;
+
+		// how to get co-ordinates from indices
+		// https://stackoverflow.com/questions/10155893/1d-vector-3d-indices
+		uint32_t ix = i % nbx;
+		uint32_t iy = (i / nbx) % nby;
+		uint32_t iz = ((i / nbx) / nby) % nbz;
+
+		//nucleation functions run before solve_REPLACE_CA_STRUCTURE(), deformed grains are accessed via tmpdefgseeds
+		uint32_t dgid = getDeformedGrainID( ix, iy, iz );
+
+		//nucleus inherits the orientation of its parent deformed grain
+		uint32_t oid = mydefgpool[tmpdefgseeds[dgid].mydefgpoolid].caori;
+		double qderived[4] = { myoripool[oid].q0, myoripool[oid].q1, myoripool[oid].q2, myoripool[oid].q3 };
+
+		struct carxg rxg;
+		rxg.caori = ca_check_disjunctness_core( qderived, false, 0.0, 0.0, 0.0 );
+		rxg.cellcount = 0;
+		rxg.nucsite = i;
+		rxg.startingsite = i;
+		rxg.tincub = t;
+
+		myrxgpool.push_back( rxg );
+
+		nuclei_density[i] = 0.0;
+	}
+}
+
+
 void caHdl::init_myMaternUniverse()
 {
 	//a very large Matern cluster process on a cubic RVE of size rvesize in micron is squeezed on a unit cube in \mathbb{R}^3

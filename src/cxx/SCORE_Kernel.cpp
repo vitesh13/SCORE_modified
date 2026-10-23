@@ -601,6 +601,24 @@ bool ensembleHdl::init_parameter_from_hdf_nucleation() {
 		}
 	}
 	*/
+
+	ensNucleationModel.continuous_nucleation = CONTNUCLEATION_NO;
+	if ( spatial_model.compare("continuous") == 0 || spatial_model.compare("continuous_nucleation") == 0 ) {
+		ensNucleationModel.continuous_nucleation = CONTNUCLEATION_YES;
+		if ( h5r.nexus_read( grpnm + "activation_energy", ensNucleationModel.Q_act ) != MYHDF5_SUCCESS ) {
+			status = false; cerr << grpnm << "activation_energy" << endl;
+		}
+		ensNucleationModel.Q_act *= echarge; //input in eV
+		if ( h5r.nexus_read( grpnm + "pre_factor", ensNucleationModel.pre_factor_nuc_rate ) != MYHDF5_SUCCESS ) {
+			status = false; cerr << grpnm << "pre_factor" << endl;
+		}
+		if ( h5r.nexus_read( grpnm + "critical_dislocation_density", ensNucleationModel.rho_0 ) != MYHDF5_SUCCESS ) {
+			status = false; cerr << grpnm << "critical_dislocation_density" << endl;
+		}
+		if ( ( ensNucleationModel.Q_act <= 0. || ensNucleationModel.pre_factor_nuc_rate <= 0. || ensNucleationModel.rho_0 < 0. ) && myRank == MASTER ) {
+			status = false; cerr << "Invalid continuous nucleation parameters!" << endl;
+		}
+	}
 	return status;
 }
 
@@ -3057,13 +3075,18 @@ void ensembleHdl::SIMULATE_myCAs()
 
 			//##MK::nucleation does not run OpenMP parallel
 			if ( theca->myNucleationModel.csrnucleation != CSRNUCLEATION_NO || theca->myNucleationModel.gbnucleation != GBNUCLEATION_NO ) {
-				theca->solve_NUCLEATIONMODELING();
+				if ( theca->myNucleationModel.continuous_nucleation != CONTNUCLEATION_YES ) {
+					theca->solve_NUCLEATIONMODELING();
+				}
 			}
 			timer[4] = MPI_Wtime();
 			prof.MPIWTimeSpendNucleation = timer[4] - timer[3];
 
 
-			theca->solve_REPLACE_CA_STRUCTURE();
+			//##VS::for continuous nucleation tmpdefgseeds are still needed, so the replacement has to happen later inside solve_RXGROWTH
+			if ( theca->myNucleationModel.continuous_nucleation != CONTNUCLEATION_YES ) {
+				theca->solve_REPLACE_CA_STRUCTURE();
+			}
 			//MK::now everything is prepared for placing nuclei from myrxgpool let them grow
 
 
@@ -7559,6 +7582,10 @@ void caHdl::init_parameter()
 	myNucleationModel.gbnucleation_drho2dens = myens->ensNucleationModel.gbnucleation_drho2dens;
 	myNucleationModel.gbnucleation_scatter = myens->ensNucleationModel.gbnucleation_scatter;
 	myNucleationModel.tincub_rayleigh_sigma = myens->ensNucleationModel.tincub_rayleigh_sigma;
+	myNucleationModel.continuous_nucleation = myens->ensNucleationModel.continuous_nucleation;
+	myNucleationModel.Q_act = myens->ensNucleationModel.Q_act;
+	myNucleationModel.pre_factor_nuc_rate = myens->ensNucleationModel.pre_factor_nuc_rate;
+	myNucleationModel.rho_0 = myens->ensNucleationModel.rho_0;
 
 	percolation = myens->percolation;
 	mobilitymodel = myens->mobilitymodel;
@@ -8201,11 +8228,58 @@ void caHdl::solve_REPLACE_CA_STRUCTURE()
 	determine_initial_nucleitexture_myrxgpoolids();
 
 	//clean-up tmdefgseeds as it is not longer needed
-	delete [] tmpdefgseeds;
-	tmpdefgseeds = NULL;
+	// !!!! This is a hack for getting continuous nucleation 
+	// when we need it to run normally tmpdefgseeds needs to be deleted
+	//delete [] tmpdefgseeds;
+	//tmpdefgseeds = NULL;
 	myMemGuard = myMemGuard - ( ndefgseeds * sizeof(struct defgseed) );
 
 	if (myensHdl->myRank == MASTER ) { cout << "myRank " << this->myensHdl->myRank << "; JobID " << this->jobid << " CA structure replaced successfully" << endl; }
+}
+
+void caHdl::solve_REPLACE_CA_STRUCTURE_CONTNUCLEATION( void )
+{
+        //now we know all potential nuclei, so no new orientations are added further because only existing ones grow
+        nmyrxgpool = myrxgpool.size();
+
+        //MK::allocate memory to store the deformation texture, only once and sequential
+        DefMicrotextureClasses = myensHdl->standardlagen.size() + 1;
+        DefMicrotexture = NULL;
+        DefMicrotexture = new uint32_t[DefMicrotextureClasses];
+        QUICKASSERT ( DefMicrotexture != NULL );
+        for ( uint32_t d = 0; d < DefMicrotextureClasses; d++ ) { this->DefMicrotexture[d] = 0; }
+
+        int threadid;
+        uint32_t c, nxyz, seedid, mydgid;
+
+        #pragma omp parallel private(threadid, c, nxyz, seedid )
+        {
+                threadid = omp_get_thread_num(); //MK::hereby it is dictacted that each thread works on disjoint data!
+                nxyz = regions[threadid]->myGeom.nregvol_rdtdnd;
+
+
+                //threads initialize local copy of the myrxgpool and the mydefgpoolcell counters
+                //such that during updating the cells in the growth simulation, the bookkeeping is race free and thread-locality maximized
+                ompshar_initialize_region_myrxgpools(threadid);
+				// no re-initializing of the deformed structure needed otherwise the bookkeeping of tmpdefgseeds would be lost
+                //ompshar_initialize_region_mydfgpools(threadid);
+
+
+        } //implicit barrier and flush
+
+        //counter pool bookkeeping, must not be executed in parallel otherwise race conditions!
+        synchronize_mydefpool_counts();
+        synchronize_myrxgpool_counts();
+
+        //nuclei bookkeeping
+        determine_initial_nucleitexture_myrxgpoolids();
+
+		//tmpdefgseeds are not deleted here to preserve bookkeeping
+        //delete [] tmpdefgseeds;
+        //tmpdefgseeds = NULL;
+        myMemGuard = myMemGuard - ( ndefgseeds * sizeof(struct defgseed) );
+
+        if (myensHdl->myRank == MASTER ) { cout << "myRank " << this->myensHdl->myRank << "; JobID " << this->jobid << " CA structure replaced successfully" << endl; }
 }
 
 
@@ -8271,6 +8345,7 @@ void caHdl::solve_RXGROWTH()
 	dXstep = 0.0;
 	Sv = 0;
 	step = 0;
+	nuclei_density.resize(myCAGeometry.nboxvol_rdtdnd); // resizing to the size of the whole geometry
 
 	//MK::you desire initial I/O prior to simulation? --> inject the code then here
 
@@ -8357,7 +8432,10 @@ void caHdl::solve_RXGROWTH()
 
 		//add nuclei into the simulation, at the moment ##MK::MPI/OMP only site-saturated --> inject time-dependent nucleation here...
 		vector<rxgcommit>* thrsafesync = NULL;	thrsafesync = new vector<rxgcommit>;
-		ompshar_sim_myCA_sitesaturatedNucleation( thrsafesync );
+		if (myNucleationModel.continuous_nucleation != CONTNUCLEATION_YES ) {
+			std::cout << "Start site saturated nucleation --------- " << std::endl;
+			ompshar_sim_myCA_sitesaturatedNucleation( thrsafesync );
+		}
 		#pragma omp barrier
 
 		#pragma omp critical
@@ -8367,7 +8445,7 @@ void caHdl::solve_RXGROWTH()
 				myrxgpool[thrsafesync->at(s).nrxgid].tincub = thrsafesync->at(s).tincub;
 			}
 		}
-		delete thrsafesync; thrsafesync = NULL;
+		//delete thrsafesync; thrsafesync = NULL;
 
 		//necessary, not possible to start before the threads seeded all nuclei surplus barrier implicitly flushes
 		#pragma omp barrier
@@ -8402,7 +8480,52 @@ void caHdl::solve_RXGROWTH()
 				}
 
 				//MK::no time dependent nucleation model for OpenMP at the moment--> if desired inject it here!
+				std::cout << "integration step: " << integrationstep << std::endl;
+                std::cout << "time : " << t << std::endl;
+                if( myNucleationModel.continuous_nucleation == CONTNUCLEATION_YES )
+				{
 
+                    std::vector<double> nuc_rate;
+                    nuc_rate = calculate_nuc_rate();
+
+                    for( uint32_t i = 0; i < nuc_rate.size(); i++ ){
+                        nuclei_density[i] = nuclei_density[i] + nuc_rate[i]*dt;
+                        //std::cout << "integration step: " << integrationstep << "nuclei density: " << nuclei_density[i] << std::endl;
+                        }
+
+                    solve_continuous_nucleation();
+                    if( integrationstep == 0){
+                    	solve_REPLACE_CA_STRUCTURE();
+                    }
+                    else{
+                        solve_REPLACE_CA_STRUCTURE_CONTNUCLEATION();
+                    }
+                    ompshar_sim_myCA_sitesaturatedNucleation( thrsafesync );
+                    std::cout << "number of nuclei" << regions[0]->reg_nmynuclei << std::endl;
+                    #pragma omp barrier
+                    #pragma omp critical
+                    {
+                        for ( uint32_t s = 0; s < thrsafesync->size(); s++ ) {
+                            myrxgpool[thrsafesync->at(s).nrxgid].nucsite = thrsafesync->at(s).nucsite;
+                            myrxgpool[thrsafesync->at(s).nrxgid].tincub = thrsafesync->at(s).tincub;
+                            }
+                    }
+
+                    #pragma omp barrier
+
+                    #pragma omp master
+                    {
+                        nmynuclei = 0;
+                        for (uint32_t r = 0; r < regions.size(); r++) {
+                            if ( regions[r]->reg_myMobilityWeightMax >= myMobilityWeightMax ) { myMobilityWeightMax = regions[r]->reg_myMobilityWeightMax; }
+                                nmynuclei = nmynuclei + regions[r]->reg_nmynuclei;
+                            }
+                            cout << "Starting RX Growth with myMobilityWeightMax = " << myMobilityWeightMax << " and " << nmynuclei << " nuclei." << "total RXGpool is: " << myrxgpool.size() << endl;
+                    }
+                    //barrier necessary, as otherwise the threads would start iterating even though myMobilityWeightMax is not yet consistent because pragma omp master construct has no implicit barrier
+                    }
+                    #pragma omp barrier
+					
 				//fill ACTIVE cells while keeping track of INACTIVE cells in myRecyclingList, totally local and independent of others
 				regions[omp_get_thread_num()]->ompshar_sim_myCA_calcGrowthStepInside();
 				regions[omp_get_thread_num()]->ompshar_sim_myCA_calcGrowthStepBorder();

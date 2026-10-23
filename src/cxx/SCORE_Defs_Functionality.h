@@ -137,6 +137,10 @@
 #define CSRNUCLEATION_DIEHL_RANDOMDEFORI	0x24
 #define CSRNUCLEATION_DIEHL_SCATTEREXISTENT	0x25
 
+//continuous nucleation
+#define CONTNUCLEATION_NO					0x26
+#define CONTNUCLEATION_YES					0x27
+
 //recovery modeling
 #define RECOVERY_NO							0x01
 #define RECOVERY_NES_VACCOREDIFF			0x02
