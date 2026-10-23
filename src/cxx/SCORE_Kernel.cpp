@@ -8261,7 +8261,7 @@ void caHdl::solve_REPLACE_CA_STRUCTURE_CONTNUCLEATION( void )
                 //threads initialize local copy of the myrxgpool and the mydefgpoolcell counters
                 //such that during updating the cells in the growth simulation, the bookkeeping is race free and thread-locality maximized
                 ompshar_initialize_region_myrxgpools(threadid);
-				// no re-initializing of the deformed structure needed otherwise the bookkeeping of tmpdfgseeds would be lost
+				// no re-initializing of the deformed structure needed otherwise the bookkeeping of tmpdefgseeds would be lost
                 //ompshar_initialize_region_mydfgpools(threadid);
 
 
