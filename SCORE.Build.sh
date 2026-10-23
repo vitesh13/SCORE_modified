@@ -4,8 +4,8 @@
 
 
 # GNU C/C++ compiler
-MY_C_COMPILER=gcc-14
-MY_CXX_COMPILER=g++-14
+MY_C_COMPILER=gcc-15
+MY_CXX_COMPILER=g++-15
 # Intel oneAPI C/C++ compiler
 # make sure to call source setvars.sh within the with which you compile the paraprobe tools
 # so that the Intel oneAPI compiler and library locations will be resolved properly
