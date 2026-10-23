@@ -8228,8 +8228,10 @@ void caHdl::solve_REPLACE_CA_STRUCTURE()
 	determine_initial_nucleitexture_myrxgpoolids();
 
 	//clean-up tmdefgseeds as it is not longer needed
-	delete [] tmpdefgseeds;
-	tmpdefgseeds = NULL;
+	// !!!! This is a hack for getting continuous nucleation 
+	// when we need it to run normally tmpdefgseeds needs to be deleted
+	//delete [] tmpdefgseeds;
+	//tmpdefgseeds = NULL;
 	myMemGuard = myMemGuard - ( ndefgseeds * sizeof(struct defgseed) );
 
 	if (myensHdl->myRank == MASTER ) { cout << "myRank " << this->myensHdl->myRank << "; JobID " << this->jobid << " CA structure replaced successfully" << endl; }
@@ -8482,6 +8484,7 @@ void caHdl::solve_RXGROWTH()
                 std::cout << "time : " << t << std::endl;
                 if( myNucleationModel.continuous_nucleation == CONTNUCLEATION_YES )
 				{
+
                     std::vector<double> nuc_rate;
                     nuc_rate = calculate_nuc_rate();
 
